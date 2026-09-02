@@ -7,6 +7,8 @@ desktop.ini
 .env
 .env*.local
 *.env
+*.session
+*.session-journal
 
 # Node & Frontend dependencies
 node_modules/
@@ -59,3 +61,13 @@ build/
 *.sqlite
 *.sqlite3
 *.db
+
+# Test & Coverage caches
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local Data & Model Artifacts
+data/
+models/
+
