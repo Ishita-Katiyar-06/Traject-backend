@@ -15,8 +15,10 @@ The platform addresses **SIH 2026 Problem Statement 26152 (National Technical Re
 
 | Horizon | Capabilities |
 | :--- | :--- |
-| **Current Implementation** | • Python backend foundation (`backend/app/`)<br>• Core `CanonicalMessage` schema (Pydantic v2) with strict UTC timestamp enforcement and controlled platform/author types<br>• Chat-scoped deterministic Telegram canonical ID generation (`telegram:{chat_id}:{message_id}`)<br>• Telegram message normalizer (`TelegramNormalizer`) handling plain text, captions, forwards, replies, reactions, and entity extraction<br>• MTProto collector (`Telethon`) supporting interactive terminal authentication and cloud 2FA<br>• Deterministic root `.env` discovery with operating system environment precedence<br>• Session lifecycle and `AuthKeyUnregisteredError` recovery<br>• Appendable, immutable raw JSONL storage (`data/raw/telegram/`)<br>• 35 passing unit tests using mocked clients (zero network calls during test runs)<br>• Successful real-world smoke test against public Telegram channel (`@GenshinUpdate_STR`) |
-| **Planned / Future Scope** | • Continuous timeline and streaming ingestion<br>• Durable columnar Parquet analytical datasets and offline replay pipeline (Milestone 3)<br>• **X (Twitter)** ingestion collector (Essential)<br>• **Instagram** and **Facebook** collectors (Desirable)<br>• **Reddit** and **YouTube** collectors (Appreciable additional sources)<br>• Sentiment, stance, and emotion classification<br>• Real-time topic, narrative genesis, and mutation tracking<br>• Information cascade topology, link analysis, and influence propagation graphs<br>• Aggregate and anonymized demographic profiling<br>• FastAPI backend service layer and Next.js / Vite analyst dashboard |
+| Horizon | Capabilities |
+| :--- | :--- |
+| **Current Implementation** | • Python backend foundation (`backend/app/`)<br>• Core `CanonicalMessage` schema (Pydantic v2) with strict UTC timestamp enforcement and controlled platform/author types<br>• Chat-scoped deterministic Telegram canonical ID generation (`telegram:{chat_id}:{message_id}`)<br>• Telegram message normalizer (`TelegramNormalizer`) handling plain text, captions, forwards, replies, reactions, and entity extraction<br>• MTProto collector (`Telethon`) supporting interactive terminal authentication and cloud 2FA<br>• Deterministic root `.env` discovery with operating system environment precedence<br>• Session lifecycle and `AuthKeyUnregisteredError` recovery<br>• Appendable, immutable raw JSONL storage (`data/raw/telegram/`)<br>• Streaming offline JSONL replay & pre-validation engine (`backend/app/replay/`) with line-level provenance preservation<br>• Columnar processed storage (`backend/app/storage/`) using Snappy-compressed Apache Parquet with 27-field typed schema, native Arrow lists, reaction maps, and UTC microsecond timestamps<br>• Data quality & deduplication engine (`backend/app/quality/`) enforcing temporal consistency, identity well-formedness, engagement integrity, first-occurrence-wins deduplication on `canonical_id`, and generating paired JSON quality audit reports<br>• 84 passing unit tests using mocked clients and offline datasets (zero network calls during test runs)<br>• Successful real-world smoke test against public Telegram channel (`@GenshinUpdate_STR`) and verified end-to-end replay, quality check, and Parquet conversion |
+| **Planned / Future Scope** | • Continuous timeline and streaming ingestion<br>• **X (Twitter)** ingestion collector (Essential)<br>• **Instagram** and **Facebook** collectors (Desirable)<br>• **Reddit** and **YouTube** collectors (Appreciable additional sources)<br>• Sentiment, stance, and emotion classification<br>• Real-time topic, narrative genesis, and mutation tracking<br>• Information cascade topology, link analysis, and influence propagation graphs<br>• Aggregate and anonymized demographic profiling<br>• FastAPI backend service layer and Next.js / Vite analyst dashboard |
 
 > [!NOTE]
 > Capabilities marked as **Planned / Future Scope** are not yet implemented. The project is being constructed strictly incrementally from verified data contracts upward.
@@ -48,6 +50,13 @@ TRAJECT decouples platform-specific ingestion protocols from downstream analytic
                            │
                            ▼
 ┌────────────────────────────────────────────────────────┐
+│                 OFFLINE STREAMING REPLAY               │
+│   iter_raw_telegram_jsonl (Line-level provenance,      │
+│   pre-validation, raw immutability preserved)          │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────┐
 │                  PLATFORM NORMALIZERS                  │
 │   TelegramNormalizer (Extracts entities, topology,     │
 │   engagement, media, and chat-scoped canonical ID)     │
@@ -61,14 +70,22 @@ TRAJECT decouples platform-specific ingestion protocols from downstream analytic
                            │
                            ▼
 ┌────────────────────────────────────────────────────────┐
-│           SHARED ML & ANALYTICS (PLANNED)              │
-│   Sentiment, Framing, Narrative Genesis, Cascade Graph │
+│               DATA QUALITY & DEDUPLICATION             │
+│   process_quality (Temporal checks, canonical_id       │
+│   deduplication [first-wins], JSON audit report)       │
 └──────────────────────────┬─────────────────────────────┘
                            │
                            ▼
 ┌────────────────────────────────────────────────────────┐
-│              PROCESSED DATASETS (PLANNED)              │
-│   data/processed/ (Partitioned Apache Parquet)         │
+│               DURABLE PROCESSED DATASETS               │
+│   data/processed/telegram/*.parquet (PyArrow, Snappy)  │
+│   data/processed/telegram/*.quality.json               │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│           SHARED ML & ANALYTICS (PLANNED)              │
+│   Sentiment, Framing, Narrative Genesis, Cascade Graph │
 └──────────────────────────┬─────────────────────────────┘
                            │
                            ▼
@@ -104,19 +121,30 @@ TRAJECT/
 │   │   │   └── config.py         # Deterministic root discovery & .env loading
 │   │   ├── normalizers/
 │   │   │   └── telegram.py       # Telegram-to-Canonical transformer
-│   │   └── schemas/
-│   │       └── canonical_message.py  # Unified CanonicalMessage contract
-│   ├── tests/                    # 35 mocked unit tests
+│   │   ├── quality/
+│   │   │   └── validation.py     # Quality diagnostics & deduplication engine
+│   │   ├── replay/
+│   │   │   └── telegram_jsonl.py # Streaming offline raw JSONL replayer
+│   │   ├── schemas/
+│   │   │   └── canonical_message.py  # Unified CanonicalMessage contract
+│   │   └── storage/
+│   │       └── parquet.py        # Columnar Parquet persistence & dataset builder
+│   ├── tests/                    # 84 offline unit tests
 │   │   ├── test_config.py
+│   │   ├── test_data_quality.py
+│   │   ├── test_parquet_storage.py
 │   │   ├── test_schemas.py
 │   │   ├── test_telegram_collector.py
-│   │   └── test_telegram_normalizer.py
+│   │   ├── test_telegram_normalizer.py
+│   │   └── test_telegram_replay.py
 │   ├── .venv/                    # Local virtual environment (gitignored)
 │   ├── pyproject.toml            # Backend dependencies and pytest config
 │   └── README.md                 # Backend-specific developer notes
 ├── data/
-│   └── raw/
-│       └── telegram/             # Ingested raw JSONL files (gitignored)
+│   ├── raw/
+│   │   └── telegram/             # Ingested raw JSONL files (gitignored)
+│   └── processed/
+│       └── telegram/             # Derived Parquet & quality reports (gitignored)
 ├── frontend/                     # Planned: Web application and analyst UI
 ├── models/                       # Planned / local: ML weights & cache (gitignored)
 ├── notebooks/                    # Planned: Exploratory analysis & validation
@@ -150,6 +178,30 @@ TRAJECT/
 * **Clean Session Recovery**: Intercepts `AuthKeyUnregisteredError` and provides actionable recovery guidance (instructing the user to remove invalid session files) rather than producing an opaque traceback.
 * **Secret Protection**: API hashes, phone numbers, login codes, and 2FA passwords are masked or omitted from logs. Session files (`*.session`, `*.session-journal`) are strictly gitignored.
 * **Raw JSONL Persistence**: Bounded batches of raw messages are appended line-by-line to `data/raw/telegram/{channel}_{timestamp}.jsonl` before normalization.
+
+### Milestone 3A: Raw Telegram JSONL Replay & Validation
+* **100% Offline Replay**: Incremental streaming reader (`iter_raw_telegram_jsonl`) that consumes local JSONL files without initiating any network connection or Telethon client.
+* **Pre-Validation**: Lightweight structural pre-validation checking required message IDs, chat identifiers, and timestamps before reaching the normalizer.
+* **Single Normalizer Invariant**: Directly routes raw records through `TelegramNormalizer.normalize`, guaranteeing zero duplication of normalization logic.
+* **Line-Level Provenance**: Every `ReplayRecord` preserves source file path, line number, and raw reference pointer.
+* **Raw Immutability**: Opens raw files strictly in read-only mode (`"r"`), preserving raw data as immutable ground truth.
+
+### Milestone 3B: Durable Processed Storage with Apache Parquet
+* **High-Performance Columnar Storage**: `app.storage.parquet` maps `CanonicalMessage` instances into a Snappy-compressed Apache Parquet dataset using `pyarrow`.
+* **Complete Schema Mapping**: All 27 domain model fields explicitly represented in `CANONICAL_MESSAGE_ARROW_SCHEMA`.
+* **Native Complex Types**: Preserves list entities (`urls`, `hashtags`, `mentions`, `media_types`) as native Arrow lists and reaction maps as native Arrow maps (`pa.map_(pa.string(), pa.int64())`).
+* **Microsecond UTC Timestamps**: Timestamps are stored as 64-bit microsecond integers with UTC timezone metadata (`pa.timestamp('us', tz='UTC')`).
+* **Audit Metadata**: File footer stores schema version, generation timestamp, and raw source filenames with zero secret leakage.
+* **Overwrite Guard**: Enforces safe default (`overwrite=False`) preventing accidental data loss.
+
+### Milestone 3C: Data Quality, Deduplication & Dataset Provenance
+* **Quality Diagnostics (`app.quality.validation`)**: Deterministic validation checking identity well-formedness, strict temporal consistency (`collected_at >= published_at`), nonnegative engagement metrics, and content rules (media-only permitted).
+* **Severity Distinction**: Differentiates `ERROR` (rejects record from processed storage) from `WARNING` (logs diagnostic issue but retains usable data).
+* **Deterministic Deduplication**: Deduplicates strictly by `canonical_id` (`telegram:{chat_id}:{message_id}`) using a **first-occurrence-wins** policy. Duplicate occurrences are logged with dual provenance (first and duplicate locations) in the audit report.
+* **Paired Output Artifacts**: Generating Parquet produces paired dataset and audit files:
+  * Columnar Parquet: `data/processed/telegram/telegram_messages.parquet`
+  * JSON Audit Report: `data/processed/telegram/telegram_messages.quality.json`
+
 
 ### Real-World Telegram Smoke Test
 A live verification smoke test was executed against a public Telegram broadcast channel:
@@ -319,13 +371,14 @@ All automated unit tests run entirely offline using mock objects and **make zero
 .\.venv\Scripts\pytest tests -v
 ```
 
-### Test Coverage (35 Passing Tests)
-* **Configuration & Precedence (`test_config.py`)**: Deterministic repository root discovery; strict OS environment variable precedence over `.env`.
-* **Canonical Schema Validation (`test_schemas.py`)**: Valid model creation, strict rejection of unsupported platforms (`Platform` enum), rejection of missing required fields, strict UTC timestamp enforcement and conversion, stable canonical ID format validation, rejection of negative engagement metrics, and extra field forbidding.
-* **Telegram Serialization (`test_telegram_collector.py`)**: Primitive dictionary conversion, signed 64-bit chat ID and peer ID extraction, message ID extraction, media type detection, forward origin headers, reply/thread headers, reaction maps, entity spans, and malformed payload handling.
-* **Authentication & Session Lifecycle (`test_telegram_collector.py`)**: Already-authorized session bypass, interactive first-time login with 2FA password handling, `AuthKeyUnregisteredError` clean recovery instructions, authentication failure handling, and credential secret masking.
-* **Telegram Normalization (`test_telegram_normalizer.py`)**: Broadcast text messages, media captions, forwarded messages, comments/replies, multi-script unicode preservation (e.g. Hindi scripts and emojis), missing optional fields, and cross-channel ID differentiation.
-* **End-to-End Mocked Collector Pipeline (`test_telegram_collector.py`)**: Mock Telethon message $\to$ primitive serializer $\to$ raw JSONL on disk $\to$ `TelegramNormalizer` $\to$ `CanonicalMessage`.
+### Test Coverage (84 Passing Tests)
+* **Configuration & Precedence (`test_config.py` - 2 tests)**: Deterministic repository root discovery; strict OS environment variable precedence over `.env`.
+* **Canonical Schema Validation (`test_schemas.py` - 8 tests)**: Valid model creation, strict rejection of unsupported platforms (`Platform` enum), rejection of missing required fields, strict UTC timestamp enforcement and conversion, stable canonical ID format validation, rejection of negative engagement metrics, and extra field forbidding.
+* **Telegram Serialization (`test_telegram_collector.py` - 17 tests)**: Primitive dictionary conversion, signed 64-bit chat ID and peer ID extraction, message ID extraction, media type detection, forward origin headers, reply/thread headers, reaction maps, entity spans, and malformed payload handling.
+* **Telegram Normalization (`test_telegram_normalizer.py` - 8 tests)**: Broadcast text messages, media captions, forwarded messages, comments/replies, multi-script unicode preservation (e.g. Hindi scripts and emojis), missing optional fields, and cross-channel ID differentiation.
+* **Streaming Offline Replay (`test_telegram_replay.py` - 15 tests)**: Line-by-line reading, blank line handling, malformed JSON recovery without aborting, pre-validation checks, source file and line-number provenance, raw JSONL SHA-256 immutability, deterministic ordering, and single-normalizer reuse.
+* **Durable Parquet Storage (`test_parquet_storage.py` - 15 tests)**: Complete 27-field Arrow schema mapping, nullability preservation, native Arrow list and reaction map round-trips, microsecond UTC timestamps, custom dataset metadata, overwrite guard, empty input rejection, and end-to-end replay-to-Parquet conversion.
+* **Data Quality & Deduplication (`test_data_quality.py` - 19 tests)**: Temporal consistency checks (`collected_at >= published_at`), identity checks, media-only acceptance, engagement integrity, deterministic first-occurrence-wins deduplication on `canonical_id`, duplicate provenance retention, paired Parquet and JSON report generation, and atomic overwrite guards.
 
 ---
 
@@ -366,16 +419,17 @@ All automated unit tests run entirely offline using mock objects and **make zero
 - [x] Interactive terminal authentication with 2FA cloud password support
 - [x] Session persistence and `AuthKeyUnregisteredError` recovery
 - [x] Appendable raw JSONL storage pipeline (`data/raw/telegram/`)
-- [x] 35 offline unit tests covering configuration, schemas, serialization, and collectors
+- [x] 84 offline unit tests covering schemas, collectors, replay, Parquet, and quality validation
 - [x] Live real-world Telegram smoke test against public broadcast channel (`@GenshinUpdate_STR`)
+- [x] Milestone 3A: Offline raw JSONL replay and validation pipeline
+- [x] Milestone 3B: Durable analytical Parquet storage (`data/processed/telegram/`)
+- [x] Milestone 3C: Data quality checks, deterministic deduplication (`canonical_id`), and JSON audit reports
 
 ### Next Milestones
-- [ ] Raw JSONL replay and validation pipeline
-- [ ] Durable analytical Parquet storage (`data/processed/telegram/`)
-- [ ] Incremental collection and message deduplication
 - [ ] Preprocessing and text cleaning pipeline
 - [ ] Baseline pretrained sentiment and emotion classification
 - [ ] Model evaluation on TRAJECT intelligence benchmarks
+
 - [ ] Fine-tuning pipeline (only if evaluation demonstrates necessity)
 - [ ] Real-time topic, framing, and narrative genesis detection
 - [ ] Information cascade graph and influence propagation analysis
