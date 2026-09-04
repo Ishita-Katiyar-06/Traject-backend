@@ -32,33 +32,49 @@ The `CanonicalMessage` entity (`app/schemas/canonical_message.py`) standardizes:
 
 ---
 
-## 3. Getting Started
+## 3. Getting Started (Developer Onboarding)
 
 ### Virtual Environment Setup
-Ensure you are using Python 3.11+:
+Ensure you are using **Python 3.11+** (tested on 3.11, 3.12, and 3.13):
 
 ```powershell
 # From the repository root:
-python -m venv backend/.venv
+cd backend
+python -m venv .venv
 
 # Activate virtual environment (Windows PowerShell)
-.\backend\.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
 
-# Install base dependencies and test dependencies
-pip install pydantic telethon python-dotenv pytest pytest-asyncio
+# Linux / macOS (Bash/Zsh):
+# source .venv/bin/activate
 ```
 
-### Running Tests
-Execute the unit test suite across schemas, normalizers, collector, and offline replay:
+### Dependency Installation
+Install the complete TRAJECT backend, storage, and machine learning pipeline in editable development mode:
 
 ```powershell
-# From the repository root:
-.\backend\.venv\Scripts\pytest backend/tests -v
-
-# Or from within backend/:
-cd backend
-pytest
+# Upgrade pip and install all backend and test dependencies
+pip install --upgrade pip
+pip install -e ".[dev,test]"
 ```
+
+### Environment Setup
+Copy the configuration template from the repository root:
+```powershell
+# From repository root:
+Copy-Item .env.example .env
+```
+*(Default values in `.env.example` allow 100% of offline tests, replay pipelines, and ML orchestrator runs to execute immediately without Telegram credentials).*
+
+### Verifying the Setup (180 Passing Tests)
+Run the automated test suite across canonical schemas, normalizers, replay, Parquet storage, quality validation, language identification, sentiment, topic discovery, feature enrichment, narrative intelligence, caching, and pipeline orchestration:
+
+```powershell
+# From within backend/ (with .venv activated):
+pytest tests -v
+```
+**Expected Result**: `180 passed in ~50s` (zero external network calls).
+
 
 ---
 

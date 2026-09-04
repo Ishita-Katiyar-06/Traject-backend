@@ -261,140 +261,178 @@ All social platforms normalize into the `CanonicalMessage` model ([`backend/app/
 
 ---
 
-## 6. Setup & Installation
+## 6. Setup & Installation (New Developer Onboarding)
+
+Welcome to TRAJECT! This guide will walk you through setting up the complete development environment from scratch, installing all dependencies, verifying with automated tests, and running the machine learning pipeline.
 
 ### Prerequisites
-* **Python 3.11+** (Tested on Python 3.13)
-* **Git**
-* **Telegram Account** and API credentials (`api_id`, `api_hash`) from [my.telegram.org](https://my.telegram.org)
+* **Python 3.11+** (Tested on Python 3.11, 3.12, and 3.13.14).
+* **Git** (for version control).
+* *(Optional)* **Telegram Account** and API credentials from [my.telegram.org](https://my.telegram.org) — **Only needed for collecting live data from Telegram**. Offline replay, dataset inspection, and the complete ML pipeline run 100% offline without Telegram credentials!
+* *(Optional)* **Hugging Face Account & Token** — Public model weights download automatically without a token. Set `HF_TOKEN` in `.env` if you experience rate limiting or want to use a personal access token.
 
-### 1. Clone & Set Up Virtual Environment
+---
+
+### Step 1: Clone Repository & Create Virtual Environment
 
 ```powershell
-# Clone the repository
+# Clone repository
 git clone https://github.com/ezManish/Traject.git
 cd Traject
 
-# Create and activate local virtual environment under backend/
+# Create Python virtual environment under backend/
 cd backend
 python -m venv .venv
+
+# Activate virtual environment
+# Windows (PowerShell):
 .\.venv\Scripts\Activate.ps1
+
+# Windows (Command Prompt):
+.\.venv\Scripts\activate.bat
+
+# Linux / macOS (Bash/Zsh):
+source .venv/bin/activate
 ```
 
-### 2. Install Dependencies
+---
 
-The project currently uses a minimal, lightweight dependency set. Heavy machine learning frameworks (PyTorch, Transformers, Sentence-Transformers) have **not** been added yet.
+### Step 2: Install Dependencies
+
+Install TRAJECT's core backend, storage, and machine learning packages in editable development mode:
 
 ```powershell
 # From within backend/ (with .venv activated):
-pip install -e .
-# Or install direct foundation dependencies:
-pip install pydantic telethon python-dotenv pytest pytest-asyncio
+pip install --upgrade pip
+pip install -e ".[dev,test]"
 ```
+
+> [!NOTE]
+> **Windows Platform Note**: Windows systems automatically pull `tzdata` (specified in `pyproject.toml`) to ensure exact microsecond UTC timezone handling for Arrow and Parquet storage.
 
 ---
 
-## 7. Environment Configuration
+### Step 3: Configure Environment (`.env`)
 
-Configuration is managed via a `.env` file located at the **repository root**:
+TRAJECT configuration is managed centrally via a `.env` file at the **repository root**:
 
-```text
-TRAJECT/
-├── .env          # Secrets & API credentials (GITIGNORED)
-├── .env.example  # Template with placeholders
-└── backend/
-```
-
-### Setup Steps
-1. Copy the example template to `.env` at the root of the repository:
+1. Copy the template to `.env`:
    ```powershell
-   # From the repository root:
+   # Windows (PowerShell from repository root):
    Copy-Item .env.example .env
+
+   # Linux / macOS:
+   cp .env.example .env
    ```
-2. Populate the required values with your own Telegram API credentials:
-   ```ini
-   # Environment & Logging
-   APP_ENV=development
-   LOG_LEVEL=INFO
-
-   # Telegram Collector Configuration (Telethon / MTProto)
-   # Obtain credentials from https://my.telegram.org
-   TELEGRAM_API_ID=your_api_id
-   TELEGRAM_API_HASH=your_api_hash
-   TELEGRAM_SESSION=traject_collector_session
-   TELEGRAM_PHONE=+91XXXXXXXXXX
-
-   # Local Storage Directories
-   DATA_RAW_DIR=./data/raw
-   DATA_PROCESSED_DIR=./data/processed
-   ```
-
-### Deterministic Discovery & Precedence
-* **Automatic Root Discovery**: The application automatically locates the repository root `.env` from any working directory using [`find_repo_root()`](file:///d:/Projects/Traject/backend/app/core/config.py).
-* **OS Precedence**: Operating system environment variables explicitly set in your terminal session take precedence over values in the `.env` file (`override=False`).
+2. The default values in `.env.example` are immediately functional for offline development, local unit tests, and ML pipeline runs!
+3. If you plan to collect live data from Telegram, open `.env` and fill in `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, and `TELEGRAM_PHONE`.
 
 ---
 
-## 8. Running the Telegram Collector
+### Step 4: Verify Installation (Run the 180-Test Suite)
 
-The collector fetches a bounded batch of recent messages from any public Telegram channel and persists them to raw storage before normalization.
-
-### Command Line Interface
+Run the full automated test suite to ensure all schemas, collectors, normalizers, storage engines, and machine learning models are functioning properly:
 
 ```powershell
-# From backend/ directory with activated virtual environment:
-python -m app.collectors.telegram.collector --channel "@GenshinUpdate_STR" --limit 10
+# From backend/ directory with .venv activated:
+pytest tests -v
 ```
 
-### What to Expect on First Run
-1. **Phone Number**: Prompts for your telephone number if not configured in `.env`.
-2. **Login Code**: Telegram sends an official login code to your Telegram app. Enter this code in the terminal.
-3. **2FA Password**: If your account has Two-Factor Authentication (Cloud Password) enabled, enter your password (input is masked via `getpass`).
-4. **Session Persistence**: The authenticated MTProto session is securely saved locally (`traject_collector_session.session`). Subsequent runs authenticate immediately without prompting.
-
-### Output
-* **Raw Payloads**: Appended to `data/raw/telegram/{channel}_{timestamp}.jsonl`
-* **Normalized Data**: Streamed through `TelegramNormalizer` into validated `CanonicalMessage` objects
-* **CLI Summary**:
-  ```text
-  Collection Summary:
-  Channel: @GenshinUpdate_STR (ID: 3190072493)
-  Raw file: D:\Projects\Traject\data\raw\telegram\GenshinUpdate_STR_20260902_194324.jsonl
-  Messages Collected: 10
-  Messages Normalized: 10
-  ```
+**Expected Result**:
+```text
+============================ 180 passed in ~50s =============================
+```
+*Zero network calls are made during tests. All tests use mocked clients, deterministic synthetic fixtures, and local datasets.*
 
 ---
 
-## 9. Testing & Quality Assurance
+## 7. Running the Machine Learning Pipeline
 
-All automated unit tests run entirely offline using mock objects and **make zero network calls to Telegram**.
+TRAJECT includes an end-to-end production ML pipeline (Milestone 4H) that performs language identification, safe social text normalization, sentence embedding, unsupervised HDBSCAN topic discovery, contextual feature enrichment, and narrative priority scoring.
 
-### Executing Tests
-
+### 1. Run Pipeline on Synthetic 16-Record Fixture
 ```powershell
 # From backend/ directory:
-.\.venv\Scripts\pytest tests -v
+python -m app.ml.pipeline.orchestrator --fixture tests/fixtures/features/synthetic_enrichment_fixture.jsonl
+```
+This executes the 5-stage pipeline, demonstrates inference caching, outputs the runtime telemetry report, and shows promoted narrative candidates with their composite Priority Signal Scores.
+
+### 2. Run Pipeline on Processed Parquet Dataset & Export Artifact
+```powershell
+# From backend/ directory:
+python -m app.ml.pipeline.orchestrator --parquet ../data/processed/telegram/telegram_messages.parquet --output ../data/processed/telegram/telegram-analytics-artifact.json --overwrite
 ```
 
-### Test Coverage (84 Passing Tests)
-* **Configuration & Precedence (`test_config.py` - 2 tests)**: Deterministic repository root discovery; strict OS environment variable precedence over `.env`.
-* **Canonical Schema Validation (`test_schemas.py` - 8 tests)**: Valid model creation, strict rejection of unsupported platforms (`Platform` enum), rejection of missing required fields, strict UTC timestamp enforcement and conversion, stable canonical ID format validation, rejection of negative engagement metrics, and extra field forbidding.
-* **Telegram Serialization (`test_telegram_collector.py` - 17 tests)**: Primitive dictionary conversion, signed 64-bit chat ID and peer ID extraction, message ID extraction, media type detection, forward origin headers, reply/thread headers, reaction maps, entity spans, and malformed payload handling.
-* **Telegram Normalization (`test_telegram_normalizer.py` - 8 tests)**: Broadcast text messages, media captions, forwarded messages, comments/replies, multi-script unicode preservation (e.g. Hindi scripts and emojis), missing optional fields, and cross-channel ID differentiation.
-* **Streaming Offline Replay (`test_telegram_replay.py` - 15 tests)**: Line-by-line reading, blank line handling, malformed JSON recovery without aborting, pre-validation checks, source file and line-number provenance, raw JSONL SHA-256 immutability, deterministic ordering, and single-normalizer reuse.
-* **Durable Parquet Storage (`test_parquet_storage.py` - 15 tests)**: Complete 27-field Arrow schema mapping, nullability preservation, native Arrow list and reaction map round-trips, microsecond UTC timestamps, custom dataset metadata, overwrite guard, empty input rejection, and end-to-end replay-to-Parquet conversion.
-* **Data Quality & Deduplication (`test_data_quality.py` - 19 tests)**: Temporal consistency checks (`collected_at >= published_at`), identity checks, media-only acceptance, engagement integrity, deterministic first-occurrence-wins deduplication on `canonical_id`, duplicate provenance retention, paired Parquet and JSON report generation, and atomic overwrite guards.
+### 3. Run Batch-Size Performance Benchmark
+```powershell
+# From backend/ directory:
+python -m app.ml.pipeline.benchmark
+```
+Benchmarks CPU inference across mini-batch sizes 8, 16, 32, and 64, recording operating system Peak RSS and Python heap allocations.
+
+---
+
+## 8. Data Pipelines & Telegram Collector
+
+### Streaming Offline JSONL Replay (Milestone 3A)
+Replays raw platform payloads through the normalization engine without hitting external APIs:
+```powershell
+# From backend/ directory:
+python -m app.replay.telegram_jsonl --input ../data/raw/telegram/GenshinUpdate_STR_20260902_194324.jsonl --output ../data/processed/telegram/replay_output.jsonl
+```
+
+### Data Quality & Deduplication (Milestone 3C)
+Validates schema integrity, removes duplicates via `canonical_id` (first-occurrence-wins), and outputs paired Parquet and `.quality.json` audit reports:
+```powershell
+# From backend/ directory:
+python -m app.quality.validation --input ../data/processed/telegram/replay_output.jsonl --output ../data/processed/telegram/telegram_messages.parquet
+```
+
+### Running the Live Telegram Collector (Optional)
+If Telegram credentials are configured in `.env`, collect live messages from any public channel:
+```powershell
+# From backend/ directory:
+python -m app.collectors.telegram.collector --channel "@GenshinUpdate_STR" --limit 10
+```
+*On first run, Telethon prompts for a login verification code sent to your Telegram app. The session is persisted locally (`traject_collector_session.session`) for immediate passwordless subsequent runs.*
+
+---
+
+## 9. Testing & Quality Assurance Architecture
+
+TRAJECT maintains **180 automated unit, regression, and contract tests**:
+
+| Test Module | Tests | Focus Area & Invariants |
+| :--- | :---: | :--- |
+| `test_config.py` | 2 | Deterministic repository root discovery & OS environment variable precedence. |
+| `test_schemas.py` | 8 | 27-field `CanonicalMessage` schema, UTC validation, and chat-scoped ID rules. |
+| `test_telegram_collector.py` | 17 | MTProto payload serialization, entity spans, 2FA masking, and error recovery. |
+| `test_telegram_normalizer.py` | 8 | UTF-8 normalization, captions, forwards, replies, and cross-channel IDs. |
+| `test_telegram_replay.py` | 15 | Line-level streaming, malformed line tolerance, and provenance tracking. |
+| `test_parquet_storage.py` | 15 | Columnar Parquet persistence, Snappy compression, and Arrow round-trips. |
+| `test_data_quality.py` | 19 | Temporal order, first-occurrence deduplication, and quality audit JSON reports. |
+| `test_ml_dataset.py` | 16 | Parquet ML loader, `MLTextRecord` preparation, and dataset inspection statistics. |
+| `test_ml_language.py` | 4 | Multilingual detection (`langdetect`), confidence thresholding, unknown fallback. |
+| `test_ml_normalization.py` | 6 | Social-safe Unicode NFC normalization, preserving URLs, hashtags, and emojis. |
+| `test_sentiment_metrics.py` | 8 | English sentiment baseline (RoBERTa), confusion matrix, and macro F1 metrics. |
+| `test_sentiment_multilingual.py` | 5 | Multilingual XLM-RoBERTa sentiment evaluation and model recommendation routing. |
+| `test_topics.py` | 8 | Sentence embeddings, HDBSCAN clustering, c-TF-IDF keywords, and centroids. |
+| `test_topic_features.py` | 13 | 4F Feature vectors: entities, engagement, observed forwarding, and burstiness. |
+| `test_narratives.py` | 20 | 4G Narrative candidate formation, Priority Signal Score, and evidence tiers. |
+| `test_ml_cache.py` | 9 | Deterministic SQLite inference caching, cache-key semantics, and hit rates. |
+| `test_ml_performance.py` | 4 | Cold-start vs warm inference benchmarks, memory telemetry, and parity checks. |
+| `test_ml_pipeline.py` | 5 | End-to-end orchestrator execution, analytics artifact serialization, and reuse. |
+| **Total** | **180** | **100% Offline, Mocked, Deterministic Test Suite** |
 
 ---
 
 ## 10. Security & Privacy Considerations
 
-* **Secrets Management**: `.env` and `.env*.local` are explicitly ignored by Git. Real credentials, tokens, and hashes must never be committed.
-* **Session Integrity**: Telegram MTProto session files (`*.session`, `*.session-journal`) contain authenticated encryption keys and are strictly ignored by Git.
-* **Secret Masking**: All credential objects implement custom `__repr__` and `__str__` methods to prevent `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, and `TELEGRAM_PHONE` from leaking into logs or tracebacks.
-* **Hidden Inputs**: 2FA passwords are read via `getpass.getpass()`, preventing shoulder surfing and terminal buffer leakage.
-* **Data Sensitivity**: Ingested social media data in `data/` is excluded from version control. Analysts must handle public communications datasets in compliance with relevant data privacy principles and NTRO guidelines.
+* **Secrets Management**: `.env` and `.env*.local` are strictly ignored by Git. API hashes, tokens, and session keys must never be committed.
+* **Session Integrity**: Telegram MTProto session files (`*.session`, `*.session-journal`) contain authenticated encryption keys and are excluded by `.gitignore`.
+* **No Secret Leakage**: Collector and script modules sanitize credentials. All model scripts use environment variables (`os.environ.get("HF_TOKEN")`) rather than hardcoded keys.
+* **Sensitive Inputs**: 2FA passwords are read via `getpass.getpass()`, preventing terminal buffer logging.
+* **Data Sensitivity**: Raw payloads in `data/raw/` are excluded from version control. Analysts must handle public communications datasets in compliance with relevant data privacy principles and NTRO guidelines.
 
 ---
 
@@ -405,10 +443,10 @@ All automated unit tests run entirely offline using mock objects and **make zero
 3. **Single Canonical Contract**: All platforms must normalize into a shared data model. Never create platform-specific ML pipelines.
 4. **Reproducible Pipelines**: Ensure every normalized record maintains a `raw_reference` linking it back to source raw files.
 5. **Test Before Architecture Expansion**: Prove collection and normalization before adding databases, queues, or distributed workers.
-6. **Zero Unnecessary Dependencies**: Add libraries only when actively required. Heavy ML dependencies will be introduced incrementally.
+6. **Zero Unnecessary Dependencies**: Add libraries only when actively required. No Redis, Kafka, or distributed databases unless strictly necessary.
 7. **Pretrained Baselines First**: Utilize established pretrained models before attempting custom fine-tuning.
-8. **Evaluate Before Fine-Tuning**: Base model selection and fine-tuning on quantitative evaluation metrics against TRAJECT datasets.
-9. **Never Commit Secrets**: Treat credentials, session files, and raw user identifiers as strictly sensitive.
+8. **Evaluate Before Fine-Tuning**: Base model selection on quantitative evaluation metrics against TRAJECT datasets.
+9. **Never Commit Secrets**: Treat credentials, session files, and access tokens as strictly sensitive.
 10. **Honest Documentation**: Document only what is implemented; clearly distinguish active functionality from future roadmap milestones.
 
 ---
@@ -416,34 +454,27 @@ All automated unit tests run entirely offline using mock objects and **make zero
 ## 12. Project Roadmap
 
 ### Completed Milestones
-- [x] Repository foundation and clean monorepo structure
-- [x] Unified `CanonicalMessage` schema with Pydantic v2
-- [x] Chat-scoped Telegram canonical ID convention (`telegram:{chat_id}:{message_id}`)
-- [x] Telegram normalizer with media, forward, reply, and entity parsing
-- [x] Deterministic repository-root `.env` discovery with OS environment precedence
-- [x] Telethon MTProto historical channel collector
-- [x] Interactive terminal authentication with 2FA cloud password support
-- [x] Session persistence and `AuthKeyUnregisteredError` recovery
-- [x] Appendable raw JSONL storage pipeline (`data/raw/telegram/`)
-- [x] 84 offline unit tests covering schemas, collectors, replay, Parquet, and quality validation
-- [x] Live real-world Telegram smoke test against public broadcast channel (`@GenshinUpdate_STR`)
-- [x] Milestone 3A: Offline raw JSONL replay and validation pipeline
-- [x] Milestone 3B: Durable analytical Parquet storage (`data/processed/telegram/`)
-- [x] Milestone 3C: Data quality checks, deterministic deduplication (`canonical_id`), and JSON audit reports
+- [x] **Milestone 1**: Repository foundation and clean monorepo structure
+- [x] **Milestone 2**: Unified `CanonicalMessage` schema (Pydantic v2) and Telegram collector/normalizer
+- [x] **Milestone 3A**: Streaming offline raw JSONL replay and validation engine
+- [x] **Milestone 3B**: Durable analytical Parquet storage with typed 27-field Arrow schema
+- [x] **Milestone 3C**: Data quality checks, deterministic deduplication (`canonical_id`), and paired quality reports
+- [x] **Milestone 4A**: ML dataset loader, `MLTextRecord` preparation, and dataset inspection statistics
+- [x] **Milestone 4B**: Multilingual language identification and social-safe text normalization
+- [x] **Milestone 4C**: Pretrained English sentiment baseline (RoBERTa) and evaluation metrics
+- [x] **Milestone 4D**: Multilingual sentiment adapter (XLM-RoBERTa) and per-language evaluation
+- [x] **Milestone 4E**: Sentence embeddings (`MiniLM-L12-v2`), HDBSCAN topic discovery, and c-TF-IDF keywords
+- [x] **Milestone 4F**: Deterministic feature enrichment (social/gazetteer entities, engagement, propagation, burstiness)
+- [x] **Milestone 4G**: Narrative candidate formation, bounded Priority Signal Scoring, and evidence-density heuristics
+- [x] **Milestone 4H**: Production ML pipeline orchestration, singleton model lifecycle, SQLite inference cache, and batch benchmarking
+- [x] **Milestone 5A Spec**: Complete Backend Analytics API Specification ([`docs/MILESTONE_5A_BACKEND_ANALYTICS_API_SPEC.md`](file:///d:/Projects/Traject/docs/MILESTONE_5A_BACKEND_ANALYTICS_API_SPEC.md))
 
-### Next Milestones
-- [ ] Preprocessing and text cleaning pipeline
-- [ ] Baseline pretrained sentiment and emotion classification
-- [ ] Model evaluation on TRAJECT intelligence benchmarks
-
-- [ ] Fine-tuning pipeline (only if evaluation demonstrates necessity)
-- [ ] Real-time topic, framing, and narrative genesis detection
-- [ ] Information cascade graph and influence propagation analysis
-- [ ] **X (Twitter)** collector and normalizer (feeding identical `CanonicalMessage` contract)
-- [ ] Additional platform collectors (Instagram, Facebook, Reddit, YouTube)
-- [ ] Aggregate demographic and linguistic analysis
-- [ ] FastAPI backend service layer
-- [ ] Next.js / Vite analyst dashboard
+### Current & Upcoming Milestones
+- [ ] **Milestone 5A**: Backend Analytics API implementation (FastAPI serving precomputed analytics)
+- [ ] **Milestone 5B**: Interactive Analyst Web Dashboard (Next.js / Vite frontend consuming `/api/v1`)
+- [ ] **Milestone 6**: Continuous timeline ingestion & sliding-window dynamic narrative mutation tracking
+- [ ] **Milestone 7**: Cross-platform collectors: **X (Twitter)**, Reddit, and YouTube
+- [ ] **Milestone 8**: Information cascade graph and influence propagation analysis (NetworkX / Neo4j)
 
 ---
 
