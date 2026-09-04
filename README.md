@@ -13,15 +13,15 @@ The platform addresses **SIH 2026 Problem Statement 26152 (National Technical Re
 
 ### Scope & Capabilities
 
+### Scope & Capabilities
+
 | Horizon | Capabilities |
 | :--- | :--- |
-| Horizon | Capabilities |
-| :--- | :--- |
-| **Current Implementation** | • Python backend foundation (`backend/app/`)<br>• Core `CanonicalMessage` schema (Pydantic v2) with strict UTC timestamp enforcement and controlled platform/author types<br>• Chat-scoped deterministic Telegram canonical ID generation (`telegram:{chat_id}:{message_id}`)<br>• Telegram message normalizer (`TelegramNormalizer`) handling plain text, captions, forwards, replies, reactions, and entity extraction<br>• MTProto collector (`Telethon`) supporting interactive terminal authentication and cloud 2FA<br>• Deterministic root `.env` discovery with operating system environment precedence<br>• Session lifecycle and `AuthKeyUnregisteredError` recovery<br>• Appendable, immutable raw JSONL storage (`data/raw/telegram/`)<br>• Streaming offline JSONL replay & pre-validation engine (`backend/app/replay/`) with line-level provenance preservation<br>• Columnar processed storage (`backend/app/storage/`) using Snappy-compressed Apache Parquet with 27-field typed schema, native Arrow lists, reaction maps, and UTC microsecond timestamps<br>• Data quality & deduplication engine (`backend/app/quality/`) enforcing temporal consistency, identity well-formedness, engagement integrity, first-occurrence-wins deduplication on `canonical_id`, and generating paired JSON quality audit reports<br>• 84 passing unit tests using mocked clients and offline datasets (zero network calls during test runs)<br>• Successful real-world smoke test against public Telegram channel (`@GenshinUpdate_STR`) and verified end-to-end replay, quality check, and Parquet conversion |
-| **Planned / Future Scope** | • Continuous timeline and streaming ingestion<br>• **X (Twitter)** ingestion collector (Essential)<br>• **Instagram** and **Facebook** collectors (Desirable)<br>• **Reddit** and **YouTube** collectors (Appreciable additional sources)<br>• Sentiment, stance, and emotion classification<br>• Real-time topic, narrative genesis, and mutation tracking<br>• Information cascade topology, link analysis, and influence propagation graphs<br>• Aggregate and anonymized demographic profiling<br>• FastAPI backend service layer and Next.js / Vite analyst dashboard |
+| **Current Implementation** | • Python backend foundation (`backend/app/`)<br>• Core `CanonicalMessage` schema (Pydantic v2) with strict UTC timestamp enforcement and controlled platform/author types<br>• Chat-scoped deterministic Telegram canonical ID generation (`telegram:{chat_id}:{message_id}`)<br>• Telegram message normalizer (`TelegramNormalizer`) handling plain text, captions, forwards, replies, reactions, and entity extraction<br>• MTProto collector (`Telethon`) supporting interactive terminal authentication and cloud 2FA<br>• Appendable, immutable raw JSONL storage (`data/raw/telegram/`)<br>• Streaming offline JSONL replay & pre-validation engine (`backend/app/replay/`) with line-level provenance preservation<br>• Columnar processed storage (`backend/app/storage/`) using Snappy-compressed Apache Parquet with 27-field typed schema, native Arrow lists, reaction maps, and UTC microsecond timestamps<br>• Data quality & deduplication engine (`backend/app/quality/`) enforcing temporal consistency, identity well-formedness, engagement integrity, first-occurrence-wins deduplication on `canonical_id`, and generating paired JSON quality audit reports<br>• **ML Dataset & Inspection Layer (4A)**: Canonical Parquet ML loader, `MLTextRecord` preparation, and deterministic statistical profiling<br>• **Language Identification & Normalization (4B)**: Deterministic multilingual language detection (`langdetect`) and social-safe text normalization<br>• **Sentiment Intelligence Baseline (4C/4D)**: Pretrained frozen sentiment adapters (English RoBERTa & Multilingual XLM-RoBERTa), evaluation metrics, and model recommendation routing<br>• **Topic Discovery Baseline (4E)**: Multilingual sentence embeddings (`paraphrase-multilingual-MiniLM-L12-v2`), unsupervised HDBSCAN clustering, deterministic c-TF-IDF keyword extraction, and representative message centroids<br>• **Topic Feature Enrichment (4F)**: Deterministic feature vectors across social/gazetteer entities, engagement metrics, observed forwarding propagation, uncredited syndication detection, and temporal cadence/burstiness<br>• **Narrative Candidate Formation & Scoring (4G)**: Bounded, explainable Priority Signal Score ($S \in [0, 1]$) with Spread, Potential Coordination, Observed Reach, and Friction sub-scores, audit rationale, and evidence-density tiers<br>• **Production Pipeline & Caching (4H)**: Unified `run_ml_pipeline` orchestration, process-level singleton `ModelLifecycleManager`, thread-safe deterministic SQLite `InferenceCache`, batch-size benchmark harness, and precomputed analytics export (`MLPipelineResult`)<br>• **180 passing tests** using mocked clients and offline datasets (zero network calls during test runs)<br>• Successful real-world smoke test against public Telegram channel (`@GenshinUpdate_STR`) and verified end-to-end replay, quality check, Parquet conversion, and ML pipeline analytics |
+| **Planned / Future Scope** | • Continuous timeline and streaming ingestion<br>• **X (Twitter)** ingestion collector (Essential)<br>• **Instagram** and **Facebook** collectors (Desirable)<br>• **Reddit** and **YouTube** collectors (Appreciable additional sources)<br>• Dynamic sliding-window narrative mutation tracking<br>• Multi-node distributed inference caching (Redis/PostgreSQL)<br>• Information cascade topology, link analysis, and influence propagation graphs<br>• Aggregate and anonymized demographic profiling<br>• FastAPI backend service layer and Next.js / Vite analyst dashboard |
 
 > [!NOTE]
-> Capabilities marked as **Planned / Future Scope** are not yet implemented. The project is being constructed strictly incrementally from verified data contracts upward.
+> Capabilities marked as **Planned / Future Scope** are not yet implemented. The project is constructed strictly incrementally from verified data contracts upward.
 
 ---
 
@@ -84,8 +84,14 @@ TRAJECT decouples platform-specific ingestion protocols from downstream analytic
                            │
                            ▼
 ┌────────────────────────────────────────────────────────┐
-│           SHARED ML & ANALYTICS (PLANNED)              │
-│   Sentiment, Framing, Narrative Genesis, Cascade Graph │
+│      SHARED ML & NARRATIVE INTELLIGENCE (ACTIVE 4A-4H) │
+│   • Model Lifecycle Manager (Singleton Reuse)          │
+│   • Deterministic SQLite Inference Cache               │
+│   • Language Detection & Social Text Normalization     │
+│   • Multilingual MiniLM Embeddings & HDBSCAN Topics    │
+│   • Deterministic Feature Enrichment (4F)              │
+│   • Narrative Formation & Priority Signal Scoring (4G) │
+│   • Precomputed Analytics Artifacts (JSON)             │
 └──────────────────────────┬─────────────────────────────┘
                            │
                            ▼
