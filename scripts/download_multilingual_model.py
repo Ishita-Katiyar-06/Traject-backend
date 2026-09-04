@@ -9,7 +9,8 @@ from pathlib import Path
 # Optional Hugging Face access token from environment (not hardcoded)
 token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_TOKEN", "")
 model_url = "https://huggingface.co/cardiffnlp/twitter-xlm-roberta-base-sentiment/resolve/main/pytorch_model.bin"
-out_dir = Path("d:/Projects/Traject/models/cardiffnlp/twitter-xlm-roberta-base-sentiment")
+REPO_ROOT = Path(__file__).resolve().parent.parent
+out_dir = REPO_ROOT / "models" / "cardiffnlp" / "twitter-xlm-roberta-base-sentiment"
 out_file = out_dir / "pytorch_model.bin"
 
 out_dir.mkdir(parents=True, exist_ok=True)

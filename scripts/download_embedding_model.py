@@ -8,7 +8,8 @@ from pathlib import Path
 # Optional Hugging Face access token from environment (not hardcoded)
 token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_TOKEN", "")
 model_url = "https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/resolve/main/model.safetensors"
-out_dir = Path("d:/Projects/Traject/models/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+REPO_ROOT = Path(__file__).resolve().parent.parent
+out_dir = REPO_ROOT / "models" / "sentence-transformers" / "paraphrase-multilingual-MiniLM-L12-v2"
 out_file = out_dir / "model.safetensors"
 
 out_dir.mkdir(parents=True, exist_ok=True)
