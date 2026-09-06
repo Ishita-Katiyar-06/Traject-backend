@@ -1,0 +1,65 @@
+[
+  {
+    "id": "1001",
+    "channel_id": "1546079728404930612",
+    "guild_id": "999888777",
+    "author": {
+      "id": "2001",
+      "username": "investigator_alpha",
+      "discriminator": "0",
+      "global_name": "Alpha Lead",
+      "bot": false
+    },
+    "content": "Perimeter security checks complete at sector 4. See report https://example.com/briefing #security #update",
+    "timestamp": "2026-09-06T10:00:00.000000+00:00",
+    "attachments": [
+      {
+        "id": "5001",
+        "filename": "radar_scan.png",
+        "content_type": "image/png",
+        "size": 1048576,
+        "url": "https://cdn.discordapp.com/attachments/1546079728404930612/5001/radar_scan.png"
+      }
+    ],
+    "embeds": [
+      {
+        "title": "Sector 4 Incident Report",
+        "description": "All communication nodes functioning with zero anomalies.",
+        "url": "https://example.com/briefing",
+        "type": "rich"
+      }
+    ],
+    "reactions": [
+      {
+        "emoji": {"name": "👍", "id": null},
+        "count": 5
+      },
+      {
+        "emoji": {"name": "🔥", "id": null},
+        "count": 2
+      }
+    ],
+    "message_reference": null
+  },
+  {
+    "id": "1002",
+    "channel_id": "1546079728404930612",
+    "guild_id": "999888777",
+    "author": {
+      "id": "2002",
+      "username": "analyst_beta",
+      "discriminator": "0",
+      "global_name": "Beta Analyst",
+      "bot": false
+    },
+    "content": "Acknowledged Alpha. Telemetry feed synced with central dashboard.",
+    "timestamp": "2026-09-06T10:05:00.000000+00:00",
+    "attachments": [],
+    "embeds": [],
+    "reactions": [],
+    "message_reference": {
+      "message_id": "1001",
+      "channel_id": "1546079728404930612"
+    }
+  }
+]
