@@ -12,7 +12,7 @@ from app.ml.pipeline.orchestrator import (
 )
 from app.schemas import AuthorType, CanonicalMessage, Platform
 
-FIXTURE_PATH = Path("tests/fixtures/features/synthetic_enrichment_fixture.jsonl")
+FIXTURE_PATH = Path(__file__).parent / "fixtures" / "features" / "synthetic_enrichment_fixture.jsonl"
 
 
 def load_fixture_messages() -> list[CanonicalMessage]:

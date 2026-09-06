@@ -41,10 +41,14 @@ dev = [
     "httpx>=0.27.0",
 ]
 
+[tool.setuptools.packages.find]
+include = ["app*"]
+
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-v --strict-markers"
 asyncio_mode = "auto"
+
 

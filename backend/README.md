@@ -66,14 +66,18 @@ Copy-Item .env.example .env
 ```
 *(Default values in `.env.example` allow 100% of offline tests, replay pipelines, and ML orchestrator runs to execute immediately without Telegram credentials).*
 
-### Verifying the Setup (180 Passing Tests)
-Run the automated test suite across canonical schemas, normalizers, replay, Parquet storage, quality validation, language identification, sentiment, topic discovery, feature enrichment, narrative intelligence, caching, and pipeline orchestration:
+### Verifying the Setup (200 Passing Tests)
+Run the automated test suite across canonical schemas, normalizers, replay, Parquet storage, quality validation, language identification, sentiment, topic discovery, feature enrichment, narrative intelligence, caching, pipeline orchestration, and the Milestone 5A Analytics API:
 
 ```powershell
 # From within backend/ (with .venv activated):
-pytest tests -v
+pytest -q
+
+# Or from repository root:
+pytest -q
 ```
-**Expected Result**: `180 passed in ~50s` (zero external network calls).
+**Expected Result**: `200 passed in ~60s` (zero external network calls).
+
 
 
 ---
@@ -870,6 +874,114 @@ python -m app.ml.pipeline.orchestrator `
     --batch-size 16 `
     --overwrite
 ```
+
+---
+
+## 14. Milestone 5A: Backend Analytics API
+
+Milestone 5A introduces a high-performance, typed, read-only HTTP serving layer built on **FastAPI** to expose precomputed narrative intelligence, semantic topic clusters, and canonical social media records to the downstream analyst dashboard.
+
+### Core Directive: No ML on Request Path
+Normal GET requests against `/api/v1` never load transformer weights, calculate embeddings, or run clustering algorithms. All serving operates strictly against precomputed in-memory indexed artifacts (`telegram_messages.parquet` and `*-analytics-artifact.json`), delivering warm response latencies below 2ms.
+
+### Step-by-Step Terminal Guide
+
+#### 1. Open PowerShell and Navigate to Backend
+```powershell
+cd D:\Projects\Traject\backend
+```
+
+#### 2. Activate Virtual Environment
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+> [!NOTE]
+> If your PowerShell execution policy blocks running scripts, execute this one-time bypass in your current terminal session:
+> ```powershell
+> Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+> ```
+
+#### 3. Ensure Dependencies are Synchronized
+```powershell
+pip install -e ".[dev,test]"
+```
+
+#### 4. Start the FastAPI Development Server
+```powershell
+uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+Expected terminal output on startup:
+```text
+INFO:     Will watch for changes in: ['D:\\Projects\\Traject\\backend']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process using WatchFiles
+INFO:     Started server process
+INFO:     Waiting for application startup.
+INFO:     TRAJECT Backend Analytics API initializing...
+INFO:     Application startup complete.
+```
+
+#### 5. Verify Endpoints While the Server is Running
+
+##### Interactive Documentation (Browser)
+* **Swagger UI**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+* **ReDoc UI**: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+* **OpenAPI Schema (JSON)**: [http://127.0.0.1:8000/openapi.json](http://127.0.0.1:8000/openapi.json)
+
+##### Terminal Verification (PowerShell in a second window)
+```powershell
+# Health & readiness
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/health
+
+# Analytics overview
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/analytics
+
+# Prioritized narratives
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/narratives
+
+# Discovered topics
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/topics
+
+# Canonical messages
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/messages
+
+# Pipeline metrics
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/pipeline/metrics
+```
+
+#### 6. Stopping the Server
+Press `CTRL+C` in the terminal running Uvicorn to terminate the process cleanly.
+
+### Base URL & Available Endpoints
+
+Base path: `/api/v1`
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/v1/health` | Operational health, liveness, and artifact readiness check. |
+| `GET` | `/api/v1/analytics` | High-level dashboard summary metrics and priority distribution. |
+| `GET` | `/api/v1/narratives` | Paginated, filterable collection of prioritized narrative candidates. |
+| `GET` | `/api/v1/narratives/{narrative_id}` | Detailed explainability metrics, sub-scores, and audit rationale. |
+| `GET` | `/api/v1/topics` | Discovered semantic topic clusters with representative c-TF-IDF keywords. |
+| `GET` | `/api/v1/topics/{topic_id}` | Topic cluster features: entities, engagement ratios, propagation, burstiness. |
+| `GET` | `/api/v1/messages` | Paginated normalized canonical messages (supports topic, media, platform filters). |
+| `GET` | `/api/v1/messages/{message_id}` | Full canonical message record by chat-scoped ID (e.g. `telegram:chan:101`). |
+| `GET` | `/api/v1/pipeline/status` | ML pipeline execution lifecycle, provenance timestamp, and cache state. |
+| `GET` | `/api/v1/pipeline/metrics` | Audit-ready stage latencies, memory footprint (RSS/heap), and cache hit rates. |
+
+### Running the Test Suite (200 Passing Tests)
+
+Tests can be executed either from the `backend/` directory or from the repository root:
+
+```powershell
+# Option A: From backend/ directory (with .venv activated):
+pytest -q
+
+# Option B: From repository root (with backend/.venv activated):
+pytest -q
+```
+**Expected Result**: `200 passed in ~60s` (zero external network calls).
+
 
 
 

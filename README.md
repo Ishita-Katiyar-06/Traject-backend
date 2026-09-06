@@ -17,8 +17,8 @@ The platform addresses **SIH 2026 Problem Statement 26152 (National Technical Re
 
 | Horizon | Capabilities |
 | :--- | :--- |
-| **Current Implementation** | • Python backend foundation (`backend/app/`)<br>• Core `CanonicalMessage` schema (Pydantic v2) with strict UTC timestamp enforcement and controlled platform/author types<br>• Chat-scoped deterministic Telegram canonical ID generation (`telegram:{chat_id}:{message_id}`)<br>• Telegram message normalizer (`TelegramNormalizer`) handling plain text, captions, forwards, replies, reactions, and entity extraction<br>• MTProto collector (`Telethon`) supporting interactive terminal authentication and cloud 2FA<br>• Appendable, immutable raw JSONL storage (`data/raw/telegram/`)<br>• Streaming offline JSONL replay & pre-validation engine (`backend/app/replay/`) with line-level provenance preservation<br>• Columnar processed storage (`backend/app/storage/`) using Snappy-compressed Apache Parquet with 27-field typed schema, native Arrow lists, reaction maps, and UTC microsecond timestamps<br>• Data quality & deduplication engine (`backend/app/quality/`) enforcing temporal consistency, identity well-formedness, engagement integrity, first-occurrence-wins deduplication on `canonical_id`, and generating paired JSON quality audit reports<br>• **ML Dataset & Inspection Layer (4A)**: Canonical Parquet ML loader, `MLTextRecord` preparation, and deterministic statistical profiling<br>• **Language Identification & Normalization (4B)**: Deterministic multilingual language detection (`langdetect`) and social-safe text normalization<br>• **Sentiment Intelligence Baseline (4C/4D)**: Pretrained frozen sentiment adapters (English RoBERTa & Multilingual XLM-RoBERTa), evaluation metrics, and model recommendation routing<br>• **Topic Discovery Baseline (4E)**: Multilingual sentence embeddings (`paraphrase-multilingual-MiniLM-L12-v2`), unsupervised HDBSCAN clustering, deterministic c-TF-IDF keyword extraction, and representative message centroids<br>• **Topic Feature Enrichment (4F)**: Deterministic feature vectors across social/gazetteer entities, engagement metrics, observed forwarding propagation, uncredited syndication detection, and temporal cadence/burstiness<br>• **Narrative Candidate Formation & Scoring (4G)**: Bounded, explainable Priority Signal Score ($S \in [0, 1]$) with Spread, Potential Coordination, Observed Reach, and Friction sub-scores, audit rationale, and evidence-density tiers<br>• **Production Pipeline & Caching (4H)**: Unified `run_ml_pipeline` orchestration, process-level singleton `ModelLifecycleManager`, thread-safe deterministic SQLite `InferenceCache`, batch-size benchmark harness, and precomputed analytics export (`MLPipelineResult`)<br>• **180 passing tests** using mocked clients and offline datasets (zero network calls during test runs)<br>• Successful real-world smoke test against public Telegram channel (`@GenshinUpdate_STR`) and verified end-to-end replay, quality check, Parquet conversion, and ML pipeline analytics |
-| **Planned / Future Scope** | • Continuous timeline and streaming ingestion<br>• **X (Twitter)** ingestion collector (Essential)<br>• **Instagram** and **Facebook** collectors (Desirable)<br>• **Reddit** and **YouTube** collectors (Appreciable additional sources)<br>• Dynamic sliding-window narrative mutation tracking<br>• Multi-node distributed inference caching (Redis/PostgreSQL)<br>• Information cascade topology, link analysis, and influence propagation graphs<br>• Aggregate and anonymized demographic profiling<br>• FastAPI backend service layer and Next.js / Vite analyst dashboard |
+| **Current Implementation** | • Python backend foundation (`backend/app/`)<br>• Core `CanonicalMessage` schema (Pydantic v2) with strict UTC timestamp enforcement and controlled platform/author types<br>• Chat-scoped deterministic Telegram canonical ID generation (`telegram:{chat_id}:{message_id}`)<br>• Telegram message normalizer (`TelegramNormalizer`) handling plain text, captions, forwards, replies, reactions, and entity extraction<br>• MTProto collector (`Telethon`) supporting interactive terminal authentication and cloud 2FA<br>• Appendable, immutable raw JSONL storage (`data/raw/telegram/`)<br>• Streaming offline JSONL replay & pre-validation engine (`backend/app/replay/`) with line-level provenance preservation<br>• Columnar processed storage (`backend/app/storage/`) using Snappy-compressed Apache Parquet with 27-field typed schema, native Arrow lists, reaction maps, and UTC microsecond timestamps<br>• Data quality & deduplication engine (`backend/app/quality/`) enforcing temporal consistency, identity well-formedness, engagement integrity, first-occurrence-wins deduplication on `canonical_id`, and generating paired JSON quality audit reports<br>• **ML Dataset & Inspection Layer (4A)**: Canonical Parquet ML loader, `MLTextRecord` preparation, and deterministic statistical profiling<br>• **Language Identification & Normalization (4B)**: Deterministic multilingual language detection (`langdetect`) and social-safe text normalization<br>• **Sentiment Intelligence Baseline (4C/4D)**: Pretrained frozen sentiment adapters (English RoBERTa & Multilingual XLM-RoBERTa), evaluation metrics, and model recommendation routing<br>• **Topic Discovery Baseline (4E)**: Multilingual sentence embeddings (`paraphrase-multilingual-MiniLM-L12-v2`), unsupervised HDBSCAN clustering, deterministic c-TF-IDF keyword extraction, and representative message centroids<br>• **Topic Feature Enrichment (4F)**: Deterministic feature vectors across social/gazetteer entities, engagement metrics, observed forwarding propagation, uncredited syndication detection, and temporal cadence/burstiness<br>• **Narrative Candidate Formation & Scoring (4G)**: Bounded, explainable Priority Signal Score ($S \in [0, 1]$) with Spread, Potential Coordination, Observed Reach, and Friction sub-scores, audit rationale, and evidence-density tiers<br>• **Production Pipeline & Caching (4H)**: Unified `run_ml_pipeline` orchestration, process-level singleton `ModelLifecycleManager`, thread-safe deterministic SQLite `InferenceCache`, batch-size benchmark harness, and precomputed analytics export (`MLPipelineResult`)<br>• **Backend Analytics API (5A)**: High-performance, typed FastAPI serving layer (`/api/v1`) exposing precomputed analytics, topic clusters, prioritized narratives, canonical message streams, and pipeline telemetry with sub-2ms warm latencies and zero ML on the serving path<br>• **200 passing tests** using mocked clients and offline datasets (zero network calls during test runs)<br>• Successful real-world smoke test against public Telegram channel (`@GenshinUpdate_STR`) and verified end-to-end replay, quality check, Parquet conversion, ML pipeline analytics, and live API serving |
+| **Planned / Future Scope** | • Continuous timeline and streaming ingestion<br>• **X (Twitter)** ingestion collector (Essential)<br>• **Instagram** and **Facebook** collectors (Desirable)<br>• **Reddit** and **YouTube** collectors (Appreciable additional sources)<br>• Dynamic sliding-window narrative mutation tracking<br>• Multi-node distributed inference caching (Redis/PostgreSQL)<br>• Information cascade topology, link analysis, and influence propagation graphs<br>• Aggregate and anonymized demographic profiling<br>• Next.js / Vite analyst web dashboard (Milestone 5B) |
 
 > [!NOTE]
 > Capabilities marked as **Planned / Future Scope** are not yet implemented. The project is constructed strictly incrementally from verified data contracts upward.
@@ -329,20 +329,24 @@ TRAJECT configuration is managed centrally via a `.env` file at the **repository
 
 ---
 
-### Step 4: Verify Installation (Run the 180-Test Suite)
+### Step 4: Verify Installation (Run the 200-Test Suite)
 
-Run the full automated test suite to ensure all schemas, collectors, normalizers, storage engines, and machine learning models are functioning properly:
+Run the full automated test suite to ensure all schemas, collectors, normalizers, storage engines, machine learning pipelines, and the Analytics API are functioning properly:
 
 ```powershell
-# From backend/ directory with .venv activated:
-pytest tests -v
+# From within backend/ directory (with .venv activated):
+pytest -q
+
+# Or from repository root:
+pytest -q
 ```
 
 **Expected Result**:
 ```text
-============================ 180 passed in ~50s =============================
+============================ 200 passed in ~60s =============================
 ```
 *Zero network calls are made during tests. All tests use mocked clients, deterministic synthetic fixtures, and local datasets.*
+
 
 ---
 
@@ -398,9 +402,118 @@ python -m app.collectors.telegram.collector --channel "@GenshinUpdate_STR" --lim
 
 ---
 
-## 9. Testing & Quality Assurance Architecture
+---
 
-TRAJECT maintains **180 automated unit, regression, and contract tests**:
+## 9. Running the Backend Analytics API (Milestone 5A)
+
+TRAJECT includes a high-performance, typed FastAPI serving layer (`/api/v1`) that exposes precomputed narrative intelligence, semantic topic clusters, and canonical social media records without executing any ML inference on the request path.
+
+### Step-by-Step Terminal Guide
+
+#### 1. Open PowerShell and Navigate to Backend
+```powershell
+cd D:\Projects\Traject\backend
+```
+
+#### 2. Activate Virtual Environment
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+> [!NOTE]
+> If your PowerShell execution policy blocks running scripts, run this one-time bypass in your terminal session:
+> ```powershell
+> Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+> ```
+
+#### 3. Start the API Server
+```powershell
+uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+You should see console output confirming the server has started and loaded artifacts:
+```text
+INFO:     Will watch for changes in: ['D:\\Projects\\Traject\\backend']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process using WatchFiles
+INFO:     Started server process
+INFO:     Waiting for application startup.
+INFO:     TRAJECT Backend Analytics API initializing...
+INFO:     Application startup complete.
+```
+
+#### 4. Verify Endpoints While the Server is Running
+
+##### Option A: Interactive Browser Documentation (Swagger UI)
+Open **[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)** in your browser to inspect and interactively test all 10 API endpoints.
+Alternative documentation formats:
+* **ReDoc**: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+* **OpenAPI JSON Schema**: [http://127.0.0.1:8000/openapi.json](http://127.0.0.1:8000/openapi.json)
+
+##### Option B: Terminal Verification (PowerShell)
+Open a second PowerShell window and test the core endpoints with `Invoke-RestMethod` (or `curl`):
+
+* **Health Check & In-Memory Artifact Status:**
+  ```powershell
+  Invoke-RestMethod http://127.0.0.1:8000/api/v1/health
+  ```
+  *Response:*
+  ```json
+  {
+    "status": "healthy",
+    "version": "0.1.0",
+    "active_records_count": 10,
+    "active_narratives_count": 3,
+    "active_topics_count": 2,
+    "pipeline_stage": "READY"
+  }
+  ```
+
+* **Analytics Dashboard Overview:**
+  ```powershell
+  Invoke-RestMethod http://127.0.0.1:8000/api/v1/analytics
+  ```
+
+* **Prioritized Narratives (sorted by Signal Score descending):**
+  ```powershell
+  Invoke-RestMethod http://127.0.0.1:8000/api/v1/narratives
+  ```
+
+* **Discovered Semantic Topics:**
+  ```powershell
+  Invoke-RestMethod http://127.0.0.1:8000/api/v1/topics
+  ```
+
+* **Canonical Messages:**
+  ```powershell
+  Invoke-RestMethod http://127.0.0.1:8000/api/v1/messages
+  ```
+
+* **ML Pipeline Metrics & Provenance:**
+  ```powershell
+  Invoke-RestMethod http://127.0.0.1:8000/api/v1/pipeline/metrics
+  ```
+
+#### 5. Stopping the Server
+Press `CTRL+C` in the terminal running Uvicorn to shut down the server cleanly.
+
+### Available Endpoints Summary (`/api/v1`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/v1/health` | Operational readiness and artifact loading state. |
+| `GET` | `/api/v1/analytics` | Dashboard summary metrics, message volume, and priority distribution. |
+| `GET` | `/api/v1/narratives` | Paginated, filterable prioritized narrative candidates. |
+| `GET` | `/api/v1/narratives/{id}` | Detailed explainable narrative metrics, sub-scores, and audit rationale. |
+| `GET` | `/api/v1/topics` | Discovered semantic topic clusters with representative c-TF-IDF keywords. |
+| `GET` | `/api/v1/topics/{id}` | Diagnostic topic features (entities, engagement, propagation, burstiness). |
+| `GET` | `/api/v1/messages` | Paginated canonical messages (supports topic, media, platform filters). |
+| `GET` | `/api/v1/messages/{id}` | Full canonical message record by chat-scoped ID (e.g. `telegram:chan:101`). |
+| `GET` | `/api/v1/pipeline/status` | Upstream pipeline execution lifecycle, provenance, and cache status. |
+| `GET` | `/api/v1/pipeline/metrics` | Audit-ready stage latencies, memory footprint, and cache performance. |
+
+---
+
+## 10. Testing & Quality Assurance Architecture
+
+TRAJECT maintains **200 automated unit, regression, and contract tests**:
 
 | Test Module | Tests | Focus Area & Invariants |
 | :--- | :---: | :--- |
@@ -422,11 +535,21 @@ TRAJECT maintains **180 automated unit, regression, and contract tests**:
 | `test_ml_cache.py` | 9 | Deterministic SQLite inference caching, cache-key semantics, and hit rates. |
 | `test_ml_performance.py` | 4 | Cold-start vs warm inference benchmarks, memory telemetry, and parity checks. |
 | `test_ml_pipeline.py` | 5 | End-to-end orchestrator execution, analytics artifact serialization, and reuse. |
-| **Total** | **180** | **100% Offline, Mocked, Deterministic Test Suite** |
+| `test_api_*.py` | 20 | Milestone 5A Backend Analytics API: health, overview, narratives, topics, messages, pipeline, and error envelopes. |
+| **Total** | **200** | **100% Offline, Mocked, Deterministic Test Suite** |
+
+```powershell
+# Run full test suite from backend directory:
+cd backend
+pytest -q
+
+# Or from repository root:
+pytest -q
+```
 
 ---
 
-## 10. Security & Privacy Considerations
+## 11. Security & Privacy Considerations
 
 * **Secrets Management**: `.env` and `.env*.local` are strictly ignored by Git. API hashes, tokens, and session keys must never be committed.
 * **Session Integrity**: Telegram MTProto session files (`*.session`, `*.session-journal`) contain authenticated encryption keys and are excluded by `.gitignore`.
@@ -436,7 +559,7 @@ TRAJECT maintains **180 automated unit, regression, and contract tests**:
 
 ---
 
-## 11. Development Principles
+## 12. Development Principles
 
 1. **Build from Real Data**: Design schemas and normalizers against actual platform payloads, not theoretical assumptions.
 2. **Preserve Raw Data First**: Always persist raw, immutable responses to allow offline replaying and schema iteration.
@@ -451,7 +574,7 @@ TRAJECT maintains **180 automated unit, regression, and contract tests**:
 
 ---
 
-## 12. Project Roadmap
+## 13. Project Roadmap
 
 ### Completed Milestones
 - [x] **Milestone 1**: Repository foundation and clean monorepo structure
@@ -467,13 +590,13 @@ TRAJECT maintains **180 automated unit, regression, and contract tests**:
 - [x] **Milestone 4F**: Deterministic feature enrichment (social/gazetteer entities, engagement, propagation, burstiness)
 - [x] **Milestone 4G**: Narrative candidate formation, bounded Priority Signal Scoring, and evidence-density heuristics
 - [x] **Milestone 4H**: Production ML pipeline orchestration, singleton model lifecycle, SQLite inference cache, and batch benchmarking
-- [x] **Milestone 5A Spec**: Complete Backend Analytics API Specification ([`docs/MILESTONE_5A_BACKEND_ANALYTICS_API_SPEC.md`](file:///d:/Projects/Traject/docs/MILESTONE_5A_BACKEND_ANALYTICS_API_SPEC.md))
+- [x] **Milestone 5A**: Backend Analytics API implementation (FastAPI serving precomputed analytics, 10 typed endpoints, sub-2ms latencies)
 
 ### Current & Upcoming Milestones
-- [ ] **Milestone 5A**: Backend Analytics API implementation (FastAPI serving precomputed analytics)
 - [ ] **Milestone 5B**: Interactive Analyst Web Dashboard (Next.js / Vite frontend consuming `/api/v1`)
 - [ ] **Milestone 6**: Continuous timeline ingestion & sliding-window dynamic narrative mutation tracking
 - [ ] **Milestone 7**: Cross-platform collectors: **X (Twitter)**, Reddit, and YouTube
+
 - [ ] **Milestone 8**: Information cascade graph and influence propagation analysis (NetworkX / Neo4j)
 
 ---

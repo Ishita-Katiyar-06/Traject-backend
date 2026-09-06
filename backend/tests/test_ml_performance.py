@@ -8,7 +8,7 @@ from app.ml.pipeline.lifecycle import ModelLifecycleManager
 from app.ml.pipeline.orchestrator import PipelineConfig, run_ml_pipeline
 from app.schemas import CanonicalMessage
 
-FIXTURE_PATH = Path("tests/fixtures/features/synthetic_enrichment_fixture.jsonl")
+FIXTURE_PATH = Path(__file__).parent / "fixtures" / "features" / "synthetic_enrichment_fixture.jsonl"
 
 
 def load_fixture_messages() -> list[CanonicalMessage]:
