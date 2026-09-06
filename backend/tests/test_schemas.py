@@ -52,13 +52,13 @@ def test_invalid_platform_rejection():
     with pytest.raises(ValidationError) as excinfo:
         CanonicalMessage(
             canonical_id="unsupported:123",
-            platform="discord",  # type: ignore[arg-type]
+            platform="unsupported_platform",  # type: ignore[arg-type]
             native_id="123",
             author_id="author_1",
             published_at=now_utc,
             collected_at=now_utc,
         )
-    assert "Input should be 'telegram' or 'x'" in str(excinfo.value)
+    assert "Input should be 'telegram', 'x', 'discord' or 'threads'" in str(excinfo.value)
 
 
 def test_missing_required_fields():

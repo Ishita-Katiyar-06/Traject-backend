@@ -8,6 +8,8 @@ class Platform(StrEnum):
     """Supported social media and messaging platforms."""
     TELEGRAM = "telegram"
     X = "x"
+    DISCORD = "discord"
+    THREADS = "threads"
 
 
 class AuthorType(StrEnum):
