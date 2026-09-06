@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TelegramCollectionConfig",
+  "description": "Schema for TRAJECT bounded Telegram corpus collection configuration.",
+  "type": "object",
+  "required": ["per_source_limit"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "type": "string" },
+    "description": { "type": "string" },
+    "per_source_limit": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "max_sources": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "dataset_name": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

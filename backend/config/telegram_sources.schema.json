@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TelegramSourceRegistry",
+  "description": "Schema for TRAJECT version-controlled Telegram Source Registry.",
+  "type": "object",
+  "required": ["version", "sources"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "type": "string" },
+    "description": { "type": "string" },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["username", "domain", "expected_language", "source_type"],
+        "properties": {
+          "username": { "type": "string" },
+          "display_name": { "type": "string" },
+          "domain": { "type": "string" },
+          "expected_language": { "type": "string" },
+          "source_type": {
+            "type": "string",
+            "enum": ["official", "publisher", "independent", "republication"]
+          },
+          "enabled": { "type": "boolean" },
+          "description": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

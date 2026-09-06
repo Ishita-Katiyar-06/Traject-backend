@@ -1,0 +1,8 @@
+{
+  "$schema": "./telegram_collection.schema.json",
+  "description": "Configuration for bounded Telegram corpus expansion and validation runs (Milestone 6B).",
+  "version": "1.0.0",
+  "per_source_limit": 500,
+  "max_sources": 13,
+  "dataset_name": "telegram_messages"
+}

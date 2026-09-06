@@ -1,0 +1,124 @@
+{
+  "$schema": "./telegram_sources.schema.json",
+  "description": "Version-controlled Telegram Source Registry for TRAJECT narrative intelligence collection.",
+  "version": "1.0.0",
+  "sources": [
+    {
+      "username": "@warmonitors",
+      "display_name": "War Monitor",
+      "domain": "geopolitics",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Independent OSINT and conflict monitoring updates."
+    },
+    {
+      "username": "@liveuamap",
+      "display_name": "Liveuamap",
+      "domain": "conflict",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Live Universal Awareness Map tracking global conflicts."
+    },
+    {
+      "username": "@OSINTdefender",
+      "display_name": "OSINTdefender",
+      "domain": "conflict",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Open source intelligence monitor focused on Eastern Europe and global conflicts."
+    },
+    {
+      "username": "@GeoPWatch",
+      "display_name": "Geopolitical Watch",
+      "domain": "geopolitics",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Independent geopolitical observations and analysis."
+    },
+    {
+      "username": "@BNONews",
+      "display_name": "BNO News",
+      "domain": "general_news",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "International news agency providing breaking news coverage."
+    },
+    {
+      "username": "@Ministry_Of_Defence_Gvt_India",
+      "display_name": "Ministry of Defence, Government of India",
+      "domain": "india_defence",
+      "expected_language": "en",
+      "source_type": "official",
+      "enabled": true,
+      "description": "Official Ministry of Defence (Government of India) press releases and announcements."
+    },
+    {
+      "username": "@majormadhankumarmmk",
+      "display_name": "Major Madhan Kumar",
+      "domain": "india_defence",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Independent defence and strategic affairs commentary."
+    },
+    {
+      "username": "@thehackernews",
+      "display_name": "The Hacker News",
+      "domain": "cybersecurity",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Dedicated cybersecurity news publisher covering vulnerabilities, breaches, and malware."
+    },
+    {
+      "username": "@ctinow",
+      "display_name": "Cyber Threat Intelligence",
+      "domain": "cybersecurity",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Cyber Threat Intelligence alerts and vulnerability reporting."
+    },
+    {
+      "username": "@cveNotify",
+      "display_name": "CVE Notify",
+      "domain": "cybersecurity",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Automated and curated Common Vulnerabilities and Exposures alerts."
+    },
+    {
+      "username": "@cybdetective",
+      "display_name": "Cyber Detective",
+      "domain": "cybersecurity",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "OSINT investigation techniques, cybersecurity tools, and threat intelligence."
+    },
+    {
+      "username": "@ReutersWorldChannel",
+      "display_name": "Reuters: World (Unofficial)",
+      "domain": "general_news",
+      "expected_language": "en",
+      "source_type": "republication",
+      "enabled": true,
+      "description": "Unofficial Telegram channel republishing Reuters World wire news."
+    },
+    {
+      "username": "@BBCWorld",
+      "display_name": "BBC News: World (Unofficial)",
+      "domain": "general_news",
+      "expected_language": "en",
+      "source_type": "republication",
+      "enabled": true,
+      "description": "Unofficial Telegram channel republishing BBC World news dispatches."
+    }
+  ]
+}
