@@ -41,6 +41,9 @@ class CollectionResult:
     raw_file_path: str
     canonical_messages: list[CanonicalMessage] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
+    max_message_id: int | None = None
+    min_message_id: int | None = None
+    latest_message_date: str | None = None
 
 
 @dataclass
@@ -244,15 +247,17 @@ class TelegramCollector:
         self,
         channel: str,
         limit: int = 100,
+        min_id: int | None = None,
     ) -> CollectionResult:
         """Fetch a bounded batch of recent messages from a target public channel.
         
         Args:
             channel: Username, link, or ID of the public Telegram channel (e.g. '@channel').
             limit: Maximum number of recent messages to collect (bounded).
+            min_id: Optional message ID threshold; if provided, only messages with id > min_id are returned.
             
         Returns:
-            CollectionResult: Ingestion outcome with raw paths and validated CanonicalMessages.
+            CollectionResult: Ingestion outcome with raw paths, validated CanonicalMessages, and message ID bounds.
         """
         if not channel or not channel.strip():
             raise ValueError("Channel identifier must not be empty.")
@@ -315,18 +320,40 @@ class TelegramCollector:
         raw_records: list[dict[str, Any]] = []
         canonical_messages: list[CanonicalMessage] = []
         errors: list[str] = []
+        max_message_id: int | None = None
+        min_message_id: int | None = None
+        latest_message_date: str | None = None
 
         logger.info(
-            "Starting collection for channel '%s' (limit: %d, output: %s)",
+            "Starting collection for channel '%s' (limit: %d, min_id: %s, output: %s)",
             channel_clean,
             limit,
+            min_id,
             raw_file,
         )
 
+        iter_kwargs: dict[str, Any] = {"limit": limit}
+        if min_id is not None and min_id > 0:
+            iter_kwargs["min_id"] = min_id
+
         try:
             line_idx = 0
-            async for message in client.iter_messages(entity, limit=limit):
+            async for message in client.iter_messages(entity, **iter_kwargs):
                 try:
+                    # Track native message ID cursor
+                    msg_native_id = getattr(message, "id", None)
+                    if isinstance(msg_native_id, int):
+                        if max_message_id is None or msg_native_id > max_message_id:
+                            max_message_id = msg_native_id
+                        if min_message_id is None or msg_native_id < min_message_id:
+                            min_message_id = msg_native_id
+
+                    msg_dt = getattr(message, "date", None)
+                    if msg_dt is not None and hasattr(msg_dt, "isoformat"):
+                        dt_iso = msg_dt.isoformat()
+                        if latest_message_date is None or dt_iso > latest_message_date:
+                            latest_message_date = dt_iso
+
                     # 1. Deliberate primitive serialization
                     raw_dict = TelethonMessageSerializer.serialize(
                         message,
@@ -362,10 +389,11 @@ class TelegramCollector:
             raise
 
         logger.info(
-            "Completed collection for '%s': %d raw records saved, %d normalized.",
+            "Completed collection for '%s': %d raw records saved, %d normalized (max_id: %s).",
             channel_clean,
             len(raw_records),
             len(canonical_messages),
+            max_message_id,
         )
 
         return CollectionResult(
@@ -377,6 +405,9 @@ class TelegramCollector:
             raw_file_path=str(raw_file),
             canonical_messages=canonical_messages,
             errors=errors,
+            max_message_id=max_message_id,
+            min_message_id=min_message_id,
+            latest_message_date=latest_message_date,
         )
 
     async def collect_sources(
@@ -385,6 +416,7 @@ class TelegramCollector:
         limit: int | None = None,
         per_source_limits: dict[str, int] | None = None,
         use_registry: bool = True,
+        source_min_ids: dict[str, int] | None = None,
     ) -> MultiCollectionResult:
         """Fetch messages sequentially from multiple configured Telegram sources.
         
@@ -401,6 +433,7 @@ class TelegramCollector:
             limit: Global maximum messages per channel.
             per_source_limits: Optional dictionary mapping source -> limit override.
             use_registry: Whether to fall back to the version-controlled source registry.
+            source_min_ids: Optional dictionary mapping source -> min_id checkpoint cursor.
             
         Returns:
             MultiCollectionResult: Aggregated outcome across all requested sources.
@@ -440,9 +473,15 @@ class TelegramCollector:
 
         for source in target_sources:
             ch_limit = (per_source_limits or {}).get(source) or default_limit
-            logger.info("Processing Telegram source '%s' (limit: %d)...", source, ch_limit)
+            ch_min_id = (source_min_ids or {}).get(source)
+            logger.info(
+                "Processing Telegram source '%s' (limit: %d, min_id: %s)...",
+                source,
+                ch_limit,
+                ch_min_id,
+            )
             try:
-                res = await self.collect_channel(source, limit=ch_limit)
+                res = await self.collect_channel(source, limit=ch_limit, min_id=ch_min_id)
                 channel_results[source] = res
                 all_canonical.extend(res.canonical_messages)
                 if res.raw_file_path:

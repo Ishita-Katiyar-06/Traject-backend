@@ -2,7 +2,7 @@ import json
 import logging
 import math
 from pathlib import Path
-from typing import Sequence
+from typing import Any, Sequence
 import urllib.parse
 
 from app.core.config import APISettings, find_repo_root, get_settings
@@ -20,7 +20,7 @@ from app.schemas.api.analytics import (
 )
 from app.schemas.api.common import PaginationMeta
 from app.schemas.api.messages import MessageDetailData, MessageSummaryResponse
-from app.schemas.api.narratives import NarrativeSummaryResponse
+from app.schemas.api.narratives import NarrativeDetailData, NarrativeSummaryResponse
 from app.schemas.api.pipeline import (
     CachePerformance,
     CacheStatus,
@@ -60,6 +60,7 @@ class ArtifactRepository:
         self._narratives_by_id: dict[str, NarrativeCandidate] = {}
         self._sorted_narratives: list[NarrativeCandidate] = []
         self._message_to_topic: dict[str, str] = {}
+        self._narrative_validation_by_id: dict[str, Any] = {}
         
         # Metrics & Summary state
         self._metrics: PipelineStageMetrics | None = None
@@ -132,6 +133,17 @@ class ArtifactRepository:
                     key=lambda n: n.priority_signal_score,
                     reverse=True,
                 )
+
+                # Milestone 6C: Compute deterministic narrative validation metrics
+                try:
+                    from app.analytics.narrative_validation import CorpusQualityValidator
+                    validator = CorpusQualityValidator()
+                    val_report = validator.validate_corpus(self._messages, pipeline_result)
+                    self._narrative_validation_by_id = {m.narrative_id: m for m in val_report.narratives}
+                except Exception as val_exc:
+                    logger.debug("Could not compute narrative validation metrics: %s", val_exc)
+                    self._narrative_validation_by_id = {}
+
                 self.artifacts_loaded = True
             else:
                 self.artifacts_loaded = (len(self._messages) > 0)
@@ -311,27 +323,35 @@ class ArtifactRepository:
         end = start + page_size
         sliced = filtered[start:end]
 
-        items = [
-            NarrativeSummaryResponse(
-                narrative_id=n.narrative_id,
-                promoted_from_topic_id=n.promoted_from_topic_id,
-                headline_claim=n.headline_claim,
-                priority_signal_score=n.priority_signal_score,
-                priority_tier=n.priority_tier,
-                sub_scores=n.sub_scores,
-                has_coordination_signals=any([
-                    n.coordination_signals.potential_syndication_spike,
-                    n.coordination_signals.potential_temporal_burst,
-                    n.coordination_signals.potential_rapid_channel_entry,
-                    n.coordination_signals.potential_cross_channel_cascade,
-                ]),
-                evidence_density=n.data_coverage.evidence_density,
-                message_count=n.data_coverage.message_count,
-                first_observed_at=n.first_observed_at,
-                last_observed_at=n.last_observed_at,
+        items = []
+        for n in sliced:
+            val_m = self._narrative_validation_by_id.get(n.narrative_id)
+            items.append(
+                NarrativeSummaryResponse(
+                    narrative_id=n.narrative_id,
+                    promoted_from_topic_id=n.promoted_from_topic_id,
+                    headline_claim=n.headline_claim,
+                    priority_signal_score=n.priority_signal_score,
+                    priority_tier=n.priority_tier,
+                    sub_scores=n.sub_scores,
+                    has_coordination_signals=any([
+                        n.coordination_signals.potential_syndication_spike,
+                        n.coordination_signals.potential_temporal_burst,
+                        n.coordination_signals.potential_rapid_channel_entry,
+                        n.coordination_signals.potential_cross_channel_cascade,
+                    ]),
+                    evidence_density=n.data_coverage.evidence_density,
+                    message_count=n.data_coverage.message_count,
+                    first_observed_at=n.first_observed_at,
+                    last_observed_at=n.last_observed_at,
+                    distinct_sources_count=val_m.distinct_sources_count if val_m else max(n.data_coverage.channel_count, 1),
+                    distinct_domains_count=val_m.distinct_domains_count if val_m else 1,
+                    is_cross_source=val_m.is_cross_source if val_m else (n.data_coverage.channel_count >= 2),
+                    is_cross_domain=val_m.is_cross_domain if val_m else False,
+                    domains_represented=val_m.domains_represented if val_m else [],
+                    quality_classification=val_m.quality_classification.value if val_m else "moderate_evidence",
+                )
             )
-            for n in sliced
-        ]
 
         meta = PaginationMeta(
             total=total,
@@ -343,10 +363,26 @@ class ArtifactRepository:
         )
         return items, meta
 
-    def get_narrative_by_id(self, narrative_id: str) -> NarrativeCandidate | None:
+    def get_narrative_by_id(self, narrative_id: str) -> Any:
         if not self.artifacts_loaded:
             raise RuntimeError("Analytics artifact is unavailable.")
-        return self._narratives_by_id.get(narrative_id)
+        cand = self._narratives_by_id.get(narrative_id)
+        if cand is None:
+            return None
+        val_m = self._narrative_validation_by_id.get(narrative_id)
+        if val_m:
+            from app.schemas.api.narratives import NarrativeDetailData
+            return NarrativeDetailData(
+                **cand.model_dump(),
+                distinct_sources_count=val_m.distinct_sources_count,
+                distinct_domains_count=val_m.distinct_domains_count,
+                is_cross_source=val_m.is_cross_source,
+                is_cross_domain=val_m.is_cross_domain,
+                domains_represented=val_m.domains_represented,
+                quality_classification=val_m.quality_classification.value,
+                validation_notes=val_m.validation_notes,
+            )
+        return cand
 
     # --------------------------------------------------------------------------
     # Topic Queries
@@ -544,12 +580,87 @@ class ArtifactRepository:
                 hit_rate=self._metrics.cache_hit_rate,
             )
 
+        collection_mode = None
+        last_collection_run = None
+        last_successful_collection = None
+        source_count = None
+        successful_source_count = None
+        failed_source_count = None
+        last_new_record_count = None
+        cumulative_record_count = len(self._messages) if self._messages else None
+        corpus_snapshot_id = None
+        analytics_generated_at = self.created_at_utc or None
+
+        # Dynamically load latest incremental collection metadata if present
+        latest_manifest_path = (
+            self.repo_root / "data" / "manifests" / "telegram" / "incremental" / "latest_manifest.json"
+        )
+        if latest_manifest_path.is_file():
+            try:
+                with open(latest_manifest_path, "r", encoding="utf-8") as f:
+                    manifest_data = json.load(f)
+                collection_mode = manifest_data.get("mode", "incremental")
+                last_collection_run = manifest_data.get("completed_at_utc")
+                if manifest_data.get("sources_succeeded", 0) > 0:
+                    last_successful_collection = manifest_data.get("completed_at_utc")
+                source_count = manifest_data.get("sources_attempted")
+                successful_source_count = manifest_data.get("sources_succeeded")
+                failed_source_count = manifest_data.get("sources_failed")
+                last_new_record_count = manifest_data.get("total_new_canonical_persisted")
+                if manifest_data.get("cumulative_corpus_count"):
+                    cumulative_record_count = manifest_data.get("cumulative_corpus_count")
+                corpus_snapshot_id = manifest_data.get("corpus_snapshot_id")
+            except Exception as e:
+                logger.warning("Failed reading incremental manifest for pipeline status: %s", e)
+
+        # Milestone 6E: Stale Analytics Detection
+        analytics_current = True
+        stale_analytics_reason = None
+        if cumulative_record_count and self._metrics:
+            records_analyzed = getattr(self._metrics, "records_ingested", len(self._messages))
+            if cumulative_record_count > records_analyzed:
+                analytics_current = False
+                stale_analytics_reason = (
+                    f"Corpus has {cumulative_record_count} messages, but loaded analytics "
+                    f"reflect earlier snapshot with {records_analyzed} messages."
+                )
+
+        # Milestone 6E: Temporal Lineage Metrics
+        active_lineages_count = None
+        last_temporal_update = None
+        lineage_state_path = self.repo_root / "data" / "temporal" / "lineage" / "lineage_state.json"
+        if lineage_state_path.is_file():
+            try:
+                with open(lineage_state_path, "r", encoding="utf-8") as f:
+                    lin_state = json.load(f)
+                last_temporal_update = lin_state.get("updated_at_utc")
+                lineages = lin_state.get("lineages", {})
+                active_lineages_count = sum(
+                    1 for l in lineages.values() if l.get("state") not in ["disappeared"]
+                )
+            except Exception as e:
+                logger.warning("Failed reading temporal lineage state for pipeline status: %s", e)
+
         return PipelineStatusResponse(
             status="completed",
             dataset_source=self.dataset_source,
             created_at_utc=self.created_at_utc,
             pipeline_version=self.pipeline_version,
             cache_status=cache_status,
+            collection_mode=collection_mode,
+            last_collection_run=last_collection_run,
+            last_successful_collection=last_successful_collection,
+            source_count=source_count,
+            successful_source_count=successful_source_count,
+            failed_source_count=failed_source_count,
+            last_new_record_count=last_new_record_count,
+            cumulative_record_count=cumulative_record_count,
+            corpus_snapshot_id=corpus_snapshot_id,
+            analytics_generated_at=analytics_generated_at,
+            analytics_current=analytics_current,
+            stale_analytics_reason=stale_analytics_reason,
+            active_lineages_count=active_lineages_count,
+            last_temporal_update=last_temporal_update,
         )
 
     def get_pipeline_metrics(self) -> PipelineMetricsResponse:

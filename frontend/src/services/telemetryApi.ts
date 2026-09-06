@@ -23,11 +23,15 @@ import type {
   MessageDetailResponse,
   MessageListResponse,
   MessageQueryParams,
+  LineageListResponse,
   NarrativeDetailResponse,
+  NarrativeLineageDetailResponse,
   NarrativeListResponse,
   NarrativeQueryParams,
   PipelineMetricsResponse,
   PipelineStatusResponse,
+  TemporalSnapshotListResponse,
+  TemporalStatusResponse,
   TopicDetailResponse,
   TopicListResponse,
   TopicQueryParams,
@@ -169,5 +173,79 @@ export const telemetryApi = {
       cacheTtlMs: 5000,
       ...options,
     });
+  },
+
+  // ---------------------------------------------------------------------------
+  // Milestone 6E: Temporal Narrative Lineage & Monitoring
+  // ---------------------------------------------------------------------------
+
+  /**
+   * GET /api/v1/temporal/status
+   * Unified operational health and temporal lineage status.
+   */
+  async getTemporalStatus(options?: RequestOptions): Promise<TemporalStatusResponse> {
+    return apiClient.get<TemporalStatusResponse>('/temporal/status', {
+      skipCache: true,
+      ...options,
+    });
+  },
+
+  /**
+   * GET /api/v1/temporal/snapshots
+   * Discovered immutable analytics snapshots.
+   */
+  async getTemporalSnapshots(options?: RequestOptions): Promise<TemporalSnapshotListResponse> {
+    return apiClient.get<TemporalSnapshotListResponse>('/temporal/snapshots', {
+      cacheTtlMs: 5000,
+      ...options,
+    });
+  },
+
+  /**
+   * GET /api/v1/temporal/narratives
+   * Paginated list of temporal narrative lineages.
+   */
+  async getLineages(
+    params?: { state?: string; page?: number; page_size?: number },
+    options?: RequestOptions
+  ): Promise<LineageListResponse> {
+    const qs = apiClient.buildQueryString((params || {}) as Record<string, unknown>);
+    return apiClient.get<LineageListResponse>(`/temporal/narratives${qs}`, {
+      cacheTtlMs: 3000,
+      ...options,
+    });
+  },
+
+  /**
+   * GET /api/v1/temporal/narratives/{lineage_id}
+   * Full lineage details and lifecycle event history.
+   */
+  async getLineageDetail(
+    lineageId: string,
+    options?: RequestOptions
+  ): Promise<NarrativeLineageDetailResponse> {
+    const encodedId = encodeURIComponent(lineageId.trim());
+    return apiClient.get<NarrativeLineageDetailResponse>(`/temporal/narratives/${encodedId}`, {
+      cacheTtlMs: 5000,
+      ...options,
+    });
+  },
+
+  /**
+   * GET /api/v1/temporal/narratives/by-narrative/{narrative_id}
+   * Resolve lineage for a snapshot-local narrative candidate.
+   */
+  async getLineageByNarrative(
+    narrativeId: string,
+    options?: RequestOptions
+  ): Promise<NarrativeLineageDetailResponse> {
+    const encodedId = encodeURIComponent(narrativeId.trim());
+    return apiClient.get<NarrativeLineageDetailResponse>(
+      `/temporal/narratives/by-narrative/${encodedId}`,
+      {
+        cacheTtlMs: 5000,
+        ...options,
+      }
+    );
   },
 };

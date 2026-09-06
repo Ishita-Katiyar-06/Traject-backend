@@ -154,6 +154,12 @@ export interface NarrativeSummaryResponse {
   message_count: number;
   first_observed_at: string;
   last_observed_at: string;
+  distinct_sources_count?: number;
+  distinct_domains_count?: number;
+  is_cross_source?: boolean;
+  is_cross_domain?: boolean;
+  domains_represented?: string[];
+  quality_classification?: 'strong_evidence' | 'moderate_evidence' | 'limited_evidence' | 'insufficient_evidence' | string;
 }
 
 export interface NarrativeListResponse {
@@ -178,6 +184,13 @@ export interface NarrativeDetailData {
   first_observed_at: string;
   last_observed_at: string;
   audit_rationale: string[];
+  distinct_sources_count?: number;
+  distinct_domains_count?: number;
+  is_cross_source?: boolean;
+  is_cross_domain?: boolean;
+  domains_represented?: string[];
+  quality_classification?: 'strong_evidence' | 'moderate_evidence' | 'limited_evidence' | 'insufficient_evidence' | string;
+  validation_notes?: string[];
 }
 
 export interface NarrativeDetailResponse {
@@ -378,6 +391,20 @@ export interface PipelineStatusResponse {
   created_at_utc: string;
   pipeline_version: string;
   cache_status: CacheStatus | null;
+  collection_mode?: string | null;
+  last_collection_run?: string | null;
+  last_successful_collection?: string | null;
+  source_count?: number | null;
+  successful_source_count?: number | null;
+  failed_source_count?: number | null;
+  last_new_record_count?: number | null;
+  cumulative_record_count?: number | null;
+  corpus_snapshot_id?: string | null;
+  analytics_generated_at?: string | null;
+  analytics_current?: boolean;
+  stale_analytics_reason?: string | null;
+  active_lineages_count?: number | null;
+  last_temporal_update?: string | null;
 }
 
 export interface StageLatencies {
@@ -428,4 +455,105 @@ export interface PipelineMetricsResponse {
   record_accounting: RecordAccounting;
   cache_performance: CachePerformance;
   memory_footprint_mb: MemoryFootprint;
+}
+
+// -----------------------------------------------------------------------------
+// Milestone 6E: Temporal Narrative Lineage & Operational Monitoring
+// -----------------------------------------------------------------------------
+
+export type LineageState = 'new' | 'persisting' | 'weakening' | 'disappeared' | 'reappeared';
+
+export interface LineageEvent {
+  event_id: string;
+  lineage_id: string;
+  snapshot_id: string;
+  previous_snapshot_id: string | null;
+  event_type: string;
+  timestamp: string;
+  source_narrative_id: string | null;
+  previous_narrative_id: string | null;
+  lineage_match_score: number | null;
+  match_evidence: Record<string, any>;
+  explanation: string;
+}
+
+export interface NarrativeLineage {
+  lineage_id: string;
+  current_narrative_id: string | null;
+  state: LineageState;
+  first_seen_at: string;
+  last_seen_at: string;
+  first_snapshot_id: string;
+  last_snapshot_id: string;
+  previous_snapshot_id: string | null;
+  snapshot_count: number;
+  consecutive_snapshot_count: number;
+  message_count_current: number;
+  message_count_previous: number | null;
+  distinct_sources_current: number;
+  distinct_sources_previous: number | null;
+  distinct_domains_current: number;
+  distinct_domains_previous: number | null;
+  priority_signal_current: number;
+  priority_signal_previous: number | null;
+  headline_claim_current: string;
+  lineage_match_score: number | null;
+  historical_narrative_ids: string[];
+}
+
+export interface NarrativeLineageSummary {
+  lineage_id: string;
+  current_narrative_id: string | null;
+  state: LineageState;
+  first_seen_at: string;
+  last_seen_at: string;
+  snapshot_count: number;
+  consecutive_snapshot_count: number;
+  message_count_current: number;
+  message_count_previous: number | null;
+  priority_signal_current: number;
+  headline_claim_current: string;
+  lineage_match_score: number | null;
+}
+
+export interface LineageListResponse {
+  data: NarrativeLineageSummary[];
+  meta: PaginationMeta;
+}
+
+export interface NarrativeLineageDetailResponse {
+  lineage: NarrativeLineage;
+  events: LineageEvent[];
+}
+
+export interface TemporalSnapshotMetadata {
+  snapshot_id: string;
+  collection_run_id: string | null;
+  corpus_snapshot_id: string | null;
+  generated_at_utc: string;
+  corpus_size: number;
+  narrative_count: number;
+  topic_count: number;
+  artifact_path: string;
+}
+
+export interface TemporalSnapshotListResponse {
+  snapshots: TemporalSnapshotMetadata[];
+  total_snapshots: number;
+}
+
+export interface TemporalStatusResponse {
+  collection_status: string;
+  last_collection_run: string | null;
+  last_successful_collection: string | null;
+  cumulative_corpus_count: number;
+  latest_corpus_snapshot_id: string | null;
+  latest_analytics_snapshot_id: string | null;
+  analytics_generated_at_utc: string | null;
+  analytics_current: boolean;
+  stale_analytics_reason: string | null;
+  total_lineages_tracked: number;
+  active_lineages_count: number;
+  lineages_by_state: Record<string, number>;
+  last_temporal_update: string | null;
 }

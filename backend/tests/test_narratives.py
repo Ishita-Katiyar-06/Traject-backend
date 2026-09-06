@@ -588,3 +588,38 @@ def test_priority_tier_assignment_and_custom_weights():
         weights={"spread": 0.0, "coordination": 0.0, "reach": 0.0, "friction": 1.0},
     )
     assert score_friction_focused == 0.9000
+
+
+def test_frozen_4g_priority_signal_score_exact_weights():
+    """10. Verify exact frozen 4G Priority Signal Score weighting contract:
+    Priority Signal Score = 0.30 * Spread + 0.30 * Coordination + 0.20 * Reach + 0.20 * Friction.
+    """
+    assert DEFAULT_SCORING_WEIGHTS == {
+        "spread": 0.30,
+        "coordination": 0.30,
+        "reach": 0.20,
+        "friction": 0.20,
+    }
+
+    # Test Case 1: Fixed sub-scores producing 0.5400
+    # 0.30 * 0.80 + 0.30 * 0.60 + 0.20 * 0.40 + 0.20 * 0.20 = 0.24 + 0.18 + 0.08 + 0.04 = 0.5400
+    sub1 = NarrativeSubScores(
+        spread_score=0.80,
+        coordination_score=0.60,
+        reach_score=0.40,
+        friction_score=0.20,
+    )
+    score1 = compute_priority_signal_score(sub1)
+    assert score1 == 0.5400
+
+    # Test Case 2: Fixed sub-scores producing 0.5000
+    # 0.30 * 1.00 + 0.30 * 0.50 + 0.20 * 0.25 + 0.20 * 0.00 = 0.30 + 0.15 + 0.05 + 0.00 = 0.5000
+    sub2 = NarrativeSubScores(
+        spread_score=1.00,
+        coordination_score=0.50,
+        reach_score=0.25,
+        friction_score=0.00,
+    )
+    score2 = compute_priority_signal_score(sub2)
+    assert score2 == 0.5000
+

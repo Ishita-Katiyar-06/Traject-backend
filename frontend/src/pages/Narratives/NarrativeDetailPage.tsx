@@ -14,11 +14,13 @@ import {
   Shield,
   Activity,
   Share2,
+  GitCommit,
+  History,
 } from 'lucide-react';
 import { PageHeader } from '../../layout/PageHeader';
 import { Button } from '../../components/ui/Button';
 import { telemetryApi } from '../../services/telemetryApi';
-import { NarrativeDetailData } from '../../types/api';
+import { NarrativeDetailData, NarrativeLineageDetailResponse } from '../../types/api';
 import {
   formatPriorityTierBadge,
   formatEvidenceDensityBadge,
@@ -34,9 +36,10 @@ export const NarrativeDetailPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [narrative, setNarrative] = useState<NarrativeDetailData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [lineageDetail, setLineageDetail] = useState<NarrativeLineageDetailResponse | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isError, setIsError] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const [isWatching, setIsWatching] = useState(false);
 
   useEffect(() => {
@@ -58,6 +61,12 @@ export const NarrativeDetailPage: React.FC = () => {
       .finally(() => {
         setIsLoading(false);
       });
+
+    // Milestone 6E: Fetch temporal lineage data
+    telemetryApi
+      .getLineageByNarrative(id)
+      .then((res) => setLineageDetail(res))
+      .catch(() => setLineageDetail(null));
   }, [id]);
 
   if (isLoading) {
@@ -153,6 +162,30 @@ export const NarrativeDetailPage: React.FC = () => {
           >
             {densityBadge.label} Coverage
           </span>
+          {narrative.is_cross_source && (
+            <>
+              <span className="text-slate-300">•</span>
+              <span className="text-[11px] font-semibold text-teal-800 bg-teal-50 border border-teal-200 px-2.5 py-0.5 rounded-full">
+                Cross-Source ({narrative.distinct_sources_count || 2} channels)
+              </span>
+            </>
+          )}
+          {narrative.is_cross_domain && (
+            <>
+              <span className="text-slate-300">•</span>
+              <span className="text-[11px] font-semibold text-purple-800 bg-purple-50 border border-purple-200 px-2.5 py-0.5 rounded-full">
+                Cross-Domain ({narrative.distinct_domains_count || 2} domains)
+              </span>
+            </>
+          )}
+          {narrative.quality_classification && (
+            <>
+              <span className="text-slate-300">•</span>
+              <span className="text-[11px] font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                {narrative.quality_classification.replace(/_/g, ' ')}
+              </span>
+            </>
+          )}
           <span className="text-slate-300">•</span>
           <button
             type="button"
@@ -468,10 +501,172 @@ export const NarrativeDetailPage: React.FC = () => {
           ) : (
             <p className="text-[13px] text-[#8591A5]">Channel distribution not available in summary.</p>
           )}
+
+          {narrative.domains_represented && narrative.domains_represented.length > 0 && (
+            <div className="pt-3 border-t border-slate-100 space-y-1.5">
+              <div className="text-[11px] font-bold text-[#8591A5] uppercase tracking-wider">
+                Strategic Domains Represented
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {narrative.domains_represented.map((dom, i) => (
+                  <span
+                    key={i}
+                    className="px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-mono font-semibold"
+                  >
+                    {dom}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {narrative.validation_notes && narrative.validation_notes.length > 0 && (
+            <div className="pt-3 border-t border-slate-100 space-y-1">
+              <div className="text-[11px] font-bold text-[#8591A5] uppercase tracking-wider">
+                Observational Evidence Notes
+              </div>
+              <ul className="list-disc list-inside text-[12px] text-slate-600 space-y-0.5">
+                {narrative.validation_notes.map((note, i) => (
+                  <li key={i}>{note}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* 5. Representative Centroid Messages / Evidence Excerpts */}
+      {/* 5. Temporal Narrative Lineage (Milestone 6E) */}
+      <section className="p-6 md:p-8 rounded-[26px] border border-[rgba(228,233,245,0.85)] bg-white shadow-dashboard space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div className="flex items-center gap-2.5">
+            <History className="w-5 h-5 text-[#2F65F6]" />
+            <div>
+              <h3 className="text-[17px] font-bold text-[#111727]">
+                Temporal Narrative Lineage
+              </h3>
+              <p className="text-[12px] text-[#8591A5]">
+                Cross-snapshot lineage continuity, observed volume trajectories, and transition history
+              </p>
+            </div>
+          </div>
+
+          {lineageDetail && (
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[12px] text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full font-semibold">
+                {lineageDetail.lineage.lineage_id}
+              </span>
+              <span
+                className={`px-3 py-1 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider ${
+                  lineageDetail.lineage.state === 'new'
+                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                    : lineageDetail.lineage.state === 'persisting'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    : lineageDetail.lineage.state === 'weakening'
+                    ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                    : lineageDetail.lineage.state === 'reappeared'
+                    ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                    : 'bg-slate-100 text-slate-700 border border-slate-200'
+                }`}
+              >
+                {lineageDetail.lineage.state}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {lineageDetail ? (
+          <div className="space-y-6">
+            {/* Metric Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="p-4 rounded-[20px] bg-slate-50 border border-slate-200/70">
+                <div className="text-[10px] font-bold text-slate-500 uppercase">Snapshot Span</div>
+                <div className="text-[20px] font-bold text-[#111727] font-mono mt-1">
+                  {lineageDetail.lineage.snapshot_count} snapshot{lineageDetail.lineage.snapshot_count !== 1 ? 's' : ''}
+                </div>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Consecutive: {lineageDetail.lineage.consecutive_snapshot_count}
+                </p>
+              </div>
+
+              <div className="p-4 rounded-[20px] bg-slate-50 border border-slate-200/70">
+                <div className="text-[10px] font-bold text-slate-500 uppercase">Observed Message Trend</div>
+                <div className="text-[20px] font-bold text-[#111727] font-mono mt-1">
+                  {lineageDetail.lineage.message_count_current} msgs
+                </div>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  {lineageDetail.lineage.message_count_previous !== null
+                    ? `Previous: ${lineageDetail.lineage.message_count_previous} msgs`
+                    : 'Initial observation'}
+                </p>
+              </div>
+
+              <div className="p-4 rounded-[20px] bg-slate-50 border border-slate-200/70">
+                <div className="text-[10px] font-bold text-slate-500 uppercase">First Observed Snapshot</div>
+                <div className="text-[13px] font-bold text-[#111727] font-mono truncate mt-1">
+                  {lineageDetail.lineage.first_snapshot_id}
+                </div>
+                <p className="text-[11px] text-slate-500 mt-0.5 font-mono">
+                  {new Date(lineageDetail.lineage.first_seen_at).toLocaleDateString()}
+                </p>
+              </div>
+
+              <div className="p-4 rounded-[20px] bg-slate-50 border border-slate-200/70">
+                <div className="text-[10px] font-bold text-slate-500 uppercase">Lineage Match Score</div>
+                <div className="text-[20px] font-bold text-[#111727] font-mono mt-1">
+                  {lineageDetail.lineage.lineage_match_score !== null
+                    ? formatDecimal(lineageDetail.lineage.lineage_match_score, 3)
+                    : 'Initial (1.000)'}
+                </div>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Similarity across snapshot boundary
+                </p>
+              </div>
+            </div>
+
+            {/* Transition Event Timeline */}
+            {lineageDetail.events && lineageDetail.events.length > 0 && (
+              <div className="space-y-3 pt-2">
+                <div className="text-[11px] font-bold text-[#8591A5] uppercase tracking-wider flex items-center gap-1.5">
+                  <GitCommit className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Lineage Transition Events ({lineageDetail.events.length})</span>
+                </div>
+                <div className="space-y-2.5">
+                  {lineageDetail.events.map((ev, i) => (
+                    <div
+                      key={ev.event_id || i}
+                      className="p-3.5 rounded-[16px] bg-[#F8FAFD] border border-slate-200/80 flex items-start justify-between gap-4 text-[12px]"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[11px] font-bold uppercase text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded-full">
+                            {ev.event_type}
+                          </span>
+                          <span className="font-mono text-[11px] text-slate-400">
+                            Snapshot: {ev.snapshot_id}
+                          </span>
+                        </div>
+                        <p className="text-slate-600 font-sans">{ev.explanation}</p>
+                      </div>
+                      <span className="font-mono text-[11px] text-slate-400 shrink-0">
+                        {new Date(ev.timestamp).toLocaleTimeString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="p-6 rounded-[18px] bg-slate-50 text-center space-y-1 text-slate-500 text-[13px]">
+            <p>No active temporal lineage linked to narrative ID <span className="font-mono font-semibold">{narrative.narrative_id}</span>.</p>
+            <p className="text-[11px] text-slate-400">
+              Run <span className="font-mono">python backend/scripts/update_temporal_lineage.py</span> to track cross-snapshot continuity.
+            </p>
+          </div>
+        )}
+      </section>
+
+      {/* 6. Representative Centroid Messages / Evidence Excerpts */}
       <section className="p-6 md:p-8 rounded-[26px] border border-[rgba(228,233,245,0.85)] bg-white shadow-dashboard space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-4">
           <div className="flex items-center gap-2.5">

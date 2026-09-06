@@ -15,7 +15,7 @@ import {
 import { PageHeader } from '../../layout/PageHeader';
 import { Button } from '../../components/ui/Button';
 import { telemetryApi } from '../../services/telemetryApi';
-import { AnalyticsOverviewResponse, NarrativeSummaryResponse } from '../../types/api';
+import { AnalyticsOverviewResponse, NarrativeSummaryResponse, PipelineStatusResponse } from '../../types/api';
 import {
   formatPriorityTierBadge,
   formatEvidenceDensityBadge,
@@ -31,6 +31,7 @@ export const OverviewPage: React.FC = () => {
 
   const [analytics, setAnalytics] = useState<AnalyticsOverviewResponse | null>(null);
   const [topNarratives, setTopNarratives] = useState<NarrativeSummaryResponse[]>([]);
+  const [pipelineStatus, setPipelineStatus] = useState<PipelineStatusResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -41,7 +42,7 @@ export const OverviewPage: React.FC = () => {
     setIsError(false);
     setErrorMessage('');
     try {
-      const [analyticsData, narrativesData] = await Promise.all([
+      const [analyticsData, narrativesData, statusData] = await Promise.all([
         telemetryApi.getAnalyticsOverview(),
         telemetryApi.getNarratives({
           page: 1,
@@ -49,9 +50,13 @@ export const OverviewPage: React.FC = () => {
           sort_by: 'priority_signal_score',
           order: 'desc',
         }),
+        telemetryApi.getPipelineStatus().catch(() => null),
       ]);
       setAnalytics(analyticsData);
       setTopNarratives(narrativesData.data);
+      if (statusData) {
+        setPipelineStatus(statusData);
+      }
     } catch (e: any) {
       console.error('Failed to load overview analytics:', e);
       setIsError(true);
@@ -140,6 +145,33 @@ export const OverviewPage: React.FC = () => {
               </span>
             </>
           )}
+          {pipelineStatus?.cumulative_record_count && (
+            <>
+              <span className="text-slate-300">•</span>
+              <span>
+                Corpus:{' '}
+                <span className="font-mono font-medium text-[#111727]">
+                  {pipelineStatus.cumulative_record_count.toLocaleString()} msgs
+                </span>
+              </span>
+            </>
+          )}
+          {pipelineStatus?.last_collection_run && (
+            <>
+              <span className="text-slate-300">•</span>
+              <span>
+                Last Sync:{' '}
+                <span className="font-mono text-[12px] text-[#475569]">
+                  {new Date(pipelineStatus.last_collection_run).toLocaleTimeString()}
+                </span>
+                {pipelineStatus.last_new_record_count !== null && pipelineStatus.last_new_record_count !== undefined && (
+                  <span className="ml-1 text-[11px] font-mono font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
+                    +{pipelineStatus.last_new_record_count} new
+                  </span>
+                )}
+              </span>
+            </>
+          )}
           {execution && (
             <>
               <span className="text-slate-300">•</span>
@@ -151,12 +183,37 @@ export const OverviewPage: React.FC = () => {
               </span>
             </>
           )}
+          {pipelineStatus?.active_lineages_count !== undefined && pipelineStatus?.active_lineages_count !== null && (
+            <>
+              <span className="text-slate-300">•</span>
+              <span>
+                Lineages:{' '}
+                <span className="font-mono font-medium text-[#111727]">
+                  {pipelineStatus.active_lineages_count} active
+                </span>
+              </span>
+            </>
+          )}
         </div>
         <div className="flex items-center gap-2 font-semibold">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-emerald-700 font-mono text-[12px] uppercase tracking-wider">
-            Pipeline Ready
-          </span>
+          {pipelineStatus?.analytics_current === false ? (
+            <>
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+              <span
+                className="text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full font-mono text-[11px] uppercase tracking-wider"
+                title={pipelineStatus.stale_analytics_reason || 'Analytics artifact does not reflect recent ingested records'}
+              >
+                Analytics Stale (Pending Run)
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-emerald-700 font-mono text-[12px] uppercase tracking-wider">
+                {pipelineStatus?.corpus_snapshot_id ? 'Snapshot Sync' : 'Pipeline Ready'}
+              </span>
+            </>
+          )}
         </div>
       </div>
 

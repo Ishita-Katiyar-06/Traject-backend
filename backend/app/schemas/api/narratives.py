@@ -26,6 +26,14 @@ class NarrativeSummaryResponse(BaseModel):
     first_observed_at: datetime = Field(description="Earliest publication timestamp in cluster (UTC)")
     last_observed_at: datetime = Field(description="Latest publication timestamp in cluster (UTC)")
 
+    # Milestone 6C: Validation and Cross-Source Evidence (Backward-compatible with defaults)
+    distinct_sources_count: int = Field(default=1, ge=1, description="Number of distinct broadcasting sources")
+    distinct_domains_count: int = Field(default=1, ge=0, description="Number of distinct strategic domains represented")
+    is_cross_source: bool = Field(default=False, description="True if observed across >= 2 distinct sources")
+    is_cross_domain: bool = Field(default=False, description="True if observed across >= 2 distinct domains")
+    domains_represented: list[str] = Field(default_factory=list, description="Strategic domains represented")
+    quality_classification: str = Field(default="moderate_evidence", description="Observational evidence tier")
+
 
 class NarrativeListResponse(BaseModel):
     """Paginated collection response for GET /api/v1/narratives."""
@@ -35,8 +43,21 @@ class NarrativeListResponse(BaseModel):
     meta: PaginationMeta
 
 
+class NarrativeDetailData(NarrativeCandidate):
+    """Extended narrative candidate model exposing deterministic quality and cross-source evidence."""
+    model_config = ConfigDict(extra="forbid")
+
+    distinct_sources_count: int = Field(default=1, ge=1, description="Number of distinct broadcasting sources")
+    distinct_domains_count: int = Field(default=1, ge=0, description="Number of distinct strategic domains represented")
+    is_cross_source: bool = Field(default=False, description="True if observed across >= 2 distinct sources")
+    is_cross_domain: bool = Field(default=False, description="True if observed across >= 2 distinct domains")
+    domains_represented: list[str] = Field(default_factory=list, description="Strategic domains represented")
+    quality_classification: str = Field(default="moderate_evidence", description="Observational evidence tier")
+    validation_notes: list[str] = Field(default_factory=list, description="Deterministic validation notes")
+
+
 class NarrativeDetailResponse(BaseModel):
     """Detailed explainable narrative candidate response for GET /api/v1/narratives/{id}."""
     model_config = ConfigDict(extra="forbid")
 
-    data: NarrativeCandidate
+    data: NarrativeDetailData | NarrativeCandidate

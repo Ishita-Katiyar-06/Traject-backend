@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -261,6 +262,83 @@ def read_canonical_messages(file_path: Path | str) -> list[CanonicalMessage]:
         messages.append(CanonicalMessage(**row))
 
     return messages
+
+
+def append_canonical_messages(
+    parquet_path: Path | str,
+    new_messages: Iterable[CanonicalMessage],
+    metadata: dict[str, str] | None = None,
+) -> tuple[int, int]:
+    """Safely append new CanonicalMessage domain records to an existing Parquet dataset.
+    
+    Guarantees:
+    - Idempotency: Excludes any incoming records whose canonical_id already exists in the dataset.
+    - Preserves existing schema and existing rows without data loss.
+    - Atomic write: writes combined dataset to a temporary file, then replaces destination.
+    - Returns (records_appended, total_cumulative_records).
+    
+    Args:
+        parquet_path: Path to the target Parquet file.
+        new_messages: Iterable of incoming CanonicalMessage objects.
+        metadata: Optional metadata updates to store in Parquet footer.
+        
+    Returns:
+        tuple[int, int]: (newly_appended_count, total_count_after_append).
+    """
+    path = Path(parquet_path).resolve()
+    new_list = list(new_messages)
+
+    if not path.exists():
+        if not new_list:
+            return 0, 0
+        written = write_canonical_messages(new_list, path, metadata=metadata, overwrite=True)
+        return written, written
+
+    existing_messages = read_canonical_messages(path)
+    existing_ids = {m.canonical_id for m in existing_messages}
+
+    # Strict deduplication against existing canonical records
+    distinct_new = [m for m in new_list if m.canonical_id not in existing_ids]
+
+    if not distinct_new:
+        logger.info(
+            "No new distinct canonical records to append to %s (all %d incoming records already present).",
+            path,
+            len(new_list),
+        )
+        return 0, len(existing_messages)
+
+    # Combine existing + new records
+    combined = existing_messages + distinct_new
+
+    # Merge metadata
+    combined_meta = read_parquet_metadata(path)
+    if metadata:
+        combined_meta.update(metadata)
+    combined_meta["last_appended_at"] = datetime.now(timezone.utc).isoformat()
+    combined_meta["appended_records_count"] = str(len(distinct_new))
+    combined_meta["total_records_count"] = str(len(combined))
+
+    # Atomic write to temporary file in same directory
+    temp_path = path.with_suffix(".tmp.parquet")
+    try:
+        write_canonical_messages(combined, temp_path, metadata=combined_meta, overwrite=True)
+        os.replace(temp_path, path)
+        logger.info(
+            "Successfully appended %d new records to %s (new total: %d records).",
+            len(distinct_new),
+            path,
+            len(combined),
+        )
+        return len(distinct_new), len(combined)
+    except Exception as e:
+        logger.error("Failed to safely append to Parquet file %s: %s", path, e)
+        if temp_path.exists():
+            try:
+                temp_path.unlink()
+            except OSError:
+                pass
+        raise
 
 
 def build_processed_dataset(

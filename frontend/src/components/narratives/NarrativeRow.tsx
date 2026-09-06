@@ -58,6 +58,22 @@ export const NarrativeRow: React.FC<NarrativeRowProps> = ({ narrative }) => {
           >
             {densityBadge.label} Coverage
           </span>
+          {narrative.is_cross_source && (
+            <>
+              <span className="text-slate-300 text-[11px]">•</span>
+              <span className="text-[11px] font-semibold text-teal-800 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-full" title={`Observed across ${narrative.distinct_sources_count} distinct channels`}>
+                Cross-Source ({narrative.distinct_sources_count || 2})
+              </span>
+            </>
+          )}
+          {narrative.is_cross_domain && (
+            <>
+              <span className="text-slate-300 text-[11px]">•</span>
+              <span className="text-[11px] font-semibold text-purple-800 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full" title={`Spans ${narrative.distinct_domains_count} strategic domains`}>
+                Cross-Domain ({narrative.distinct_domains_count || 2})
+              </span>
+            </>
+          )}
           {narrative.has_coordination_signals && (
             <>
               <span className="text-slate-300 text-[11px]">•</span>
@@ -82,6 +98,18 @@ export const NarrativeRow: React.FC<NarrativeRowProps> = ({ narrative }) => {
             <Layers className="w-3 h-3 text-slate-400" />
             <span><strong className="text-[#111727]">{narrative.message_count}</strong> messages</span>
           </span>
+          {narrative.domains_represented && narrative.domains_represented.length > 0 && (
+            <>
+              <span className="text-slate-300">•</span>
+              <span className="inline-flex items-center gap-1.5 font-medium text-slate-600">
+                {narrative.domains_represented.map((dom) => (
+                  <span key={dom} className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-mono">
+                    {dom}
+                  </span>
+                ))}
+              </span>
+            </>
+          )}
           {narrative.last_observed_at && (
             <>
               <span className="text-slate-300">•</span>
