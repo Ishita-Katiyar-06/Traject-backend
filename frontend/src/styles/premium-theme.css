@@ -1,0 +1,266 @@
+/* ==========================================================================
+   EXTRACTED DESIGN SYSTEM UTILITIES (Reference UI)
+   Imported globally for project-wide usage across all pages and components
+   ========================================================================== */
+
+/* 1. Core Card Foundations */
+.premium-card {
+  background-color: var(--dash-card, #FFFFFF);
+  border-radius: var(--dash-radius-card, 26px);
+  box-shadow: var(--dash-shadow-card, 0 10px 30px -5px rgba(112, 128, 176, 0.08));
+  border: 1px solid var(--dash-border, rgba(228, 233, 245, 0.85));
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  color: var(--dash-text-title, #111727);
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-card:hover {
+  box-shadow: var(--dash-shadow-hover, 0 16px 40px -6px rgba(112, 128, 176, 0.14));
+}
+
+/* 2. Authentic Mesh Gradients */
+.premium-gradient-peach {
+  background: linear-gradient(135deg, #FFA690 0%, #FF856D 50%, #FFEBE5 100%);
+  border-radius: var(--dash-radius-card, 26px);
+  color: #111727;
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-gradient-cyan {
+  background: linear-gradient(135deg, #53E5C3 0%, #38BDF8 50%, #EFF6FF 100%);
+  border-radius: var(--dash-radius-card, 26px);
+  color: #111727;
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-gradient-blue {
+  background: linear-gradient(135deg, #2563EB 0%, #60A5FA 100%);
+  color: #FFFFFF;
+}
+
+/* 3. Frosted Glass Floating Action Badges */
+.premium-glass-icon {
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 150ms ease, background 150ms ease;
+}
+
+.premium-glass-icon:hover {
+  background: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+/* 4. Pill Search & Pill Inputs */
+.premium-pill-input {
+  background-color: var(--dash-surface-pill, #E5E9F4);
+  border-radius: 9999px;
+  color: #111727;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 150ms ease;
+}
+
+.premium-pill-input::placeholder {
+  color: var(--dash-text-muted, #8591A5);
+}
+
+.premium-pill-input:focus {
+  outline: none;
+  background-color: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(47, 101, 246, 0.2), 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* 5. Capsule Containers & Status Docks */
+.premium-capsule {
+  background-color: var(--dash-surface-capsule, #F6F8FC);
+  border-radius: 9999px;
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+
+/* 6. Trend Direction Indicator Badges */
+.premium-badge-up {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background-color: var(--dash-accent-blue, #2F65F6);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(47, 101, 246, 0.3);
+}
+
+.premium-badge-down {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background-color: var(--dash-accent-orange, #FF8833);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(255, 136, 51, 0.3);
+}
+
+/* 7. Progress Bars */
+.premium-progress-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 9999px;
+  background-color: #E5EAF3;
+  overflow: hidden;
+}
+
+.premium-progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background-color: var(--dash-accent-blue, #2F65F6);
+  transition: width 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 8. Floating Week Tooltip Pill */
+.premium-floating-tooltip {
+  background-color: #FFFFFF;
+  border-radius: 9999px;
+  padding: 6px 16px;
+  box-shadow: var(--dash-shadow-tooltip, 0 6px 20px rgba(0, 0, 0, 0.08));
+  border: 1px solid rgba(228, 233, 245, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   DARK MODE REFINED ENTERPRISE STYLING (AUTHENTIC CHARCOAL & SLATE)
+   Matte solid charcoal surfaces, precision borders, clean typography.
+   Strictly scoped under html.dark so White Mode is 100% untouched.
+   ========================================================================== */
+/* Card 1: Emerging Signals (Smooth Dark Peach/Coral Mesh Gradient) */
+html.dark .premium-gradient-peach,
+html.dark [class*="from-[#FFA690]"] {
+  background: radial-gradient(circle at 85% 15%, rgba(255, 133, 109, 0.18) 0%, transparent 60%),
+              linear-gradient(135deg, #421D18 0%, #321716 38%, #221618 72%, #171C22 100%) !important;
+  border: 1px solid rgba(255, 133, 109, 0.28) !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.40), inset 0 1px 1px rgba(255, 255, 255, 0.08) !important;
+  color: #FFFFFF !important;
+}
+
+html.dark [class*="from-[#FFA690]"]:hover,
+html.dark .premium-gradient-peach:hover {
+  border-color: rgba(255, 133, 109, 0.45) !important;
+  box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.50), 0 0 24px rgba(255, 109, 90, 0.14) !important;
+}
+
+/* Card 2: Ingest Velocity (Smooth Dark Aqua/Cyan Mesh Gradient) */
+html.dark .premium-gradient-cyan,
+html.dark [class*="from-[#53E5C3]"] {
+  background: radial-gradient(circle at 15% 85%, rgba(56, 189, 248, 0.16) 0%, transparent 60%),
+              linear-gradient(135deg, #113B36 0%, #0E303A 38%, #10222B 72%, #171C22 100%) !important;
+  border: 1px solid rgba(83, 229, 195, 0.28) !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.40), inset 0 1px 1px rgba(255, 255, 255, 0.08) !important;
+  color: #FFFFFF !important;
+}
+
+html.dark [class*="from-[#53E5C3]"]:hover,
+html.dark .premium-gradient-cyan:hover {
+  border-color: rgba(83, 229, 195, 0.45) !important;
+  box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.50), 0 0 24px rgba(83, 229, 195, 0.14) !important;
+}
+
+/* Atmospheric corner light orbs matching light mode's diffused glow */
+html.dark [class*="from-[#FFA690]"] > [class*="blur-"],
+html.dark .premium-gradient-peach [class*="blur-"] {
+  display: block !important;
+  opacity: 0.18 !important;
+  background-color: #FFA690 !important;
+  filter: blur(28px) !important;
+}
+
+html.dark [class*="from-[#53E5C3]"] > [class*="blur-"],
+html.dark .premium-gradient-cyan [class*="blur-"] {
+  display: block !important;
+  opacity: 0.18 !important;
+  background-color: #53E5C3 !important;
+  filter: blur(28px) !important;
+}
+
+/* Frosted, Translucent Glass Icon Boxes matching Light Mode's elegance */
+html.dark .premium-glass-icon,
+html.dark [class*="from-[#FFA690]"] [class*="bg-white/35"],
+html.dark [class*="from-[#53E5C3]"] [class*="bg-white/35"] {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.20) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.20) !important;
+}
+
+html.dark [class*="from-[#FFA690]"] [class*="bg-white/35"] svg,
+html.dark [class*="from-[#53E5C3]"] [class*="bg-white/35"] svg,
+html.dark .premium-glass-icon svg {
+  color: #FFFFFF !important;
+}
+
+/* Frosted Translucent Trend Badges on Gradient Cards */
+html.dark [class*="from-[#FFA690]"] [class*="bg-white/40"],
+html.dark [class*="from-[#53E5C3]"] [class*="bg-white/40"] {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  color: #FFFFFF !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+}
+
+/* Text Hierarchy on Dark Gradient Cards */
+html.dark [class*="from-[#FFA690]"] span[class*="tracking-wide"],
+html.dark [class*="from-[#53E5C3]"] span[class*="tracking-wide"],
+html.dark .premium-gradient-peach h3,
+html.dark .premium-gradient-cyan h3 {
+  color: #FFFFFF !important;
+}
+
+html.dark [class*="from-[#FFA690]"] p,
+html.dark [class*="from-[#53E5C3]"] p,
+html.dark [class*="from-[#FFA690]"] span:not([class*="bg-white/40"]):not([class*="tracking-wide"]),
+html.dark [class*="from-[#53E5C3]"] span:not([class*="bg-white/40"]):not([class*="tracking-wide"]) {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+html.dark [class*="from-[#FFA690]"] [class*="text-[40px]"],
+html.dark [class*="from-[#53E5C3]"] [class*="text-[40px]"] {
+  color: #FFFFFF !important;
+}
+
+/* Tooltip & Progress Clean Overrides */
+html.dark .premium-floating-tooltip {
+  background-color: #20262D !important;
+  border-color: #303740 !important;
+  color: #F1F3F5 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.40) !important;
+}
+
+html.dark .premium-progress-track {
+  background-color: #191F26 !important;
+}
+
+html.dark .premium-progress-fill {
+  background-color: #5878C7 !important;
+}
+

@@ -1,0 +1,791 @@
+@import './tokens.css';
+@import './fonts.css';
+@import './premium-theme.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, ::before, ::after {
+    box-sizing: border-box;
+    border-color: var(--color-border);
+  }
+
+  html {
+    height: 100%;
+    color-scheme: light;
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    text-rendering: geometricPrecision;
+    font-feature-settings: "tnum" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    height: 100%;
+    margin: 0;
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+    overflow: hidden;
+  }
+
+  /* Text selection highlight */
+  ::selection {
+    background-color: rgba(47, 101, 246, 0.2);
+    color: var(--color-text-primary);
+  }
+
+  ::-moz-selection {
+    background-color: rgba(47, 101, 246, 0.2);
+    color: var(--color-text-primary);
+  }
+
+  /* Accessible soft blue focus indicators */
+  :focus-visible {
+    outline: 2px solid var(--dash-accent-blue);
+    outline-offset: 2px;
+  }
+
+  /* Precision subtle scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+  }
+}
+
+@layer utilities {
+  .border-subtle {
+    border-color: var(--color-border-subtle);
+  }
+  
+  .surface-panel {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--dash-shadow-card);
+  }
+
+  .surface-elevated {
+    background-color: var(--color-surface-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--dash-shadow-card);
+  }
+}
+
+/* ==========================================================================
+   AUTHENTIC CHARCOAL & SLATE DARK ANALYTICAL MODE
+   Deep charcoal canvas (#0D1014) + solid primary cards (#171C22) +
+   elevated surfaces (#1D232A) + precision borders (#2B323A) +
+   dividers (#252B32) + high-contrast text hierarchy + restrained accents.
+   Strictly scoped under html.dark so White Mode is 100% untouched.
+   ========================================================================== */
+html.dark,
+html.dark body {
+  background-color: #0D1014 !important;
+  color: #AEB5BE !important;
+}
+
+html.dark aside {
+  background-color: #11151A !important;
+  border-color: #252B32 !important;
+}
+
+html.dark header {
+  background-color: #101419 !important;
+  border-color: #252B32 !important;
+}
+
+html.dark main,
+html.dark [class*="bg-[#EEF1F8]"] {
+  background-color: #0D1014 !important;
+}
+
+/* Primary Surface Panels & Cards */
+html.dark .bg-white,
+html.dark [class*="bg-white"] {
+  background-color: #171C22 !important;
+  border-color: #2B323A !important;
+}
+
+html.dark [class*="hover:bg-[#F8FAFD]"]:hover {
+  background-color: #22282F !important;
+  border-color: #37404B !important;
+}
+
+/* Static Secondary & Elevated Surfaces */
+html.dark span[class*="bg-[#F8FAFD]"],
+html.dark div[class*="bg-[#F8FAFD]"],
+html.dark button[class*="bg-[#F8FAFD]"],
+html.dark a[class*="bg-[#F8FAFD]"],
+html.dark span[class*="bg-[#F1F4F9]"],
+html.dark kbd[class*="bg-[#F1F4F9]"],
+html.dark div[class*="bg-[#F1F4F9]"],
+html.dark button[class*="bg-[#F1F4F9]"],
+html.dark span[class*="bg-[#E5E9F4]"],
+html.dark div[class*="bg-[#E5E9F4]"],
+html.dark button[class*="bg-[#E5E9F4]"] {
+  background-color: #191F26 !important;
+  border-color: #2B323A !important;
+}
+
+/* High-Contrast Typography Hierarchy */
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6,
+html.dark strong,
+html.dark [class*="text-[#111727]"] {
+  color: #F8FAFC !important;
+}
+
+html.dark p,
+html.dark [class*="text-[#475569]"] {
+  color: #CBD5E1 !important;
+}
+
+html.dark [class*="text-[#64748B]"] {
+  color: #CBD5E1 !important;
+}
+
+html.dark label,
+html.dark [class*="text-[#8591A5]"] {
+  color: #94A3B8 !important;
+}
+
+html.dark [class*="text-slate-300"] {
+  color: #7A8699 !important;
+}
+
+/* Interactive Card & Link Hover - Focused Crisp Highlight */
+html.dark [class*="group"]:hover [class*="group-hover:text-[#2F65F6]"],
+html.dark [class*="group-hover:text-[#2F65F6]"]:hover,
+html.dark a:hover [class*="group-hover:text-[#2F65F6]"],
+html.dark .group:hover .group-hover\:text-\[\#2F65F6\],
+html.dark [class*="group"]:hover h3 {
+  color: #6E8ED4 !important;
+}
+
+/* Accent Blues */
+html.dark [class*="text-[#2F65F6]"] {
+  color: #5878C7 !important;
+}
+
+/* Semantic Accent Highlights */
+html.dark [class*="text-[#FF6D5A]"],
+html.dark [class*="text-[#C0503E]"] {
+  color: #E87868 !important;
+}
+
+/* Structural Borders & Dividers */
+html.dark [class*="border-[rgba(228,233,245"] {
+  border-color: #2B323A !important;
+}
+
+html.dark [class*="divide-[rgba(228,233,245"] {
+  border-color: #252B32 !important;
+}
+
+/* High-End Refined Buttons in Dark Mode */
+html.dark button.bg-white,
+html.dark button[class*="bg-white"] {
+  background-color: #191F26 !important;
+  border-color: #2B323A !important;
+  color: #C4CAD1 !important;
+}
+
+html.dark button.bg-white:hover,
+html.dark button[class*="bg-white"]:hover {
+  background-color: #22282F !important;
+  border-color: #37404B !important;
+  color: #F1F3F5 !important;
+}
+
+html.dark button[class*="bg-[#2F65F6]"] {
+  background-color: #5878C7 !important;
+  color: #F1F3F5 !important;
+  border-color: transparent !important;
+}
+
+html.dark button[class*="bg-[#2F65F6]"]:hover {
+  background-color: #4D6BB8 !important;
+}
+
+html.dark button[class*="hover:bg-[#E5E9F4]"]:hover {
+  background-color: #1D232A !important;
+  color: #F1F3F5 !important;
+}
+
+/* Secondary Button Icons */
+html.dark button [class*="text-[#2F65F6]"] {
+  color: #6E8ED4 !important;
+}
+
+html.dark button [class*="text-[#FF6D5A]"] {
+  color: #E87868 !important;
+}
+
+/* Dropdown Triggers & Select Controls (excluding navigation bars) */
+html.dark button[aria-expanded]:not(nav button) {
+  background-color: #191F26 !important;
+  border-color: #2B323A !important;
+  color: #F1F3F5 !important;
+}
+
+html.dark button[aria-expanded]:not(nav button):hover {
+  background-color: #22282F !important;
+  border-color: #37404B !important;
+}
+
+html.dark button[aria-expanded="true"]:not(nav button) {
+  border-color: #5878C7 !important;
+  box-shadow: 0 0 0 1.5px #5878C7 !important;
+}
+
+html.dark button[aria-expanded]:not(nav button) span {
+  color: #F1F3F5 !important;
+}
+
+html.dark button[aria-expanded]:not(nav button) svg {
+  color: #858D98 !important;
+}
+
+/* Mobile Bottom Navigation Bar - Flat, borderless buttons and links */
+html.dark nav[aria-label="Mobile primary navigation"] button,
+html.dark nav[aria-label="Mobile primary navigation"] a {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+html.dark nav[aria-label="Mobile primary navigation"] button:hover,
+html.dark nav[aria-label="Mobile primary navigation"] a:hover {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Floating Dropdown Menus & Listboxes */
+html.dark [role="listbox"],
+html.dark [role="menu"] {
+  background-color: #20262D !important;
+  border: 1px solid #303740 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.40) !important;
+}
+
+/* ALL unselected options: flat, transparent, NO box container, NO border */
+html.dark [role="listbox"] button,
+html.dark [role="menu"] button,
+html.dark [role="listbox"] [role="option"],
+html.dark [role="menu"] [role="menuitem"],
+html.dark [role="listbox"] button:not([aria-selected="true"]),
+html.dark [role="menu"] button:not([aria-selected="true"]),
+html.dark [role="listbox"] [role="option"]:not([aria-selected="true"]),
+html.dark [role="menu"] [role="menuitem"]:not([aria-selected="true"]) {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #C4CAD1 !important;
+  font-weight: 500 !important;
+}
+
+/* Hover on unselected options: soft neutral highlight without border */
+html.dark [role="listbox"] button:not([aria-selected="true"]):hover,
+html.dark [role="menu"] button:not([aria-selected="true"]):hover,
+html.dark [role="listbox"] [role="option"]:not([aria-selected="true"]):hover,
+html.dark [role="menu"] [role="menuitem"]:not([aria-selected="true"]):hover {
+  background-color: #292F36 !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #F1F3F5 !important;
+}
+
+/* Selected option: Subtle restrained blue tint */
+html.dark [role="listbox"] button[aria-selected="true"],
+html.dark [role="listbox"] [role="option"][aria-selected="true"],
+html.dark [role="menu"] button[aria-selected="true"],
+html.dark [role="menu"] [role="menuitem"][aria-selected="true"],
+html.dark [role="listbox"] button[class*="bg-[#EEF2FF]"],
+html.dark [role="listbox"] [role="option"][class*="bg-[#EEF2FF]"],
+html.dark [role="menu"] button[class*="bg-[#EEF2FF]"],
+html.dark [role="menu"] [role="menuitem"][class*="bg-[#EEF2FF]"] {
+  background-color: rgba(88, 120, 199, 0.12) !important;
+  color: #E8ECF3 !important;
+  font-weight: 600 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+html.dark [role="listbox"] button[aria-selected="true"] svg,
+html.dark [role="listbox"] [role="option"][aria-selected="true"] svg,
+html.dark [role="menu"] button[aria-selected="true"] svg,
+html.dark [role="menu"] [role="menuitem"][aria-selected="true"] svg,
+html.dark [role="listbox"] button[class*="bg-[#EEF2FF]"] svg,
+html.dark [role="listbox"] [role="option"][class*="bg-[#EEF2FF]"] svg,
+html.dark [role="menu"] button[class*="bg-[#EEF2FF]"] svg,
+html.dark [role="menu"] [role="menuitem"][class*="bg-[#EEF2FF]"] svg {
+  color: #6E8ED4 !important;
+}
+
+/* Inputs & Search Bars */
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background-color: #191F26 !important;
+  border-color: #2B323A !important;
+  color: #E8EBEF !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #858D98 !important;
+}
+
+html.dark input:focus,
+html.dark textarea:focus,
+html.dark select:focus {
+  border-color: #5878C7 !important;
+  box-shadow: 0 0 0 1.5px #5878C7 !important;
+  background-color: #191F26 !important;
+}
+
+/* Header Search Bar Trigger Pill */
+html.dark header button[aria-label*="Search"] {
+  background-color: #191F26 !important;
+  border-color: #2B323A !important;
+  color: #858D98 !important;
+}
+
+html.dark header button[aria-label*="Search"]:hover {
+  background-color: #22282F !important;
+  border-color: #37404B !important;
+}
+
+html.dark header button[aria-label*="Search"] span {
+  color: #C4CAD1 !important;
+}
+
+html.dark header button[aria-label*="Search"] svg {
+  color: #858D98 !important;
+}
+
+html.dark header button[aria-label*="Search"] kbd {
+  background-color: #22282F !important;
+  border-color: #2B323A !important;
+  color: #858D98 !important;
+}
+
+html.dark header button[aria-label*="Notifications"],
+html.dark header button[aria-label*="User"] {
+  background-color: #191F26 !important;
+  border-color: #2B323A !important;
+  color: #C4CAD1 !important;
+}
+
+html.dark header button[aria-label*="Notifications"]:hover,
+html.dark header button[aria-label*="User"]:hover {
+  background-color: #22282F !important;
+  border-color: #37404B !important;
+  color: #F1F3F5 !important;
+}
+
+/* Left Sidebar Navigation & Mobile Navigation Drawer */
+html.dark aside a,
+html.dark [role="dialog"] nav a {
+  color: #858D98 !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+html.dark aside a svg,
+html.dark [role="dialog"] nav a svg {
+  color: #858D98 !important;
+}
+
+/* Inactive items: flat, transparent, clean neutral hover */
+html.dark aside a:not([aria-current="page"]):not(.active),
+html.dark [role="dialog"] nav a:not([aria-current="page"]):not(.active) {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #858D98 !important;
+}
+
+html.dark aside a:not([aria-current="page"]):not(.active) svg,
+html.dark [role="dialog"] nav a:not([aria-current="page"]):not(.active) svg {
+  color: #858D98 !important;
+}
+
+html.dark aside a:not([aria-current="page"]):not(.active):hover,
+html.dark [role="dialog"] nav a:not([aria-current="page"]):not(.active):hover {
+  background-color: #1D232A !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #F1F3F5 !important;
+}
+
+html.dark aside a:not([aria-current="page"]):not(.active):hover svg,
+html.dark [role="dialog"] nav a:not([aria-current="page"]):not(.active):hover svg {
+  color: #C4CAD1 !important;
+}
+
+/* Active navigation item: Subtle blue backing + off-white text + soft blue icon */
+html.dark aside a[aria-current="page"],
+html.dark aside a.active,
+html.dark [role="dialog"] nav a[aria-current="page"],
+html.dark [role="dialog"] nav a.active {
+  background-color: rgba(88, 120, 199, 0.10) !important;
+  color: #E8ECF3 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+html.dark aside a[aria-current="page"] svg,
+html.dark aside a.active svg,
+html.dark [role="dialog"] nav a[aria-current="page"] svg,
+html.dark [role="dialog"] nav a.active svg {
+  color: #6E8ED4 !important;
+}
+
+html.dark aside span[class*="bg-[#E5E9F4]"] {
+  background-color: #191F26 !important;
+  color: #858D98 !important;
+  border: none !important;
+}
+
+/* Theme Toggle Container in Sidebar & Mobile Navigation Sheet */
+html.dark aside div[class*="rounded-[14px]"],
+html.dark [role="dialog"] div[class*="rounded-[14px]"] {
+  background-color: #11151A !important;
+  border-color: #252B32 !important;
+}
+
+html.dark aside div[class*="rounded-[14px]"] button,
+html.dark [role="dialog"] div[class*="rounded-[14px]"] button {
+  border: none !important;
+}
+
+html.dark aside div[class*="rounded-[14px]"] button[class*="bg-white"],
+html.dark [role="dialog"] div[class*="rounded-[14px]"] button[class*="bg-white"] {
+  background-color: #1D232A !important;
+  color: #F1F3F5 !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+html.dark aside div[class*="rounded-[14px]"] button:not([class*="bg-white"]),
+html.dark [role="dialog"] div[class*="rounded-[14px]"] button:not([class*="bg-white"]) {
+  background-color: transparent !important;
+  color: #858D98 !important;
+  border: none !important;
+}
+
+html.dark aside div[class*="rounded-[14px]"] button:not([class*="bg-white"]):hover,
+html.dark [role="dialog"] div[class*="rounded-[14px]"] button:not([class*="bg-white"]):hover {
+  color: #F8FAFC !important;
+}
+
+/* Collapsed Sidebar Footer Controls (Theme Toggle & Expand Buttons) */
+html.dark aside button[class*="w-10 h-10"],
+html.dark aside button[aria-label="Toggle theme"],
+html.dark aside button[aria-label*="sidebar"] {
+  background-color: #161B21 !important;
+  border: 1px solid #252B32 !important;
+  box-shadow: none !important;
+  color: #94A3B8 !important;
+}
+
+html.dark aside button[class*="w-10 h-10"]:hover,
+html.dark aside button[aria-label="Toggle theme"]:hover,
+html.dark aside button[aria-label*="sidebar"]:hover {
+  background-color: #1F252D !important;
+  border-color: #37404B !important;
+  color: #F8FAFC !important;
+}
+
+html.dark aside button[class*="w-10 h-10"] svg,
+html.dark aside button[aria-label*="sidebar"] svg {
+  color: #94A3B8 !important;
+}
+
+html.dark aside button[aria-label="Toggle theme"] svg {
+  color: #D49A5F !important;
+}
+
+html.dark aside button[class*="w-10 h-10"]:hover svg,
+html.dark aside button[aria-label*="sidebar"]:hover svg {
+  color: #F8FAFC !important;
+}
+
+html.dark .nav-dot {
+  --tw-ring-color: #11151A !important;
+}
+
+/* Status Badges - Controlled Subtle Tints with High-Legibility Text */
+html.dark .bg-emerald-50,
+html.dark [class*="bg-emerald-50"],
+html.dark [class*="bg-[#ECFDF5]"] {
+  background-color: rgba(91, 184, 168, 0.14) !important;
+  color: #6EE7D0 !important;
+  border-color: rgba(91, 184, 168, 0.28) !important;
+}
+
+html.dark .text-emerald-700,
+html.dark [class*="text-[#059669]"],
+html.dark [class*="text-emerald-600"] {
+  color: #6EE7D0 !important;
+}
+
+html.dark .bg-emerald-500,
+html.dark [class*="bg-[#10B981]"] {
+  background-color: #5BB8A8 !important;
+}
+
+html.dark .bg-rose-50,
+html.dark [class*="bg-[#FF6D5A]/10"],
+html.dark [class*="bg-[#FF6D5A]/12"],
+html.dark [class*="bg-[#FFF1F0]"] {
+  background-color: rgba(232, 120, 104, 0.14) !important;
+  color: #FFA194 !important;
+  border-color: rgba(232, 120, 104, 0.28) !important;
+}
+
+html.dark [class*="text-[#FF6D5A]"],
+html.dark [class*="text-[#C0503E]"] {
+  color: #FFA194 !important;
+}
+
+html.dark [class*="bg-[#FFFBEB]"],
+html.dark [class*="border-[#FDE68A]"] {
+  background-color: rgba(212, 154, 95, 0.14) !important;
+  color: #FBBF24 !important;
+  border-color: rgba(212, 154, 95, 0.28) !important;
+}
+
+html.dark [class*="text-[#B45309]"],
+html.dark [class*="text-[#F59E0B]"] {
+  color: #FBBF24 !important;
+}
+
+html.dark [class*="bg-[#F59E0B]"] {
+  background-color: #D49A5F !important;
+}
+
+/* Badge Border Accents */
+html.dark [class*="border-[#FFD8D3]"] {
+  border-color: rgba(232, 120, 104, 0.30) !important;
+}
+
+html.dark [class*="border-[#D6E3FD]"] {
+  border-color: rgba(88, 120, 199, 0.30) !important;
+}
+
+html.dark [class*="border-[#A7F3D0]"] {
+  border-color: rgba(91, 184, 168, 0.30) !important;
+}
+
+html.dark [class*="border-[#E2E8F0]"] {
+  border-color: #2B323A !important;
+}
+
+/* Narrative Framing Blocks (Then vs Now High Contrast) */
+html.dark [class*="bg-[#FFF8F7]"] {
+  background-color: #241919 !important;
+  border-color: rgba(232, 120, 104, 0.32) !important;
+}
+
+html.dark [class*="bg-[#FFF8F7]"] p,
+html.dark [class*="bg-[#FFF8F7]"] [class*="text-[#111727]"] {
+  color: #F8FAFC !important;
+}
+
+html.dark [class*="bg-[#F8FAFD]"] p,
+html.dark [class*="bg-[#F8FAFD]"] [class*="text-[#64748B]"] {
+  color: #CBD5E1 !important;
+}
+
+/* Universal Selected State for Pale Blue Highlights (Prevents white box glare) */
+html.dark [class*="bg-[#EEF2FF]"] {
+  background-color: #222B38 !important;
+  border-color: #374760 !important;
+}
+
+html.dark [class*="bg-[#EEF2FF]"] .text-\[\#111727\],
+html.dark [class*="bg-[#EEF2FF]"] [class*="text-[#111727]"] {
+  color: #FFFFFF !important;
+}
+
+html.dark [class*="bg-[#EEF2FF]"] span[class*="text-[#8591A5]"],
+html.dark [class*="bg-[#EEF2FF]"] .text-\[\#8591A5\] {
+  color: #7B9DE0 !important;
+}
+
+html.dark [class*="bg-[#EEF2FF]"] div[class*="text-[#8591A5]"] {
+  color: #CBD5E1 !important;
+}
+
+/* Topic Pills & Meta Tags (static badges and tags) */
+html.dark span[class*="bg-[#EFF4FE]"],
+html.dark div[class*="bg-[#EFF4FE]"]:not(button):not([role="option"]):not([role="menuitem"]) {
+  background-color: rgba(88, 120, 199, 0.12) !important;
+  border-color: rgba(88, 120, 199, 0.28) !important;
+  color: #93C5FD !important;
+}
+
+html.dark span[class*="bg-[#F1F4F9]"],
+html.dark kbd[class*="bg-[#F1F4F9]"],
+html.dark div[class*="bg-[#F1F4F9]"]:not([role="listbox"]):not([role="menu"]):not(button) {
+  background-color: #191F26 !important;
+  border-color: #252B32 !important;
+  color: #94A3B8 !important;
+}
+
+/* Table Scanning & Row Hovers */
+html.dark th,
+html.dark thead tr {
+  background-color: #11151A !important;
+  border-color: #252B32 !important;
+  color: #94A3B8 !important;
+}
+
+html.dark tbody tr {
+  border-color: #252B32 !important;
+}
+
+html.dark tbody tr:hover,
+html.dark tr:hover td {
+  background-color: #22282F !important;
+}
+
+html.dark td {
+  color: #F8FAFC !important;
+}
+
+/* Modals & Dialogs (High Contrast & Clean Separation) */
+html.dark [role="dialog"] > div {
+  background-color: #171C22 !important;
+  border-color: #2B323A !important;
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.70), 0 0 0 1px #2B323A !important;
+}
+
+/* Global Search Input & Bar */
+html.dark [role="dialog"] input {
+  color: #F8FAFC !important;
+  background-color: transparent !important;
+  outline: none !important;
+}
+
+html.dark [role="dialog"] input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+html.dark [role="dialog"] input::placeholder {
+  color: #858D98 !important;
+}
+
+html.dark [role="dialog"] kbd {
+  background-color: #1D232A !important;
+  border: 1px solid #2B323A !important;
+  color: #94A3B8 !important;
+}
+
+/* Global Search Results List */
+html.dark [role="dialog"] .max-h-80 {
+  background-color: #171C22 !important;
+}
+
+html.dark [role="dialog"] .divide-y > * + * {
+  border-top-color: #222830 !important;
+}
+
+/* Unselected Search Item */
+html.dark [role="dialog"] [class*="hover:bg-[#F8FAFD]"] {
+  background-color: transparent !important;
+}
+
+html.dark [role="dialog"] [class*="hover:bg-[#F8FAFD]"]:hover {
+  background-color: #1D232A !important;
+}
+
+html.dark [role="dialog"] div[class*="text-[#111727]"] {
+  color: #F8FAFC !important;
+}
+
+html.dark [role="dialog"] span[class*="text-[#8591A5]"] {
+  color: #94A3B8 !important;
+}
+
+html.dark [role="dialog"] div[class*="text-[#8591A5]"] {
+  color: #CBD5E1 !important;
+}
+
+/* Icon Container inside Search Item */
+html.dark [role="dialog"] div[class*="w-7 h-7"],
+html.dark [role="dialog"] .w-7.h-7 {
+  background-color: #1A2027 !important;
+  border: 1px solid #2B323A !important;
+}
+
+/* Bottom Sheet Drawers (Mobile Navigation) - Maintain border-t only */
+html.dark [role="dialog"] > div[class*="rounded-t-"] {
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  border-top-color: #2B323A !important;
+}
+
+html.dark [role="dialog"] header,
+html.dark [role="dialog"] [class*="border-b"] {
+  border-color: #252B32 !important;
+}
+
+html.dark [role="dialog"] [class*="border-t"] {
+  background-color: #13171C !important;
+  border-color: #252B32 !important;
+}
+
+html.dark [role="dialog"] h2 {
+  color: #F8FAFC !important;
+}
+
+html.dark [role="dialog"] p {
+  color: #94A3B8 !important;
+}
+
+/* Restrained Shadows & Custom Scrollbars */
+html.dark .shadow-xs,
+html.dark .shadow-sm,
+html.dark .shadow-dashboard {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.30) !important;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #2B323A;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #3A424C;
+}
+
+
+

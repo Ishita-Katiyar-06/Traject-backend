@@ -1,0 +1,168 @@
+:root {
+  /* ==========================================================================
+     TESSERA PREMIUM LIGHT ANALYTICAL DESIGN SYSTEM
+     ========================================================================== */
+
+  /* Canvas & Surfaces */
+  --dash-canvas: #EEF1F8;
+  --dash-card: #FFFFFF;
+  --dash-surface-pill: #E5E9F4;
+  --dash-surface-capsule: #F6F8FC;
+  --dash-surface-hover: #F8FAFD;
+  --dash-border: rgba(228, 233, 245, 0.85);
+  --dash-border-subtle: rgba(235, 239, 248, 0.6);
+
+  /* Typography Palette */
+  --dash-text-title: #111727;
+  --dash-text-body: #475569;
+  --dash-text-muted: #8591A5;
+  --dash-text-subtle: #B0B9C6;
+
+  /* Semantic Accent Palette */
+  --dash-accent-blue: #2F65F6;
+  --dash-accent-blue-hover: #2152DE;
+  --dash-accent-coral: #FF6D5A;
+  --dash-accent-orange: #FF8833;
+  --dash-accent-purple: #9B72F4;
+  --dash-accent-aqua: #53E5C3;
+  --dash-accent-cyan: #38BDF8;
+
+  /* Standard Application Color Mappings */
+  --color-bg: var(--dash-canvas);
+  --color-surface: var(--dash-card);
+  --color-surface-elevated: var(--dash-card);
+  --color-surface-hover: var(--dash-surface-hover);
+
+  --color-border: var(--dash-border);
+  --color-border-subtle: var(--dash-border-subtle);
+  --color-border-focus: var(--dash-accent-blue);
+
+  --color-text-primary: var(--dash-text-title);
+  --color-text-secondary: var(--dash-text-body);
+  --color-text-muted: var(--dash-text-muted);
+
+  --color-selection: var(--dash-accent-blue);
+  --color-selection-text: #FFFFFF;
+
+  /* Semantic Accents */
+  --color-signal: var(--dash-accent-coral);
+  --color-signal-subtle: rgba(255, 109, 90, 0.12);
+  --color-signal-border: rgba(255, 109, 90, 0.35);
+
+  --color-data: var(--dash-accent-blue);
+  --color-data-subtle: rgba(47, 101, 246, 0.12);
+  --color-data-border: rgba(47, 101, 246, 0.35);
+
+  --color-critical: #C0503E;
+  --color-critical-subtle: rgba(192, 80, 62, 0.12);
+  --color-critical-border: rgba(192, 80, 62, 0.35);
+
+  --color-confirmed: #6B9E78;
+  --color-confirmed-subtle: rgba(107, 158, 120, 0.12);
+  --color-confirmed-border: rgba(107, 158, 120, 0.35);
+
+  /* Spacing Scale (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Radii Scale */
+  --radius-sm: 12px;
+  --radius-input: 14px;
+  --radius-card: 26px;
+  --radius-modal: 26px;
+  --dash-radius-card: 26px;
+  --dash-radius-card-lg: 28px;
+  --dash-radius-control: 14px;
+  --dash-radius-pill: 9999px;
+
+  /* Layout Constants */
+  --sidebar-width-expanded: 240px;
+  --sidebar-width-collapsed: 68px;
+  --header-height: 64px;
+
+  /* Diffused Ambient Shadows */
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.02);
+  --shadow-elevated: 0 10px 30px -5px rgba(112, 128, 176, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --shadow-modal: 0 16px 40px -6px rgba(112, 128, 176, 0.16);
+  --dash-shadow-card: 0 10px 30px -5px rgba(112, 128, 176, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --dash-shadow-hover: 0 16px 40px -6px rgba(112, 128, 176, 0.14);
+  --dash-shadow-pill: 0 2px 6px rgba(0, 0, 0, 0.04);
+  --dash-shadow-tooltip: 0 6px 20px rgba(0, 0, 0, 0.08);
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Z-Index Layers */
+  --z-header: 30;
+  --z-sidebar: 40;
+  --z-dropdown: 50;
+  --z-modal-backdrop: 60;
+  --z-modal: 70;
+  --z-tooltip: 80;
+}
+
+/* ==========================================================================
+   TESSERA DARK MODE VARIABLE OVERRIDES (Authentic Charcoal & Slate Enterprise)
+   ========================================================================== */
+.dark {
+  /* Authentic Charcoal & Slate Canvas & Surfaces */
+  --dash-canvas: #0D1014;
+  --dash-card: #171C22;
+  --dash-surface-pill: #191F26;
+  --dash-surface-capsule: #1D232A;
+  --dash-surface-hover: #22282F;
+  --dash-border: #2B323A;
+  --dash-border-subtle: #252B32;
+
+  /* Typography Palette - Clear Information Contrast & Readability */
+  --dash-text-title: #F8FAFC;
+  --dash-text-body: #CBD5E1;
+  --dash-text-body-ui: #E2E8F0;
+  --dash-text-muted: #94A3B8;
+  --dash-text-subtle: #7A8699;
+
+  /* Semantic Accent Palette - Restrained & Professional (Blue is strictly limited) */
+  --dash-accent-blue: #5878C7;
+  --dash-accent-blue-hover: #6E8ED4;
+  --dash-accent-coral: #E87868;
+  --dash-accent-orange: #D49A5F;
+  --dash-accent-aqua: #5BB8A8;
+  --dash-accent-cyan: #5BB8A8;
+  --dash-accent-purple: #8876BE;
+
+  /* Standard Application Color Mappings */
+  --color-bg: var(--dash-canvas);
+  --color-surface: var(--dash-card);
+  --color-surface-elevated: #1D232A;
+  --color-surface-hover: var(--dash-surface-hover);
+
+  --color-border: var(--dash-border);
+  --color-border-subtle: var(--dash-border-subtle);
+  --color-border-focus: var(--dash-accent-blue);
+
+  --color-text-primary: var(--dash-text-title);
+  --color-text-secondary: var(--dash-text-body);
+  --color-text-muted: var(--dash-text-muted);
+
+  --color-signal: #FFA194;
+  --color-data: #93C5FD;
+  --color-critical: #FFA194;
+  --color-confirmed: #6EE7D0;
+
+  /* Restrained, Clean Shadows in Dark Mode (Zero Glow) */
+  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.30);
+  --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.20);
+  --shadow-modal: 0 16px 40px rgba(0, 0, 0, 0.40);
+  --dash-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.30);
+  --dash-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.20);
+  --dash-shadow-tooltip: 0 4px 16px rgba(0, 0, 0, 0.40);
+}
