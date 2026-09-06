@@ -1,8 +1,13 @@
-import { MOCK_TOPIC_DETAILS } from '../data/mock/topics';
-import { MOCK_NARRATIVE_DETAILS } from '../data/mock/narratives';
-import { MOCK_COMMUNITY_DETAILS } from '../data/mock/communities';
-import { MOCK_SIGNALS } from '../data/mock/signals';
-import { MOCK_INVESTIGATIONS } from '../data/mock/investigations';
+/**
+ * TRAJECT Global Search Service (Milestone 5B)
+ *
+ * Backed by the real Milestone 5A telemetry API (telemetryApi.ts).
+ * Searches precomputed narratives and semantic topic clusters.
+ * Zero mock data dependencies.
+ */
+
+import { telemetryApi } from './telemetryApi';
+import type { NarrativeSummaryResponse, TopicSummaryResponse } from '../types/api';
 
 export type SearchCategory = 'Topics' | 'Narratives' | 'Communities' | 'Signals' | 'Investigations';
 
@@ -15,126 +20,98 @@ export interface SearchResultItem {
 }
 
 export const searchService = {
+  /**
+   * Search real 5A narrative and topic entities
+   */
   async search(query: string): Promise<SearchResultItem[]> {
-    if (!query || query.trim().length === 0) {
-      return this.getDefaultResults();
-    }
+    try {
+      const [narrativesRes, topicsRes] = await Promise.all([
+        telemetryApi.getNarratives({ page: 1, page_size: 50, sort_by: 'priority_signal_score', order: 'desc' }),
+        telemetryApi.getTopics({ page: 1, page_size: 50, sort_by: 'message_count', order: 'desc' }),
+      ]);
 
-    const q = query.toLowerCase().trim();
-    const results: SearchResultItem[] = [];
+      const q = query.trim().toLowerCase();
 
-    // 1. Search Topics
-    for (const t of MOCK_TOPIC_DETAILS) {
-      if (t.name.toLowerCase().includes(q) || t.description.toLowerCase().includes(q)) {
-        results.push({
-          id: t.id,
-          category: 'Topics',
-          title: t.name,
-          subtitle: `${t.activityLevel} Activity • ${t.changePercent > 0 ? '+' : ''}${t.changePercent}% shift`,
-          route: `/topics/${t.id}`,
-        });
+      if (!q) {
+        return this.buildDefaultResults(narrativesRes.data, topicsRes.data);
       }
-    }
 
-    // 2. Search Narratives
-    for (const n of MOCK_NARRATIVE_DETAILS) {
-      if (
-        n.title.toLowerCase().includes(q) ||
-        n.currentFraming.toLowerCase().includes(q) ||
-        n.topicName.toLowerCase().includes(q)
-      ) {
-        results.push({
-          id: n.id,
-          category: 'Narratives',
-          title: n.title,
-          subtitle: `Framing: "${n.currentFraming}" • Status: ${n.status}`,
-          route: `/narratives/${n.id}`,
-        });
+      const results: SearchResultItem[] = [];
+
+      // 1. Match Narrative candidates
+      for (const n of narrativesRes.data) {
+        const matchesClaim = n.headline_claim.toLowerCase().includes(q);
+        const matchesId = n.narrative_id.toLowerCase().includes(q);
+        const matchesTopic = n.promoted_from_topic_id.toLowerCase().includes(q);
+
+        if (matchesClaim || matchesId || matchesTopic) {
+          results.push({
+            id: n.narrative_id,
+            category: 'Narratives',
+            title: n.headline_claim,
+            subtitle: `Priority: ${n.priority_tier.toUpperCase()} (${n.priority_signal_score.toFixed(3)}) • ${n.message_count} msgs • Topic #${n.promoted_from_topic_id}`,
+            route: `/narratives/${encodeURIComponent(n.narrative_id)}`,
+          });
+        }
       }
-    }
 
-    // 3. Search Communities
-    for (const c of MOCK_COMMUNITY_DETAILS) {
-      if (c.name.toLowerCase().includes(q) || c.description.toLowerCase().includes(q)) {
-        results.push({
-          id: c.id,
-          category: 'Communities',
-          title: c.name,
-          subtitle: `${c.volume.toLocaleString()} posts • ${c.activityLevel} activity`,
-          route: `/communities/${c.id}`,
-        });
+      // 2. Match Topic clusters
+      for (const t of topicsRes.data) {
+        const matchesId = t.topic_id.toLowerCase().includes(q);
+        const keywords = t.representative_keywords.map((k) => k.keyword.toLowerCase());
+        const matchesKeyword = keywords.some((k) => k.includes(q));
+
+        if (matchesId || matchesKeyword) {
+          const kwList = t.representative_keywords.slice(0, 3).map((k) => k.keyword).join(', ');
+          results.push({
+            id: t.topic_id,
+            category: 'Topics',
+            title: `Topic Cluster #${t.topic_id}`,
+            subtitle: `${t.message_count} observations (${t.percentage_of_dataset.toFixed(1)}%) • Keywords: ${kwList}`,
+            route: `/topics/${encodeURIComponent(t.topic_id)}`,
+          });
+        }
       }
-    }
 
-    // 4. Search Signals
-    for (const s of MOCK_SIGNALS) {
-      if (s.title.toLowerCase().includes(q) || s.description.toLowerCase().includes(q)) {
-        results.push({
-          id: s.id,
-          category: 'Signals',
-          title: s.title,
-          subtitle: `Strength: ${s.strength} • Change: +${s.changePercent}%`,
-          route: `/signals/${s.id}`,
-        });
-      }
+      return results;
+    } catch (err) {
+      console.warn('Global search query encountered an error:', err);
+      return [];
     }
-
-    // 5. Search Investigations
-    for (const inv of MOCK_INVESTIGATIONS) {
-      if (
-        inv.title.toLowerCase().includes(q) ||
-        inv.situationSummary.leadText.toLowerCase().includes(q)
-      ) {
-        results.push({
-          id: inv.id,
-          category: 'Investigations',
-          title: inv.title,
-          subtitle: `Investigation ${inv.id.toUpperCase()} • Status: ${inv.status}`,
-          route: `/investigation/${inv.id}`,
-        });
-      }
-    }
-
-    return results;
   },
 
-  getDefaultResults(): SearchResultItem[] {
-    return [
-      {
-        id: 'top-101',
-        category: 'Topics',
-        title: 'Regional power supply disruption',
-        subtitle: 'High Activity • +27% surge',
-        route: '/topics/top-101',
-      },
-      {
-        id: 'nar-201',
+  /**
+   * Return top prioritized entities when search input is empty
+   */
+  buildDefaultResults(
+    narratives: NarrativeSummaryResponse[],
+    topics: TopicSummaryResponse[]
+  ): SearchResultItem[] {
+    const defaultItems: SearchResultItem[] = [];
+
+    // Top 3 Narratives by Priority Signal Score
+    for (const n of narratives.slice(0, 3)) {
+      defaultItems.push({
+        id: n.narrative_id,
         category: 'Narratives',
-        title: 'Power outage linked to infrastructure failure',
-        subtitle: 'Framing: Infrastructure failure • Status: Developing',
-        route: '/narratives/nar-201',
-      },
-      {
-        id: 'com-301',
-        category: 'Communities',
-        title: 'Northern District Residents Network',
-        subtitle: '3,840 posts • High activity',
-        route: '/communities/com-301',
-      },
-      {
-        id: 'sig-101',
-        category: 'Signals',
-        title: 'Sudden increase in discussion around regional power cuts',
-        subtitle: 'Strength: High • Change: +27%',
-        route: '/signals/sig-101',
-      },
-      {
-        id: 'alt-601',
-        category: 'Investigations',
-        title: 'Regional power supply disruption',
-        subtitle: 'Investigation ALT-601 • Status: Under review',
-        route: '/investigation/alt-601',
-      },
-    ];
+        title: n.headline_claim,
+        subtitle: `Priority: ${n.priority_tier.toUpperCase()} (${n.priority_signal_score.toFixed(3)}) • ${n.message_count} msgs`,
+        route: `/narratives/${encodeURIComponent(n.narrative_id)}`,
+      });
+    }
+
+    // Top 3 Topics by message count
+    for (const t of topics.slice(0, 3)) {
+      const kwList = t.representative_keywords.slice(0, 3).map((k) => k.keyword).join(', ');
+      defaultItems.push({
+        id: t.topic_id,
+        category: 'Topics',
+        title: `Topic Cluster #${t.topic_id}`,
+        subtitle: `${t.message_count} observations • Keywords: ${kwList}`,
+        route: `/topics/${encodeURIComponent(t.topic_id)}`,
+      });
+    }
+
+    return defaultItems;
   },
 };

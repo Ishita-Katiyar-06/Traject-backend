@@ -1,12 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Settings, LogOut, Bookmark, PlayCircle, ChevronDown } from 'lucide-react';
+import { Settings, LogOut, Bookmark, ChevronDown } from 'lucide-react';
 import { WatchlistModal } from '../watchlist/WatchlistModal';
-import { ReplayModal } from '../replay/ReplayModal';
 
 export const UserMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isWatchlistOpen, setIsWatchlistOpen] = useState(false);
-  const [isReplayOpen, setIsReplayOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -76,19 +74,6 @@ export const UserMenu: React.FC = () => {
               <button
                 type="button"
                 role="menuitem"
-                onClick={() => {
-                  setIsOpen(false);
-                  setIsReplayOpen(true);
-                }}
-                className="flex w-full items-center gap-2.5 px-3 py-2 rounded-[14px] text-left text-[13px] font-medium text-[#475569] hover:text-[#111727] hover:bg-[#F1F4F9] transition-all cursor-pointer"
-              >
-                <PlayCircle className="w-4 h-4 text-[#2F65F6]" />
-                <span>Replay Progression</span>
-              </button>
-
-              <button
-                type="button"
-                role="menuitem"
                 onClick={() => setIsOpen(false)}
                 className="flex w-full items-center gap-2.5 px-3 py-2 rounded-[14px] text-left text-[13px] font-medium text-[#475569] hover:text-[#111727] hover:bg-[#F1F4F9] transition-all cursor-pointer"
               >
@@ -116,11 +101,6 @@ export const UserMenu: React.FC = () => {
       <WatchlistModal
         isOpen={isWatchlistOpen}
         onClose={() => setIsWatchlistOpen(false)}
-      />
-
-      <ReplayModal
-        isOpen={isReplayOpen}
-        onClose={() => setIsReplayOpen(false)}
       />
     </>
   );
