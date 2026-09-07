@@ -51,8 +51,8 @@ export const PropagationPage: React.FC = () => {
     setIsRefreshing(true);
     try {
       const [topicsRes, narrativesRes] = await Promise.all([
-        telemetryApi.getTopics({ page: 1, page_size: 20 }),
-        telemetryApi.getNarratives({ page: 1, page_size: 20 }),
+        telemetryApi.getTopics({ page: 1, page_size: 50, sort_by: 'message_count', order: 'desc' }),
+        telemetryApi.getNarratives({ page: 1, page_size: 50, sort_by: 'priority_signal_score', order: 'desc' }),
       ]);
 
       setTopics(topicsRes.data);
@@ -379,89 +379,92 @@ export const PropagationPage: React.FC = () => {
 
       {/* 2. Top-Level Summary KPIs */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-[22px] p-5 bg-white border border-[rgba(228,233,245,0.85)] shadow-xs">
+        <div className="rounded-[22px] p-5 bg-white dark:bg-[#13171C] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-[#8591A5] uppercase tracking-wider font-mono">
               Origin Channels
             </span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/40 flex items-center justify-center text-emerald-600">
               <Send className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-[28px] font-bold text-[#111727] font-mono mt-3">
+          <div className="text-[28px] font-bold text-[#111727] dark:text-[#F8FAFC] font-mono mt-3">
             {isLoading ? '...' : originChannelsCount}
           </div>
-          <span className="text-[11px] text-[#64748B] font-medium">Unique discovery sources</span>
+          <span className="text-[11px] text-[#64748B] dark:text-[#94A3B8] font-medium">Unique discovery sources</span>
         </div>
 
-        <div className="rounded-[22px] p-5 bg-white border border-[rgba(228,233,245,0.85)] shadow-xs">
+        <div className="rounded-[22px] p-5 bg-white dark:bg-[#13171C] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-[#8591A5] uppercase tracking-wider font-mono">
               Active Cascades
             </span>
-            <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-[#2F65F6]">
+            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/40 flex items-center justify-center text-[#2F65F6]">
               <GitBranch className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-[28px] font-bold text-[#111727] font-mono mt-3">
+          <div className="text-[28px] font-bold text-[#111727] dark:text-[#F8FAFC] font-mono mt-3">
             {isLoading ? '...' : narratives.length}
           </div>
-          <span className="text-[11px] text-[#64748B] font-medium">Synthesized narrative flows</span>
+          <span className="text-[11px] text-[#64748B] dark:text-[#94A3B8] font-medium">Synthesized narrative flows</span>
         </div>
 
-        <div className="rounded-[22px] p-5 bg-white border border-[rgba(228,233,245,0.85)] shadow-xs">
+        <div className="rounded-[22px] p-5 bg-white dark:bg-[#13171C] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-[#8591A5] uppercase tracking-wider font-mono">
               Amplifying Channels
             </span>
-            <div className="w-8 h-8 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600">
+            <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-900/40 flex items-center justify-center text-purple-600">
               <Radio className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-[28px] font-bold text-[#111727] font-mono mt-3">
+          <div className="text-[28px] font-bold text-[#111727] dark:text-[#F8FAFC] font-mono mt-3">
             {isLoading ? '...' : amplifyingChannelsCount}
           </div>
-          <span className="text-[11px] text-[#64748B] font-medium">Observed secondary broadcasters</span>
+          <span className="text-[11px] text-[#64748B] dark:text-[#94A3B8] font-medium">Observed secondary broadcasters</span>
         </div>
 
-        <div className="rounded-[22px] p-5 bg-white border border-[rgba(228,233,245,0.85)] shadow-xs">
+        <div className="rounded-[22px] p-5 bg-white dark:bg-[#13171C] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-[#8591A5] uppercase tracking-wider font-mono">
               Observed Forwards
             </span>
-            <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600">
+            <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-900/40 flex items-center justify-center text-amber-600">
               <Share2 className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-[28px] font-bold text-[#111727] font-mono mt-3">
+          <div className="text-[28px] font-bold text-[#111727] dark:text-[#F8FAFC] font-mono mt-3">
             {isLoading ? '...' : totalForwardsCount}
           </div>
-          <span className="text-[11px] text-[#64748B] font-medium">Direct forward transmissions</span>
+          <span className="text-[11px] text-[#64748B] dark:text-[#94A3B8] font-medium">Direct forward transmissions</span>
         </div>
       </section>
 
       {/* 3. Filter and Isolation Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-[20px] bg-white border border-[rgba(228,233,245,0.85)] shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-[20px] bg-white dark:bg-[#13171C] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] shadow-xs">
         <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-[12px] font-bold text-[#64748B] flex items-center gap-1.5 font-mono">
+          <span className="text-[12px] font-bold text-[#64748B] dark:text-[#94A3B8] flex items-center gap-1.5 font-mono">
             <Filter className="w-3.5 h-3.5 text-[#2F65F6]" />
             Isolate Cascade:
           </span>
           <select
             value={filterNarrativeId}
             onChange={(e) => setFilterNarrativeId(e.target.value)}
-            className="text-[13px] font-medium py-1.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[#111727] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2F65F6]/20"
+            className="text-[13px] font-medium py-1.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[#111727] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2F65F6]/20 font-mono"
           >
             <option value="all">All Discovered Cascades ({narratives.length})</option>
-            {narratives.map((n) => (
-              <option key={n.narrative_id} value={n.narrative_id}>
-                [{n.priority_tier.toUpperCase()}] {n.narrative_id} — {n.headline_claim.slice(0, 45)}...
-              </option>
-            ))}
+            {narratives
+              .slice()
+              .sort((a, b) => b.priority_signal_score - a.priority_signal_score)
+              .map((n) => (
+                <option key={n.narrative_id} value={n.narrative_id}>
+                  [{n.priority_tier.toUpperCase()} - {n.priority_signal_score.toFixed(3)}] {n.narrative_id} — {n.headline_claim.slice(0, 48)}...
+                </option>
+              ))}
           </select>
         </div>
 
-        <div className="text-[12px] text-[#8591A5] flex items-center gap-2">
+        <div className="text-[12px] text-[#8591A5] dark:text-[#7A8699] flex items-center gap-2">
           <Info className="w-4 h-4 text-[#2F65F6]" />
           <span>Click any node or relationship link to inspect granular telemetry.</span>
         </div>
