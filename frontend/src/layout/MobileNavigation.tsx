@@ -18,12 +18,13 @@ import {
 import { useNavigation } from '../contexts/NavigationContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { SystemStatus } from '../components/status/SystemStatus';
+import { useAlertsCount } from '../services/alertService';
 
 const PRIMARY_BOTTOM_ITEMS = [
   { name: 'Overview', path: '/overview', icon: Activity },
   { name: 'Topics', path: '/topics', icon: Hash },
   { name: 'Narratives', path: '/narratives', icon: GitBranch },
-  { name: 'Alerts', path: '/alerts', icon: AlertCircle, badge: 2 },
+  { name: 'Alerts', path: '/alerts', icon: AlertCircle },
 ];
 
 const MORE_SECONDARY_ITEMS = [
@@ -37,6 +38,7 @@ const MORE_SECONDARY_ITEMS = [
 export const MobileNavigation: React.FC = () => {
   const { isMobileMoreOpen, setIsMobileMoreOpen, toggleMobileMore } = useNavigation();
   const { theme, isDark, setTheme } = useTheme();
+  const { count: openAlertsCount } = useAlertsCount();
   const location = useLocation();
 
   // Automatically close mobile menu when route changes
@@ -177,9 +179,9 @@ export const MobileNavigation: React.FC = () => {
                 <>
                   <div className="relative">
                     <Icon className="w-4 h-4" />
-                    {typeof item.badge === 'number' && (
+                    {item.path === '/alerts' && openAlertsCount > 0 && (
                       <span className="absolute -top-1 -right-2 min-w-[14px] h-[14px] px-1 rounded-full bg-[#2F65F6] text-white text-[9px] font-bold flex items-center justify-center leading-none">
-                        {item.badge}
+                        {openAlertsCount}
                       </span>
                     )}
                   </div>

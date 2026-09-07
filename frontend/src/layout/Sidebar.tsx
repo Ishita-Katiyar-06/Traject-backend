@@ -18,10 +18,12 @@ import { useNavigation } from '../contexts/NavigationContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { NavigationItem } from '../components/navigation/NavigationItem';
 import { Tooltip } from '../components/ui/Tooltip';
+import { useAlertsCount } from '../services/alertService';
 
 export const Sidebar: React.FC = () => {
   const { isSidebarCollapsed, toggleSidebar } = useNavigation();
   const { theme, isDark, setTheme, toggleTheme } = useTheme();
+  const { count: openAlertsCount } = useAlertsCount();
 
   return (
     <aside
@@ -105,7 +107,7 @@ export const Sidebar: React.FC = () => {
               name="Alerts"
               path="/alerts"
               icon={AlertCircle}
-              badge={2}
+              badge={openAlertsCount > 0 ? openAlertsCount : undefined}
               isCollapsed={isSidebarCollapsed}
             />
           </div>
