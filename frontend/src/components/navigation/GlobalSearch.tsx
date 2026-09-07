@@ -8,7 +8,6 @@ import {
   Hash,
   GitBranch,
   Users,
-  Radio,
   ShieldCheck,
   X,
   LayoutDashboard,
@@ -80,8 +79,6 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
         return <GitBranch className="w-3.5 h-3.5 text-[#FF6D5A]" />;
       case 'Communities':
         return <Users className="w-3.5 h-3.5 text-[#8591A5]" />;
-      case 'Signals':
-        return <Radio className="w-3.5 h-3.5 text-[#FF6D5A]" />;
       case 'Investigations':
         return <ShieldCheck className="w-3.5 h-3.5 text-[#10B981]" />;
     }

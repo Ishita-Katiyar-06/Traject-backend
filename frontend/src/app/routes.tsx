@@ -6,12 +6,6 @@ import { AppShell } from '../layout/AppShell';
 const OverviewPage = lazy(() =>
   import('../pages/Overview/OverviewPage').then((m) => ({ default: m.OverviewPage }))
 );
-const SignalsPage = lazy(() =>
-  import('../pages/Signals/SignalsPage').then((m) => ({ default: m.SignalsPage }))
-);
-const SignalDetailPage = lazy(() =>
-  import('../pages/Signals/SignalDetailPage').then((m) => ({ default: m.SignalDetailPage }))
-);
 const TopicsPage = lazy(() =>
   import('../pages/Topics/TopicsPage').then((m) => ({ default: m.TopicsPage }))
 );
@@ -60,8 +54,6 @@ const RouteLoadingFallback: React.FC = () => (
 if (typeof window !== 'undefined') {
   const preloadRoutes = () => {
     import('../pages/Overview/OverviewPage');
-    import('../pages/Signals/SignalsPage');
-    import('../pages/Signals/SignalDetailPage');
     import('../pages/Topics/TopicsPage');
     import('../pages/Topics/TopicDetailPage');
     import('../pages/Narratives/NarrativesPage');
@@ -91,22 +83,6 @@ export const AppRoutes: React.FC = () => {
           element={
             <Suspense fallback={<RouteLoadingFallback />}>
               <OverviewPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="signals"
-          element={
-            <Suspense fallback={<RouteLoadingFallback />}>
-              <SignalsPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="signals/:id"
-          element={
-            <Suspense fallback={<RouteLoadingFallback />}>
-              <SignalDetailPage />
             </Suspense>
           }
         />

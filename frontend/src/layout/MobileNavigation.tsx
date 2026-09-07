@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   Activity,
-  Radio,
   Hash,
   AlertCircle,
   MoreHorizontal,
@@ -10,6 +9,7 @@ import {
   Users,
   Share2,
   Database,
+  ShieldCheck,
   Settings,
   Sun,
   Moon,
@@ -21,16 +21,16 @@ import { SystemStatus } from '../components/status/SystemStatus';
 
 const PRIMARY_BOTTOM_ITEMS = [
   { name: 'Overview', path: '/overview', icon: Activity },
-  { name: 'Signals', path: '/signals', icon: Radio, badge: 3 },
   { name: 'Topics', path: '/topics', icon: Hash },
+  { name: 'Narratives', path: '/narratives', icon: GitBranch },
   { name: 'Alerts', path: '/alerts', icon: AlertCircle, badge: 2 },
 ];
 
 const MORE_SECONDARY_ITEMS = [
-  { name: 'Narratives', path: '/narratives', icon: GitBranch },
   { name: 'Communities', path: '/communities', icon: Users },
   { name: 'Propagation', path: '/propagation', icon: Share2 },
   { name: 'Data Explorer', path: '/explorer', icon: Database },
+  { name: 'Investigation', path: '/investigation', icon: ShieldCheck },
   { name: 'Settings', path: '/settings', icon: Settings },
 ];
 

@@ -9,7 +9,7 @@
 import { telemetryApi } from './telemetryApi';
 import type { NarrativeSummaryResponse, TopicSummaryResponse } from '../types/api';
 
-export type SearchCategory = 'Topics' | 'Narratives' | 'Communities' | 'Signals' | 'Investigations';
+export type SearchCategory = 'Topics' | 'Narratives' | 'Communities' | 'Investigations';
 
 export interface SearchResultItem {
   id: string;

@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   Activity,
-  Radio,
   Hash,
   GitBranch,
   Users,
@@ -76,13 +75,6 @@ export const Sidebar: React.FC = () => {
               name="Overview"
               path="/overview"
               icon={Activity}
-              isCollapsed={isSidebarCollapsed}
-            />
-            <NavigationItem
-              name="Signals"
-              path="/signals"
-              icon={Radio}
-              badge={3}
               isCollapsed={isSidebarCollapsed}
             />
             <NavigationItem

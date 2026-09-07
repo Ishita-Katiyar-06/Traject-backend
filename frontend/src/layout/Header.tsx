@@ -29,7 +29,6 @@ export const Header: React.FC = () => {
 
       const PAGE_NAMES: Record<string, string> = {
         overview: 'Overview',
-        signals: 'Signals',
         topics: 'Topics',
         narratives: 'Narratives',
         communities: 'Communities',
@@ -106,7 +105,7 @@ export const Header: React.FC = () => {
           <div className="flex items-center gap-2.5 text-[#8591A5] dark:text-[#7A8699] truncate">
             <Search className="w-4 h-4 shrink-0" />
             <span className="hidden sm:inline-block text-[13px] text-[#475569] dark:text-[#CBD5E1] truncate font-medium">
-              Search topics, signals, narratives...
+              Search topics, narratives, communities...
             </span>
             <span className="sm:hidden text-[13px] text-[#475569] dark:text-[#CBD5E1]">Search</span>
           </div>
