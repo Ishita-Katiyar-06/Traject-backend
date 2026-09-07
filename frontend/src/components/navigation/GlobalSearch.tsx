@@ -87,6 +87,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
   // Group results
   const narrativeResults = results.filter((r) => r.category === 'Narratives');
   const topicResults = results.filter((r) => r.category === 'Topics');
+  const communityResults = results.filter((r) => r.category === 'Communities');
 
   const searchNode = (
     <AnimatePresence>
@@ -213,6 +214,40 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
                         </div>
                         <span className="text-[10px] font-mono uppercase font-bold text-blue-700 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-full border border-blue-200/60 shrink-0 ml-2">
                           Topic
+                        </span>
+                      </Command.Item>
+                    ))}
+                  </Command.Group>
+                )}
+
+                {/* Community Group */}
+                {communityResults.length > 0 && (
+                  <Command.Group
+                    heading="Community Clusters"
+                    className="p-1 text-[11px] font-mono uppercase font-bold text-[#8591A5] px-3 pt-2 pb-1"
+                  >
+                    {communityResults.map((item) => (
+                      <Command.Item
+                        key={item.id}
+                        value={item.id}
+                        onSelect={() => handleSelect(item.route)}
+                        className="flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer text-[#111727] dark:text-white hover:bg-[#F1F4F9] dark:hover:bg-[#1D232A] aria-selected:bg-[#F1F4F9] dark:aria-selected:bg-[#1D232A] transition-colors"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/40 text-[#10B981] shrink-0">
+                            {getCategoryIcon(item.category)}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-[13px] font-semibold truncate leading-snug">
+                              {item.title}
+                            </div>
+                            <div className="text-[11px] text-[#8591A5] truncate font-mono mt-0.5">
+                              {item.subtitle}
+                            </div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-mono uppercase font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200/60 shrink-0 ml-2">
+                          Community
                         </span>
                       </Command.Item>
                     ))}

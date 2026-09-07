@@ -73,6 +73,26 @@ export const searchService = {
         }
       }
 
+      // 3. Match Community clusters
+      try {
+        const { communityService } = await import('./communityService');
+        const communities = await communityService.getCommunities();
+        for (const c of communities) {
+          const matchesName = c.name.toLowerCase().includes(q);
+          const matchesDomain = c.domain_display.toLowerCase().includes(q);
+          const matchesSource = c.sources.some((s) => s.username.toLowerCase().includes(q) || s.display_name.toLowerCase().includes(q));
+          if (matchesName || matchesDomain || matchesSource) {
+            results.push({
+              id: c.id,
+              category: 'Communities',
+              title: c.name,
+              subtitle: `${c.domain_display} • ${c.source_count} sources • ${c.total_messages.toLocaleString()} messages`,
+              route: `/communities/${encodeURIComponent(c.id)}`,
+            });
+          }
+        }
+      } catch (_) {}
+
       return results;
     } catch (err) {
       console.warn('Global search query encountered an error:', err);
