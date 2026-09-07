@@ -119,6 +119,15 @@
       "source_type": "republication",
       "enabled": true,
       "description": "Unofficial Telegram channel republishing BBC World news dispatches."
+    },
+    {
+      "username": "@traject_test",
+      "display_name": "Traject Test",
+      "domain": "geopolitics",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Custom real-time analyst testing and broadcast verification channel."
     }
   ]
 }

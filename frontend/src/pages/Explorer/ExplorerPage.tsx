@@ -11,9 +11,12 @@ import { telemetryApi } from '../../services/telemetryApi';
 import { exportService } from '../../services/exportService';
 import { MessageSummaryResponse, MessageQueryParams } from '../../types/api';
 import { RefreshCw, Download } from 'lucide-react';
+import { useLiveStream } from '../../contexts/LiveStreamContext';
 
 export const ExplorerPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { liveMessages, totalCorpusCount, connectionStatus } = useLiveStream();
+  const [autoStream, setAutoStream] = useState(true);
 
   // Parse filters from URL
   const initialQuery = searchParams.get('keyword') || searchParams.get('q') || '';
@@ -93,6 +96,52 @@ export const ExplorerPage: React.FC = () => {
     setSearchParams(params, { replace: true });
   }, [filters, loadData, setSearchParams]);
 
+  // Prepend live messages dynamically when on page 1 and autoStream is active
+  useEffect(() => {
+    if (!autoStream || filters.page !== 1 || liveMessages.length === 0) return;
+
+    setObservations((prev) => {
+      const existingIds = new Set(prev.map((m) => m.canonical_id));
+      const newItems: MessageSummaryResponse[] = [];
+
+      for (const lm of liveMessages) {
+        if (!existingIds.has(lm.message_id)) {
+          // Check keyword filter if present
+          if (filters.keyword && filters.keyword.trim()) {
+            const q = filters.keyword.toLowerCase().trim();
+            const textMatch = lm.text.toLowerCase().includes(q);
+            const idMatch = lm.message_id.toLowerCase().includes(q);
+            const channelMatch =
+              lm.channel_title.toLowerCase().includes(q) ||
+              (lm.channel_username && lm.channel_username.toLowerCase().includes(q));
+            if (!textMatch && !idMatch && !channelMatch) continue;
+          }
+          newItems.push({
+            canonical_id: lm.message_id,
+            platform: 'telegram',
+            native_id: String(lm.native_id),
+            author_id: lm.channel_username ? `@${lm.channel_username}` : lm.channel_title,
+            channel_title: lm.channel_title,
+            published_at: lm.timestamp,
+            text_content: lm.text,
+            language: 'en',
+            views_count: lm.views,
+            forwards_count: lm.forwards,
+            has_media: lm.has_media,
+            is_forward: false,
+          });
+        }
+      }
+
+      if (newItems.length === 0) return prev;
+      return [...newItems, ...prev];
+    });
+
+    if (totalCorpusCount && totalCorpusCount > totalItems) {
+      setTotalItems(totalCorpusCount);
+    }
+  }, [liveMessages, autoStream, filters.page, filters.keyword, totalCorpusCount, totalItems]);
+
   const handleResetFilters = () => {
     setFilters({
       keyword: '',
@@ -134,6 +183,10 @@ export const ExplorerPage: React.FC = () => {
     { id: 'json', label: 'Export Query as JSON', onClick: handleExportJson },
   ];
 
+  const displayTotalCount = totalCorpusCount !== null && totalCorpusCount > totalItems
+    ? totalCorpusCount
+    : totalItems;
+
   return (
     <div className="space-y-6 font-sans">
       {/* 1. Page Header */}
@@ -142,6 +195,22 @@ export const ExplorerPage: React.FC = () => {
         description="Search and inspect canonical ingested post observations across monitored platforms."
         actions={
           <div className="flex items-center gap-2">
+            <Button
+              variant={autoStream ? 'primary' : 'secondary'}
+              size="sm"
+              leftIcon={
+                <span className="relative flex h-2 w-2 mr-0.5">
+                  {autoStream && (
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  )}
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${autoStream ? 'bg-emerald-400' : 'bg-slate-400'}`} />
+                </span>
+              }
+              onClick={() => setAutoStream((prev) => !prev)}
+            >
+              {autoStream ? 'Auto-Stream: ON' : 'Auto-Stream: OFF'}
+            </Button>
+
             <Dropdown
               trigger={
                 <Button
@@ -169,12 +238,40 @@ export const ExplorerPage: React.FC = () => {
         }
       />
 
+      {/* Live Stream Telemetry Banner */}
+      {connectionStatus === 'connected' && liveMessages.length > 0 && (
+        <div className="flex items-center justify-between px-4 py-2.5 rounded-[14px] bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/50 text-[13px] text-emerald-900 dark:text-emerald-200 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+            </span>
+            <span className="font-semibold">
+              Live MTProto Stream Active:
+            </span>
+            <span className="text-emerald-700 dark:text-emerald-300">
+              {liveMessages.length} real-time messages captured in current session ({displayTotalCount.toLocaleString()} total corpus)
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={loadData}
+              leftIcon={<RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />}
+            >
+              Sync Server
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* 2. Compact Structured Search & Filter Bar */}
       <ExplorerFilters
         filters={filters}
         onChange={setFilters}
         onReset={handleResetFilters}
-        totalCount={totalItems}
+        totalCount={displayTotalCount}
       />
 
       {/* 3. Observational Results Table */}
@@ -188,11 +285,11 @@ export const ExplorerPage: React.FC = () => {
       />
 
       {/* 4. Server-Style Pagination */}
-      {!isLoading && !isError && totalItems > 0 && (
+      {!isLoading && !isError && displayTotalCount > 0 && (
         <ExplorerPagination
           page={filters.page || 1}
-          totalPages={totalPages}
-          totalItems={totalItems}
+          totalPages={Math.max(totalPages, Math.ceil(displayTotalCount / (filters.page_size || 10)))}
+          totalItems={displayTotalCount}
           pageSize={filters.page_size || 10}
           onPageChange={(newPage) => setFilters({ ...filters, page: newPage })}
         />

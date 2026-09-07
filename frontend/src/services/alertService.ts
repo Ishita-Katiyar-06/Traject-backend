@@ -146,7 +146,16 @@ function evaluateNarrativeAlert(
   };
 }
 
+const _liveAlertsMap = new Map<string, AlertItem>();
+
 export const alertService = {
+  /**
+   * Register an in-flight live alert received via WebSocket stream.
+   */
+  addLiveAlert(alert: AlertItem): void {
+    _liveAlertsMap.set(alert.id, alert);
+  },
+
   /**
    * Fetches live telemetry and returns prioritized alerts.
    */
@@ -161,9 +170,19 @@ export const alertService = {
     const persistedMap = getPersistedStatuses();
     const alerts: AlertItem[] = [];
 
+    // 1. Incorporate live stream in-flight alerts
+    _liveAlertsMap.forEach((liveAlert) => {
+      const persisted = persistedMap[liveAlert.id];
+      alerts.push({
+        ...liveAlert,
+        status: persisted ? persisted.status : liveAlert.status,
+      });
+    });
+
+    // 2. Evaluate narrative alerts
     for (const narrative of res.data) {
       const alert = evaluateNarrativeAlert(narrative, persistedMap);
-      if (alert) {
+      if (alert && !alerts.some((a) => a.id === alert.id)) {
         alerts.push(alert);
       }
     }

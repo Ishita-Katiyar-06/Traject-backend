@@ -82,6 +82,11 @@ export const ExplorerTable: React.FC<ExplorerTableProps> = ({
               >
                 {item.platform.toUpperCase()}
               </Badge>
+              {item.canonical_id.startsWith('msg-live-') && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/80 animate-pulse">
+                  LIVE
+                </span>
+              )}
               <span className="font-semibold text-[#111727] text-[12px] truncate max-w-[140px]" title={item.channel_title || item.author_id}>
                 {item.channel_title || item.author_id}
               </span>

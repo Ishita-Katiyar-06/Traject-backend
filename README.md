@@ -13,12 +13,10 @@ The platform addresses **SIH 2026 Problem Statement 26152 (National Technical Re
 
 ### Scope & Capabilities
 
-### Scope & Capabilities
-
 | Horizon | Capabilities |
 | :--- | :--- |
-| **Current Implementation** | • Python backend foundation (`backend/app/`)<br>• Core `CanonicalMessage` schema (Pydantic v2) with strict UTC timestamp enforcement and controlled platform/author types<br>• Chat-scoped deterministic Telegram canonical ID generation (`telegram:{chat_id}:{message_id}`)<br>• Telegram message normalizer (`TelegramNormalizer`) handling plain text, captions, forwards, replies, reactions, and entity extraction<br>• MTProto collector (`Telethon`) supporting interactive terminal authentication and cloud 2FA<br>• Appendable, immutable raw JSONL storage (`data/raw/telegram/`)<br>• Streaming offline JSONL replay & pre-validation engine (`backend/app/replay/`) with line-level provenance preservation<br>• Columnar processed storage (`backend/app/storage/`) using Snappy-compressed Apache Parquet with 27-field typed schema, native Arrow lists, reaction maps, and UTC microsecond timestamps<br>• Data quality & deduplication engine (`backend/app/quality/`) enforcing temporal consistency, identity well-formedness, engagement integrity, first-occurrence-wins deduplication on `canonical_id`, and generating paired JSON quality audit reports<br>• **ML Dataset & Inspection Layer (4A)**: Canonical Parquet ML loader, `MLTextRecord` preparation, and deterministic statistical profiling<br>• **Language Identification & Normalization (4B)**: Deterministic multilingual language detection (`langdetect`) and social-safe text normalization<br>• **Sentiment Intelligence Baseline (4C/4D)**: Pretrained frozen sentiment adapters (English RoBERTa & Multilingual XLM-RoBERTa), evaluation metrics, and model recommendation routing<br>• **Topic Discovery Baseline (4E)**: Multilingual sentence embeddings (`paraphrase-multilingual-MiniLM-L12-v2`), unsupervised HDBSCAN clustering, deterministic c-TF-IDF keyword extraction, and representative message centroids<br>• **Topic Feature Enrichment (4F)**: Deterministic feature vectors across social/gazetteer entities, engagement metrics, observed forwarding propagation, uncredited syndication detection, and temporal cadence/burstiness<br>• **Narrative Candidate Formation & Scoring (4G)**: Bounded, explainable Priority Signal Score ($S \in [0, 1]$) with Spread, Potential Coordination, Observed Reach, and Friction sub-scores, audit rationale, and evidence-density tiers<br>• **Production Pipeline & Caching (4H)**: Unified `run_ml_pipeline` orchestration, process-level singleton `ModelLifecycleManager`, thread-safe deterministic SQLite `InferenceCache`, batch-size benchmark harness, and precomputed analytics export (`MLPipelineResult`)<br>• **Backend Analytics API (5A)**: High-performance, typed FastAPI serving layer (`/api/v1`) exposing precomputed analytics, topic clusters, prioritized narratives, canonical message streams, and pipeline telemetry with sub-2ms warm latencies and zero ML on the serving path<br>• **200 passing tests** using mocked clients and offline datasets (zero network calls during test runs)<br>• Successful real-world smoke test against public Telegram channel (`@GenshinUpdate_STR`) and verified end-to-end replay, quality check, Parquet conversion, ML pipeline analytics, and live API serving |
-| **Planned / Future Scope** | • Continuous timeline and streaming ingestion<br>• **X (Twitter)** ingestion collector (Essential)<br>• **Instagram** and **Facebook** collectors (Desirable)<br>• **Reddit** and **YouTube** collectors (Appreciable additional sources)<br>• Dynamic sliding-window narrative mutation tracking<br>• Multi-node distributed inference caching (Redis/PostgreSQL)<br>• Information cascade topology, link analysis, and influence propagation graphs<br>• Aggregate and anonymized demographic profiling<br>• Next.js / Vite analyst web dashboard (Milestone 5B) |
+| **Current Implementation** | • Python backend foundation (`backend/app/`)<br>• Core `CanonicalMessage` schema (Pydantic v2) with strict UTC timestamp enforcement and controlled platform/author types<br>• Chat-scoped deterministic Telegram canonical ID generation (`telegram:{chat_id}:{message_id}`)<br>• Telegram message normalizer (`TelegramNormalizer`) handling plain text, captions, forwards, replies, reactions, and entity extraction<br>• MTProto collector (`Telethon`) supporting interactive terminal authentication, cloud 2FA, and live streaming<br>• Appendable, immutable raw JSONL storage (`data/raw/telegram/`)<br>• Streaming offline JSONL replay & pre-validation engine (`backend/app/replay/`) with line-level provenance preservation<br>• Columnar processed storage (`backend/app/storage/`) using Snappy-compressed Apache Parquet with 27-field typed schema, native Arrow lists, reaction maps, and UTC microsecond timestamps<br>• Data quality & deduplication engine (`backend/app/quality/`) enforcing temporal consistency, identity well-formedness, engagement integrity, first-occurrence-wins deduplication on `canonical_id`, and generating paired JSON quality audit reports<br>• **ML Dataset & Inspection Layer (4A)**: Canonical Parquet ML loader, `MLTextRecord` preparation, and deterministic statistical profiling<br>• **Language Identification & Normalization (4B)**: Deterministic multilingual language detection (`langdetect`) and social-safe text normalization<br>• **Sentiment Intelligence Baseline (4C/4D)**: Pretrained frozen sentiment adapters (English RoBERTa & Multilingual XLM-RoBERTa), evaluation metrics, and model recommendation routing<br>• **Topic Discovery Baseline (4E)**: Multilingual sentence embeddings (`paraphrase-multilingual-MiniLM-L12-v2`), unsupervised HDBSCAN clustering, deterministic c-TF-IDF keyword extraction, and representative message centroids<br>• **Topic Feature Enrichment (4F)**: Deterministic feature vectors across social/gazetteer entities, engagement metrics, observed forwarding propagation, uncredited syndication detection, and temporal cadence/burstiness<br>• **Narrative Candidate Formation & Scoring (4G)**: Bounded, explainable Priority Signal Score ($S \in [0, 1]$) with Spread, Potential Coordination, Observed Reach, and Friction sub-scores, audit rationale, and evidence-density tiers<br>• **Production Pipeline & Caching (4H)**: Unified `run_ml_pipeline` orchestration, process-level singleton `ModelLifecycleManager`, thread-safe deterministic SQLite `InferenceCache`, batch-size benchmark harness, and precomputed analytics export (`MLPipelineResult`)<br>• **Backend Analytics API (5A)**: High-performance, typed FastAPI serving layer (`/api/v1`) exposing precomputed analytics, topic clusters, prioritized narratives, canonical message streams, and pipeline telemetry with sub-2ms warm latencies<br>• **Analyst Dashboard Frontend (5B)**: Full-featured reactive UI (Vite + React + TypeScript + Tailwind/Vanilla CSS) featuring Overview telemetry, Topics exploration, Narratives breakdown, Dynamic Communities, Propagation Networks, Data Explorer, and Triage Queues<br>• **Multi-Source Corpus & Incremental Collection (6A-6D)**: Bounded collection registry across 14 intelligence channels, 6,000+ clean messages, narrative quality validation, and dynamic watermarking<br>• **Temporal Narrative Lineage Tracking (6E-6F)**: Deterministic narrative evolution tracking across temporal snapshots with cryptographic validation and lifecycle states (`PERSISTING`, `WEAKENING`, `NEW`, `DISAPPEARED`, `REAPPEARED`)<br>• **Real-Time Streaming & Live Ingestion (7A / Phase E)**: Asynchronous Telethon MTProto event listening (`NewMessage`), Staggered Background Auto-Join Worker with anti-flood jitter, bidirectional WebSocket stream (`/api/v1/ws/live`), live reactive counter increments, and non-blocking toast alert dispatch<br>• **240 backend pytest tests + 14 frontend tests passing** with zero network dependency during test runs |
+| **Planned / Future Scope** | • **X (Twitter)** ingestion collector (Essential)<br>• **Instagram** and **Facebook** collectors (Desirable)<br>• **Reddit** and **YouTube** collectors (Appreciable additional sources)<br>• Multi-node distributed inference caching (Redis/PostgreSQL)<br>• Cross-platform information cascade graph and influence propagation analysis (NetworkX / Neo4j)<br>• Aggregate and anonymized demographic profiling |
 
 > [!NOTE]
 > Capabilities marked as **Planned / Future Scope** are not yet implemented. The project is constructed strictly incrementally from verified data contracts upward.
@@ -30,76 +28,50 @@ The platform addresses **SIH 2026 Problem Statement 26152 (National Technical Re
 TRAJECT decouples platform-specific ingestion protocols from downstream analytical engines using a **single canonical message representation**. Downstream machine learning, graph algorithms, and dashboard APIs operate strictly on this shared data model, avoiding redundant, platform-specific analytical pipelines.
 
 ```
-┌────────────────────────────────────────────────────────┐
-│                      DATA SOURCES                      │
-│   Telegram (Active) │ X (Planned) │ Future Platforms   │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│              PLATFORM-SPECIFIC COLLECTORS              │
-│    TelegramCollector (Telethon MTProto, Bounded)       │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│                   RAW IMMUTABLE DATA                   │
-│   data/raw/telegram/{channel}_{timestamp}.jsonl        │
-│   (Preserves complete payloads for offline replay)     │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│                 OFFLINE STREAMING REPLAY               │
-│   iter_raw_telegram_jsonl (Line-level provenance,      │
-│   pre-validation, raw immutability preserved)          │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│                  PLATFORM NORMALIZERS                  │
-│   TelegramNormalizer (Extracts entities, topology,     │
-│   engagement, media, and chat-scoped canonical ID)     │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│               CANONICAL MESSAGE CONTRACT               │
-│   CanonicalMessage (Pydantic v2 Unified Schema)        │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│               DATA QUALITY & DEDUPLICATION             │
-│   process_quality (Temporal checks, canonical_id       │
-│   deduplication [first-wins], JSON audit report)       │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│               DURABLE PROCESSED DATASETS               │
-│   data/processed/telegram/*.parquet (PyArrow, Snappy)  │
-│   data/processed/telegram/*.quality.json               │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│      SHARED ML & NARRATIVE INTELLIGENCE (ACTIVE 4A-4H) │
-│   • Model Lifecycle Manager (Singleton Reuse)          │
-│   • Deterministic SQLite Inference Cache               │
-│   • Language Detection & Social Text Normalization     │
-│   • Multilingual MiniLM Embeddings & HDBSCAN Topics    │
-│   • Deterministic Feature Enrichment (4F)              │
-│   • Narrative Formation & Priority Signal Scoring (4G) │
-│   • Precomputed Analytics Artifacts (JSON)             │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│                   BACKEND API & UI                     │
-│   FastAPI Service Layer (Planned)                      │
-│   Frontend Analyst Dashboard (Planned)                 │
-└────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                                   DATA SOURCES                                  │
+│          Telegram MTProto (Active) │ X (Planned) │ Future Platforms             │
+└───────────────────────┬─────────────────────────────────┬───────────────────────┘
+                        │ (Batch Collection)              │ (Real-Time Events)
+                        ▼                                 ▼
+┌─────────────────────────────────────────┐  ┌────────────────────────────────────┐
+│      BATCH COLLECTOR & STORAGE          │  │     LIVE STREAMING ENGINE (7A)     │
+│  • TelegramCollector (Bounded Batch)    │  │  • LiveCollectorService (Telethon) │
+│  • Immutable Raw JSONL Storage          │  │  • Staggered Auto-Join (Jittered)  │
+│  • Offline Streaming Replay (Provenance)│  │  • TelegramNormalizer (Real-Time)  │
+│  • Canonical Normalization              │  │  • Live Parquet Append & In-Memory │
+│  • Quality, Validation & First-Wins Dedup│  │    Counter Increments             │
+│  • Snappy Columnar Parquet Persistence  │  │  • StreamingManager Hub (Pub/Sub)  │
+└───────────────────────┬─────────────────┘  └─────────────────┬──────────────────┘
+                        │                                      │
+                        ▼                                      │
+┌─────────────────────────────────────────┐                    │
+│   SHARED ML & NARRATIVE INTELLIGENCE    │                    │
+│  • Model Lifecycle Manager (Singleton)  │                    │
+│  • Deterministic SQLite Inference Cache │                    │
+│  • Multilingual MiniLM & HDBSCAN Topics │                    │
+│  • 4F Topic Feature Enrichment          │                    │
+│  • 4G Narrative Formation & Scoring     │                    │
+│  • 6E/6F Temporal Narrative Lineage     │                    │
+│  • Precomputed Analytics Artifacts      │                    │
+└───────────────────────┬─────────────────┘                    │
+                        │                                      │
+                        ▼                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                        FASTAPI ANALYTICS & STREAMING API                        │
+│    REST Endpoints: /api/v1/analytics, /topics, /narratives, /messages           │
+│    WebSocket Hub:  /api/v1/ws/live (Live messages, toast alerts, sync stats)    │
+└───────────────────────────────────────┬─────────────────────────────────────────┘
+                                        │ (HTTP + WebSocket)
+                                        ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                  REACTIVE ANALYST DASHBOARD UI (Vite + React)                   │
+│  • Overview Page: Real-time telemetry, live reactive counter bump (+N new)      │
+│  • Topics & Narratives: Semantic c-TF-IDF keyword clusters & explainable scoring │
+│  • Communities & Propagation: Dynamic network topology & forward cascade trees  │
+│  • Alerts Triage Queue: Live toast dispatch, triage statuses, header popover    │
+│  • Data Explorer: Infinite scrolling raw/canonical message inspection table     │
+└─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Why Raw Data is Retained
@@ -118,47 +90,43 @@ TRAJECT is organized as a unified monorepo with top-level separation between app
 TRAJECT/
 ├── backend/
 │   ├── app/
-│   │   ├── collectors/
-│   │   │   └── telegram/         # Telethon client, serializer, and collector
-│   │   │       ├── client.py
-│   │   │       ├── collector.py
-│   │   │       └── serializer.py
-│   │   ├── core/
-│   │   │   └── config.py         # Deterministic root discovery & .env loading
-│   │   ├── normalizers/
-│   │   │   └── telegram.py       # Telegram-to-Canonical transformer
-│   │   ├── quality/
-│   │   │   └── validation.py     # Quality diagnostics & deduplication engine
-│   │   ├── replay/
-│   │   │   └── telegram_jsonl.py # Streaming offline raw JSONL replayer
-│   │   ├── schemas/
-│   │   │   └── canonical_message.py  # Unified CanonicalMessage contract
-│   │   └── storage/
-│   │       └── parquet.py        # Columnar Parquet persistence & dataset builder
-│   ├── tests/                    # 84 offline unit tests
-│   │   ├── test_config.py
-│   │   ├── test_data_quality.py
-│   │   ├── test_parquet_storage.py
-│   │   ├── test_schemas.py
-│   │   ├── test_telegram_collector.py
-│   │   ├── test_telegram_normalizer.py
-│   │   └── test_telegram_replay.py
-│   ├── .venv/                    # Local virtual environment (gitignored)
-│   ├── pyproject.toml            # Backend dependencies and pytest config
-│   └── README.md                 # Backend-specific developer notes
+│   │   ├── api/v1/               # FastAPI REST & WebSocket endpoints
+│   │   │   ├── analytics.py      # Summary metrics & overview
+│   │   │   ├── messages.py       # Canonical message inspection
+│   │   │   ├── narratives.py     # Prioritized narrative candidates
+│   │   │   ├── stream.py         # WebSocket /ws/live pub/sub gateway
+│   │   │   └── topics.py         # HDBSCAN clusters & c-TF-IDF keywords
+│   │   ├── collectors/telegram/  # Telethon client, serializer, & multi-source collector
+│   │   ├── ml/                   # ML pipeline (sentiment, embeddings, HDBSCAN, narratives)
+│   │   ├── normalizers/          # Telegram-to-Canonical transformer
+│   │   ├── quality/              # Validation diagnostics & first-wins deduplication
+│   │   ├── replay/               # Streaming offline raw JSONL replayer
+│   │   ├── repositories/         # Thread-safe in-memory query & caching engine
+│   │   ├── services/             # Live streaming & background auto-join services
+│   │   │   ├── live_collector_service.py # Telethon NewMessage listener & auto-join
+│   │   │   └── streaming_manager.py      # WebSocket connection hub & alert dispatch
+│   │   ├── storage/              # Snappy-compressed Apache Parquet persistence
+│   │   └── temporal/             # Multi-snapshot narrative lineage tracking engine
+│   ├── tests/                    # 240 automated offline pytest tests
+│   ├── pyproject.toml            # Backend dependencies & configuration
+│   └── README.md                 # Backend-specific developer documentation
+├── frontend/                     # Active React + Vite + TypeScript Analyst Dashboard
+│   ├── src/
+│   │   ├── components/           # UI components (alerts, explorer, network, feedback)
+│   │   ├── contexts/             # React LiveStreamContext for real-time WebSocket state
+│   │   ├── layout/               # AppShell, Sidebar, Header, and MobileNav
+│   │   ├── pages/                # Overview, Topics, Narratives, Communities, Propagation, Alerts, Explorer
+│   │   └── services/             # Axios API client & websocketService.ts
+│   ├── package.json              # Frontend dependencies (Lucide, Recharts, TailwindCSS)
+│   └── vite.config.ts            # Vite dev server & API proxy config
 ├── data/
-│   ├── raw/
-│   │   └── telegram/             # Ingested raw JSONL files (gitignored)
-│   └── processed/
-│       └── telegram/             # Derived Parquet & quality reports (gitignored)
-├── frontend/                     # Planned: Web application and analyst UI
-├── models/                       # Planned / local: ML weights & cache (gitignored)
-├── notebooks/                    # Planned: Exploratory analysis & validation
-├── scripts/                      # Planned: Operational pipelines & batch scripts
-├── docs/                         # Planned: Architecture specs & technical docs
+│   ├── raw/telegram/             # Raw immutable JSONL payloads (gitignored)
+│   ├── processed/telegram/       # Columnar Parquet datasets & ML artifacts (gitignored)
+│   └── manifests/telegram/       # Reproducible snapshot manifests (gitignored)
+├── docs/                         # Comprehensive architecture & milestone audit documents
 ├── .env                          # Local secrets & API credentials (gitignored)
 ├── .env.example                  # Sanitized template for environment variables
-├── .gitignore                    # Secrets, caches, sessions, and data ignore rules
+├── .gitignore                    # Git exclusions (credentials, sessions, datasets)
 └── README.md                     # Root project documentation (this file)
 ```
 
@@ -222,6 +190,32 @@ A live verification smoke test was executed against a public Telegram broadcast 
 
 This live test confirms that the complete pipeline operates reliably on production data:
 $$\text{Telegram Network} \longrightarrow \text{Telethon Client} \longrightarrow \text{Raw JSONL File} \longrightarrow \text{TelegramNormalizer} \longrightarrow \text{CanonicalMessage Contract}$$
+
+### Milestone 4A–4H: Machine Learning Intelligence Layer
+* **4A (Dataset & Inspection)**: Canonical Parquet ML loader, `LanguageAwareMLTextRecord` preparation, and deterministic statistical profiling.
+* **4B (Language & Normalization)**: Deterministic multilingual language detection (`langdetect` with seed 0) and social-safe text normalization preserving hashtags, handles, and URLs.
+* **4C/4D (Sentiment Baseline)**: Pretrained frozen sentiment inference adapters (English RoBERTa & Multilingual XLM-RoBERTa) with per-language evaluation metrics and dynamic routing.
+* **4E (Topic Discovery)**: Multilingual sentence embeddings (`paraphrase-multilingual-MiniLM-L12-v2`), unsupervised HDBSCAN density clustering, c-TF-IDF keyword extraction, and centroid message selection.
+* **4F (Topic Feature Enrichment)**: Deterministic feature vectors computing entity extraction, engagement metrics, observed forward propagation, uncredited syndication, and temporal cadence/burstiness.
+* **4G (Narrative Formation & Scoring)**: Deterministic 1-to-1 promotion of topic clusters to Narrative Candidates, bounded Priority Signal Scoring ($S \in [0, 1]$), and observational evidence density tiers.
+* **4H (Unified Orchestration & Caching)**: Unified `run_ml_pipeline` orchestration, process-level singleton `ModelLifecycleManager`, thread-safe deterministic SQLite `InferenceCache`, and precomputed analytics export (`MLPipelineResult`).
+
+### Milestone 5A & 5B: Serving API & Reactive Analyst UI
+* **5A (FastAPI Analytics API)**: High-performance, typed REST endpoints (`/api/v1/analytics`, `/narratives`, `/topics`, `/messages`, `/pipeline/metrics`) serving precomputed analytics with sub-2ms warm latencies and zero ML on the serving path.
+* **5B (Analyst Dashboard Frontend)**: Modern Vite + React TypeScript dashboard featuring Overview telemetry, Topic clusters, Narrative triage, Dynamic Communities, Propagation Networks, Data Explorer, and System Status.
+
+### Milestone 6A–6F: Multi-Channel Corpus Expansion & Temporal Lineage
+* **6A (Multi-Channel Registry)**: Version-controlled registry (`telegram_sources.json`) across 14 verified intelligence channels covering geopolitics, conflict, cybersecurity, and Indian defense.
+* **6B (Real Expanded Corpus)**: 6,036+ clean canonical messages, deduplicated and persisted to Parquet with zero synthetic artifacts.
+* **6C (Narrative Quality Audit)**: Cross-source narrative quality assessment, verifying cross-channel amplification and shared coverage.
+* **6D (Incremental Watermarking)**: Bounded incremental collector tracking dynamic high-water marks per channel (`last_seen_message_id`).
+* **6E/6F (Temporal Narrative Lineage Tracking)**: Deterministic narrative evolution tracking across temporal snapshots ($A \rightarrow B$) producing verified state transitions (`PERSISTING`, `WEAKENING`, `NEW`, `DISAPPEARED`, `REAPPEARED`) with Jaccard similarity metrics and cryptographic SHA-256 integrity verification.
+
+### Milestone 7A: Real-Time Streaming & Live Ingestion (Phase E)
+* **Asynchronous Telethon MTProto Daemon**: Captures live `NewMessage` events across monitored channels in real time.
+* **Staggered Auto-Join Worker**: Automatically resolves channel entities and joins target channels with randomized jitter (5–8s) to prevent Telegram FloodWait or anti-spam bans.
+* **WebSocket Ingestion Gateway (`/api/v1/ws/live`)**: High-throughput pub/sub gateway broadcasting live canonical messages, priority alert events, and sync stats to connected analyst clients.
+* **Frontend Reactive Synchronization**: Live counter bumping (`TOTAL INGESTED +N new`), real-time toast alert dispatches, and notification popovers without page reloads.
 
 ---
 
@@ -508,73 +502,112 @@ Press `CTRL+C` in the terminal running Uvicorn to shut down the server cleanly.
 | `GET` | `/api/v1/messages/{id}` | Full canonical message record by chat-scoped ID (e.g. `telegram:chan:101`). |
 | `GET` | `/api/v1/pipeline/status` | Upstream pipeline execution lifecycle, provenance, and cache status. |
 | `GET` | `/api/v1/pipeline/metrics` | Audit-ready stage latencies, memory footprint, and cache performance. |
+| `WS` | `/api/v1/ws/live` | Persistent bidirectional WebSocket stream broadcasting live messages, priority alert events, and sync statistics. |
+| `GET` | `/api/v1/stream/metrics` | Real-time WebSocket connection count and broadcast throughput metrics. |
+| `GET` | `/api/v1/stream/channels` | Status of all 14 monitored Telegram channels in the auto-join registry. |
 
 ---
 
-## 10. Testing & Quality Assurance Architecture
+## 10. Running the Analyst Dashboard UI (Milestone 5B)
 
-TRAJECT maintains **200 automated unit, regression, and contract tests**:
+TRAJECT includes a dedicated, reactive web application built with **Vite, React, TypeScript, and TailwindCSS** designed for operational social intelligence analysis.
+
+### Step-by-Step Frontend Guide
+
+#### 1. Open PowerShell and Navigate to Frontend
+```powershell
+cd D:\Projects\Traject\frontend
+```
+
+#### 2. Install Dependencies
+```powershell
+npm install
+```
+
+#### 3. Start the Development Server
+```powershell
+npm run dev
+```
+The application will launch on **[http://localhost:3000](http://localhost:3000)** (or the port specified by Vite) and automatically proxies API requests to `http://127.0.0.1:8000`.
+
+#### 4. Dashboard Capabilities & Navigation
+- **Overview (`/overview`)**: High-level platform health, live incoming message counter (`TOTAL INGESTED +N new`), Priority Signal Tier breakdown, and corpus sentiment distribution.
+- **Topics (`/topics`)**: Semantic clusters discovered via HDBSCAN with top c-TF-IDF keywords, temporal velocity, and cluster centroid inspection.
+- **Narratives (`/narratives`)**: Prioritized candidate narratives scored via the 4G composite formula (Spread, Coordination, Reach, Friction) with evidence-density indicators.
+- **Communities (`/communities`)**: Channel domain clustering, source co-occurrence, and cross-channel syndication networks.
+- **Propagation (`/propagation`)**: Interactive forward cascade trees and amplifier tracking.
+- **Alerts Triage Queue (`/alerts`)**: Analyst triage queue for elevated/critical narratives with live toast notifications.
+- **Data Explorer (`/explorer`)**: Infinite scrolling table of canonical messages with text search, channel filters, and raw payload modals.
+
+---
+
+## 11. Testing & Quality Assurance Architecture
+
+TRAJECT maintains **240 automated backend unit, regression, and contract tests** alongside **14 frontend integration tests**:
 
 | Test Module | Tests | Focus Area & Invariants |
 | :--- | :---: | :--- |
 | `test_config.py` | 2 | Deterministic repository root discovery & OS environment variable precedence. |
 | `test_schemas.py` | 8 | 27-field `CanonicalMessage` schema, UTC validation, and chat-scoped ID rules. |
 | `test_telegram_collector.py` | 17 | MTProto payload serialization, entity spans, 2FA masking, and error recovery. |
+| `test_telegram_multi_collector.py` | 18 | Multi-channel collection resilience, isolated failure recovery, and accounting. |
 | `test_telegram_normalizer.py` | 8 | UTF-8 normalization, captions, forwards, replies, and cross-channel IDs. |
 | `test_telegram_replay.py` | 15 | Line-level streaming, malformed line tolerance, and provenance tracking. |
+| `test_telegram_corpus_builder.py` | 6 | Dry-run replay, Parquet generation, and manifest validation. |
 | `test_parquet_storage.py` | 15 | Columnar Parquet persistence, Snappy compression, and Arrow round-trips. |
 | `test_data_quality.py` | 19 | Temporal order, first-occurrence deduplication, and quality audit JSON reports. |
-| `test_ml_dataset.py` | 16 | Parquet ML loader, `MLTextRecord` preparation, and dataset inspection statistics. |
-| `test_ml_language.py` | 4 | Multilingual detection (`langdetect`), confidence thresholding, unknown fallback. |
-| `test_ml_normalization.py` | 6 | Social-safe Unicode NFC normalization, preserving URLs, hashtags, and emojis. |
+| `test_ml_dataset.py` | 15 | Parquet ML loader, `LanguageAwareMLTextRecord` preparation, and dataset inspection. |
+| `test_ml_language.py` | 8 | Multilingual detection (`langdetect`), confidence thresholding, unknown fallback. |
+| `test_ml_normalization.py` | 8 | Social-safe Unicode NFC normalization, preserving URLs, hashtags, and emojis. |
 | `test_sentiment_metrics.py` | 8 | English sentiment baseline (RoBERTa), confusion matrix, and macro F1 metrics. |
 | `test_sentiment_multilingual.py` | 5 | Multilingual XLM-RoBERTa sentiment evaluation and model recommendation routing. |
-| `test_topics.py` | 8 | Sentence embeddings, HDBSCAN clustering, c-TF-IDF keywords, and centroids. |
-| `test_topic_features.py` | 13 | 4F Feature vectors: entities, engagement, observed forwarding, and burstiness. |
-| `test_narratives.py` | 20 | 4G Narrative candidate formation, Priority Signal Score, and evidence tiers. |
-| `test_ml_cache.py` | 9 | Deterministic SQLite inference caching, cache-key semantics, and hit rates. |
+| `test_topics.py` | 9 | Sentence embeddings, HDBSCAN clustering, c-TF-IDF keywords, and centroids. |
+| `test_topic_features.py` | 15 | 4F Feature vectors: entities, engagement, observed forwarding, and burstiness. |
+| `test_narratives.py` | 10 | 4G Narrative candidate formation, Priority Signal Score, and evidence tiers. |
+| `test_ml_cache.py` | 8 | Deterministic SQLite inference caching, cache-key semantics, and hit rates. |
 | `test_ml_performance.py` | 4 | Cold-start vs warm inference benchmarks, memory telemetry, and parity checks. |
-| `test_ml_pipeline.py` | 5 | End-to-end orchestrator execution, analytics artifact serialization, and reuse. |
-| `test_api_*.py` | 20 | Milestone 5A Backend Analytics API: health, overview, narratives, topics, messages, pipeline, and error envelopes. |
-| **Total** | **200** | **100% Offline, Mocked, Deterministic Test Suite** |
+| `test_ml_pipeline.py` | 6 | End-to-end orchestrator execution, analytics artifact serialization, and reuse. |
+| `test_api_*.py` | 20 | Milestone 5A Backend Analytics API: health, overview, narratives, topics, messages, pipeline. |
+| `test_websocket_stream.py` | 5 | Phase E WebSocket connection, live message broadcasting, and alert triggers. |
+| `test_6f_temporal_evolution.py` | 6 | Multi-snapshot lineage evolution ($A \rightarrow B$), Jaccard metrics, and cryptographic integrity. |
+| **Total Backend Tests** | **240** | **100% Offline, Mocked, Deterministic Test Suite (Passing)** |
+| **Total Frontend Tests** | **14** | **Component rendering, route navigation, and hook tests (Passing)** |
 
 ```powershell
-# Run full test suite from backend directory:
+# Run full backend test suite:
 cd backend
 pytest -q
 
-# Or from repository root:
-pytest -q
+# Run frontend tests:
+cd ../frontend
+npm run test
 ```
 
 ---
 
-## 11. Security & Privacy Considerations
+## 12. Security & Privacy Considerations
 
 * **Secrets Management**: `.env` and `.env*.local` are strictly ignored by Git. API hashes, tokens, and session keys must never be committed.
+* **No Hardcoded Credentials**: All components access configuration through `app.core.config.get_settings()` or environment variables. Zero credentials exist in the codebase.
 * **Session Integrity**: Telegram MTProto session files (`*.session`, `*.session-journal`) contain authenticated encryption keys and are excluded by `.gitignore`.
-* **No Secret Leakage**: Collector and script modules sanitize credentials. All model scripts use environment variables (`os.environ.get("HF_TOKEN")`) rather than hardcoded keys.
-* **Sensitive Inputs**: 2FA passwords are read via `getpass.getpass()`, preventing terminal buffer logging.
-* **Data Sensitivity**: Raw payloads in `data/raw/` are excluded from version control. Analysts must handle public communications datasets in compliance with relevant data privacy principles and NTRO guidelines.
+* **Masked Sensitive Attributes**: The `TelegramCredentials` container masks `api_id`, `api_hash`, and `phone` across string formatting and logging.
+* **Non-Blocking Flood Protection**: The live collector employs randomized jitter (5–8s) during channel joins to strictly adhere to Telegram anti-spam thresholds.
 
 ---
 
-## 12. Development Principles
+## 13. Development Principles
 
 1. **Build from Real Data**: Design schemas and normalizers against actual platform payloads, not theoretical assumptions.
 2. **Preserve Raw Data First**: Always persist raw, immutable responses to allow offline replaying and schema iteration.
 3. **Single Canonical Contract**: All platforms must normalize into a shared data model. Never create platform-specific ML pipelines.
 4. **Reproducible Pipelines**: Ensure every normalized record maintains a `raw_reference` linking it back to source raw files.
 5. **Test Before Architecture Expansion**: Prove collection and normalization before adding databases, queues, or distributed workers.
-6. **Zero Unnecessary Dependencies**: Add libraries only when actively required. No Redis, Kafka, or distributed databases unless strictly necessary.
-7. **Pretrained Baselines First**: Utilize established pretrained models before attempting custom fine-tuning.
-8. **Evaluate Before Fine-Tuning**: Base model selection on quantitative evaluation metrics against TRAJECT datasets.
-9. **Never Commit Secrets**: Treat credentials, session files, and access tokens as strictly sensitive.
-10. **Honest Documentation**: Document only what is implemented; clearly distinguish active functionality from future roadmap milestones.
+6. **Zero Hardcoded Secrets**: Treat credentials, session files, and access tokens as strictly sensitive.
+7. **Honest Documentation**: Document only what is implemented; clearly distinguish active functionality from future roadmap milestones.
 
 ---
 
-## 13. Project Roadmap
+## 14. Project Roadmap
 
 ### Completed Milestones
 - [x] **Milestone 1**: Repository foundation and clean monorepo structure
@@ -591,16 +624,18 @@ pytest -q
 - [x] **Milestone 4G**: Narrative candidate formation, bounded Priority Signal Scoring, and evidence-density heuristics
 - [x] **Milestone 4H**: Production ML pipeline orchestration, singleton model lifecycle, SQLite inference cache, and batch benchmarking
 - [x] **Milestone 5A**: Backend Analytics API implementation (FastAPI serving precomputed analytics, 10 typed endpoints, sub-2ms latencies)
+- [x] **Milestone 5B**: Interactive Analyst Web Dashboard (Vite + React frontend with live telemetry & telemetry charts)
+- [x] **Milestone 6A–6F**: Multi-channel corpus expansion (14 channels), narrative quality audit, incremental dynamic watermarking, and temporal narrative lineage tracking ($A \rightarrow B$)
+- [x] **Milestone 7A**: Real-Time MTProto streaming, Staggered Auto-Join Worker, WebSocket live pub/sub gateway (`/api/v1/ws/live`), and reactive UI counter synchronization
 
-### Current & Upcoming Milestones
-- [ ] **Milestone 5B**: Interactive Analyst Web Dashboard (Next.js / Vite frontend consuming `/api/v1`)
-- [ ] **Milestone 6**: Continuous timeline ingestion & sliding-window dynamic narrative mutation tracking
-- [ ] **Milestone 7**: Cross-platform collectors: **X (Twitter)**, Reddit, and YouTube
-
-- [ ] **Milestone 8**: Information cascade graph and influence propagation analysis (NetworkX / Neo4j)
+### Future Scope
+- [ ] **Milestone 8**: Cross-platform collectors: **X (Twitter)**, Reddit, and YouTube
+- [ ] **Milestone 9**: Distributed inference caching (Redis/PostgreSQL) and multi-node worker pools
+- [ ] **Milestone 10**: Information cascade graph and influence propagation analysis (NetworkX / Neo4j)
 
 ---
 
-## 13. License
+## 15. License
 
 This project is licensed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
+
