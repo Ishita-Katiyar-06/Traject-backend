@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { X, Activity, Cpu, CheckCircle2, Clock, Zap } from 'lucide-react';
 import { telemetryApi } from '../../services/telemetryApi';
 import { PipelineMetricsResponse } from '../../types/api';
 import { formatCount } from '../../utils/telemetryFormatters';
+import { modalBackdrop, modalEnter } from '../../utils/motion';
 
 interface PipelineMetricsModalProps {
   isOpen: boolean;
@@ -34,16 +36,28 @@ export const PipelineMetricsModal: React.FC<PipelineMetricsModalProps> = ({
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="pipeline-metrics-title"
-      className="fixed inset-0 z-modal flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-150"
-    >
-      <div className="w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-modal bg-surface-elevated border border-border shadow-modal p-6 text-text-primary font-sans space-y-6">
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pipeline-metrics-title"
+          variants={modalBackdrop}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          className="fixed inset-0 z-modal flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
+          onClick={onClose}
+        >
+          <motion.div
+            variants={modalEnter}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-modal bg-surface-elevated border border-border shadow-modal p-6 text-text-primary font-sans space-y-6"
+            onClick={(e) => e.stopPropagation()}
+          >
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-border pb-4">
           <div className="flex items-center gap-2.5">
@@ -205,7 +219,9 @@ export const PipelineMetricsModal: React.FC<PipelineMetricsModalProps> = ({
             Close
           </button>
         </div>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };

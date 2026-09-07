@@ -30,6 +30,8 @@ import {
   REACH_WORDING,
   EVIDENCE_DENSITY_WORDING,
 } from '../../utils/telemetryFormatters';
+import { NarrativeSubScoresRadar } from '../../components/ui/charts';
+import { GraphCanvas } from '../../components/ui/graph';
 
 export const NarrativeDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -239,64 +241,77 @@ export const NarrativeDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 4 Dimension Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Spread Dimension */}
-          <div className="p-5 rounded-[22px] bg-slate-50 border border-slate-200/70 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-600 uppercase">Spread Score</span>
-              <span className="text-[10px] font-mono text-slate-400">Weight: 30%</span>
+        {/* 4 Dimension Cards + Analytical Radar */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+          <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Spread Dimension */}
+            <div className="p-5 rounded-[22px] bg-slate-50 border border-slate-200/70 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-600 uppercase">Spread Score</span>
+                <span className="text-[10px] font-mono text-slate-400">Weight: 30%</span>
+              </div>
+              <div className="font-mono text-[26px] font-extrabold text-[#111727]">
+                {formatDecimal(narrative.sub_scores.spread_score, 3)}
+              </div>
+              <p className="text-[11px] text-[#64748B]">
+                Multi-channel dissemination and cross-source diffusion rate.
+              </p>
             </div>
-            <div className="font-mono text-[26px] font-extrabold text-[#111727]">
-              {formatDecimal(narrative.sub_scores.spread_score, 3)}
+
+            {/* Coordination Dimension */}
+            <div className="p-5 rounded-[22px] bg-slate-50 border border-slate-200/70 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-600 uppercase">Coordination Score</span>
+                <span className="text-[10px] font-mono text-slate-400">Weight: 30%</span>
+              </div>
+              <div className="font-mono text-[26px] font-extrabold text-[#111727]">
+                {formatDecimal(narrative.sub_scores.coordination_score, 3)}
+              </div>
+              <p className="text-[11px] text-[#64748B]">
+                {COORDINATION_WORDING.tooltip}
+              </p>
             </div>
-            <p className="text-[11px] text-[#64748B]">
-              Multi-channel dissemination and cross-source diffusion rate.
-            </p>
+
+            {/* Observed Reach Dimension */}
+            <div className="p-5 rounded-[22px] bg-slate-50 border border-slate-200/70 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-600 uppercase">
+                  {REACH_WORDING.primary}
+                </span>
+                <span className="text-[10px] font-mono text-slate-400">Weight: 20%</span>
+              </div>
+              <div className="font-mono text-[26px] font-extrabold text-[#111727]">
+                {formatDecimal(narrative.sub_scores.reach_score, 3)}
+              </div>
+              <p className="text-[11px] text-[#64748B]">
+                {REACH_WORDING.tooltip}
+              </p>
+            </div>
+
+            {/* Friction Dimension */}
+            <div className="p-5 rounded-[22px] bg-slate-50 border border-slate-200/70 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-600 uppercase">Friction Score</span>
+                <span className="text-[10px] font-mono text-slate-400">Weight: 20%</span>
+              </div>
+              <div className="font-mono text-[26px] font-extrabold text-[#111727]">
+                {formatDecimal(narrative.sub_scores.friction_score, 3)}
+              </div>
+              <p className="text-[11px] text-[#64748B]">
+                Counter-claims, disputations, or platform content moderation friction.
+              </p>
+            </div>
           </div>
 
-          {/* Coordination Dimension */}
-          <div className="p-5 rounded-[22px] bg-slate-50 border border-slate-200/70 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-600 uppercase">Coordination Score</span>
-              <span className="text-[10px] font-mono text-slate-400">Weight: 30%</span>
+          {/* Analytical Radar Chart Profile */}
+          <div className="p-4 rounded-[22px] bg-[#F8FAFD] border border-slate-200/70 flex flex-col items-center justify-center">
+            <div className="text-[12px] font-bold text-[#111727] mb-1 font-sans">
+              4G Formula Signal Geometry
             </div>
-            <div className="font-mono text-[26px] font-extrabold text-[#111727]">
-              {formatDecimal(narrative.sub_scores.coordination_score, 3)}
-            </div>
-            <p className="text-[11px] text-[#64748B]">
-              {COORDINATION_WORDING.tooltip}
-            </p>
-          </div>
-
-          {/* Observed Reach Dimension */}
-          <div className="p-5 rounded-[22px] bg-slate-50 border border-slate-200/70 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-600 uppercase">
-                {REACH_WORDING.primary}
-              </span>
-              <span className="text-[10px] font-mono text-slate-400">Weight: 20%</span>
-            </div>
-            <div className="font-mono text-[26px] font-extrabold text-[#111727]">
-              {formatDecimal(narrative.sub_scores.reach_score, 3)}
-            </div>
-            <p className="text-[11px] text-[#64748B]">
-              {REACH_WORDING.tooltip}
-            </p>
-          </div>
-
-          {/* Friction Dimension */}
-          <div className="p-5 rounded-[22px] bg-slate-50 border border-slate-200/70 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-600 uppercase">Friction Score</span>
-              <span className="text-[10px] font-mono text-slate-400">Weight: 20%</span>
-            </div>
-            <div className="font-mono text-[26px] font-extrabold text-[#111727]">
-              {formatDecimal(narrative.sub_scores.friction_score, 3)}
-            </div>
-            <p className="text-[11px] text-[#64748B]">
-              Counter-claims, disputations, or platform content moderation friction.
-            </p>
+            <NarrativeSubScoresRadar
+              subScores={narrative.sub_scores}
+              priorityScore={narrative.priority_signal_score}
+            />
           </div>
         </div>
 
@@ -532,6 +547,122 @@ export const NarrativeDetailPage: React.FC = () => {
               </ul>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* 4.5 Interactive Diffusion & Multi-Channel Cascade Graph */}
+      <section className="p-6 md:p-8 rounded-[26px] border border-[rgba(228,233,245,0.85)] bg-white shadow-dashboard space-y-5">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+          <div className="flex items-center gap-2.5">
+            <Share2 className="w-5 h-5 text-[#2F65F6]" />
+            <div>
+              <h3 className="text-[17px] font-bold text-[#111727]">
+                Narrative Cascade & Channel Flow
+              </h3>
+              <p className="text-[12px] text-[#8591A5]">
+                Observed diffusion trajectory: Origin Channels ➔ Source Topic ➔ 4G Synthesis ➔ Broadcasting Feeds
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => navigate('/propagation')}
+          >
+            Global Propagation
+          </Button>
+        </div>
+
+        <div className="h-[440px] rounded-[20px] overflow-hidden border border-[rgba(228,233,245,0.85)] relative">
+          <GraphCanvas
+            nodes={[
+              // 1. Origin Channels
+              ...(narrative.origin_channels || []).map((chan, idx) => ({
+                id: `origin-${chan}`,
+                type: 'channel',
+                position: { x: 30, y: 120 + idx * 140 },
+                data: {
+                  channelId: chan,
+                  channelTitle: chan,
+                  platform: 'telegram',
+                  role: 'origin',
+                },
+              })),
+              // 2. Source Topic Node
+              {
+                id: `topic-${narrative.promoted_from_topic_id}`,
+                type: 'topic',
+                position: { x: 270, y: 110 },
+                data: {
+                  topicId: narrative.promoted_from_topic_id,
+                  clusterLabel: Number(narrative.promoted_from_topic_id.replace(/\D/g, '')) || 0,
+                  messageCount: narrative.data_coverage.message_count,
+                  keywords: narrative.key_entities.slice(0, 3),
+                },
+              },
+              // 3. Current Narrative Candidate Node
+              {
+                id: `narrative-${narrative.narrative_id}`,
+                type: 'narrative',
+                position: { x: 570, y: 100 },
+                data: {
+                  narrativeId: narrative.narrative_id,
+                  headlineClaim: narrative.headline_claim,
+                  priorityScore: narrative.priority_signal_score,
+                  priorityTier: narrative.priority_tier,
+                  promotedFromTopicId: narrative.promoted_from_topic_id,
+                  messageCount: narrative.data_coverage.message_count,
+                },
+              },
+              // 4. Broadcasting Channels
+              ...(narrative.broadcasting_channels || []).map((chan, idx) => ({
+                id: `broadcaster-${chan}`,
+                type: 'channel',
+                position: { x: 920, y: 40 + idx * 160 },
+                data: {
+                  channelId: chan,
+                  channelTitle: chan,
+                  platform: 'telegram',
+                  role: 'amplifier',
+                },
+              })),
+            ]}
+            edges={[
+              // Edges: Origin ➔ Topic
+              ...(narrative.origin_channels || []).map((chan) => ({
+                id: `edge-${chan}-topic`,
+                source: `origin-${chan}`,
+                target: `topic-${narrative.promoted_from_topic_id}`,
+                type: 'smoothstep',
+                animated: true,
+                label: 'originated in',
+                style: { stroke: '#10B981', strokeWidth: 1.5 },
+                labelStyle: { fontSize: 10, fill: '#10B981', fontFamily: 'monospace' },
+              })),
+              // Edge: Topic ➔ Narrative
+              {
+                id: `edge-topic-narrative`,
+                source: `topic-${narrative.promoted_from_topic_id}`,
+                target: `narrative-${narrative.narrative_id}`,
+                type: 'smoothstep',
+                animated: false,
+                label: 'promoted from',
+                style: { stroke: '#2F65F6', strokeWidth: 2 },
+                labelStyle: { fontSize: 10, fill: '#2F65F6', fontFamily: 'monospace', fontWeight: 600 },
+              },
+              // Edges: Narrative ➔ Broadcasters
+              ...(narrative.broadcasting_channels || []).map((chan) => ({
+                id: `edge-narrative-${chan}`,
+                source: `narrative-${narrative.narrative_id}`,
+                target: `broadcaster-${chan}`,
+                type: 'smoothstep',
+                animated: true,
+                label: 'amplified by',
+                style: { stroke: '#A855F7', strokeWidth: 1.5 },
+                labelStyle: { fontSize: 10, fill: '#8591A5', fontFamily: 'monospace' },
+              })),
+            ]}
+          />
         </div>
       </section>
 

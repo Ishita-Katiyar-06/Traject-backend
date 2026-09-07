@@ -21,7 +21,6 @@ export const WatchlistModal: React.FC<WatchlistModalProps> = ({ isOpen, onClose 
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
 
   const handleRemove = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();

@@ -1,14 +1,17 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { PageContainer } from './PageContainer';
 import { MobileNavigation } from './MobileNavigation';
 import { GlobalSearch } from '../components/navigation/GlobalSearch';
 import { useNavigation } from '../contexts/NavigationContext';
+import { pageEnter } from '../utils/motion';
 
 export const AppShell: React.FC = () => {
   const { isSearchOpen, closeSearch } = useNavigation();
+  const location = useLocation();
 
   return (
     <div className="h-screen w-full bg-bg text-text-primary flex font-sans antialiased overflow-hidden">
@@ -25,7 +28,15 @@ export const AppShell: React.FC = () => {
           className="flex-1 overflow-y-auto overflow-x-hidden bg-bg pb-16 md:pb-8 focus:outline-none relative z-0"
         >
           <PageContainer>
-            <Outlet />
+            <motion.div
+              key={location.pathname}
+              variants={pageEnter}
+              initial="initial"
+              animate="animate"
+              className="w-full min-h-full"
+            >
+              <Outlet />
+            </motion.div>
           </PageContainer>
         </main>
       </div>

@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { Settings, LogOut, Bookmark, ChevronDown } from 'lucide-react';
 import { WatchlistModal } from '../watchlist/WatchlistModal';
+import { dropdownMenu } from '../../utils/motion';
 
 export const UserMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -46,12 +48,17 @@ export const UserMenu: React.FC = () => {
           <ChevronDown className="w-3.5 h-3.5 text-[#8591A5]" />
         </button>
 
-        {isOpen && (
-          <div
-            role="menu"
-            aria-label="User account options"
-            className="absolute right-0 top-full mt-2 min-w-[230px] rounded-[22px] bg-white border border-[rgba(228,233,245,0.9)] shadow-xl p-2 z-50 font-sans animate-in fade-in zoom-in-95 duration-100"
-          >
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              role="menu"
+              aria-label="User account options"
+              variants={dropdownMenu}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="absolute right-0 top-full mt-2 min-w-[230px] rounded-[22px] bg-white border border-[rgba(228,233,245,0.9)] shadow-xl p-2 z-50 font-sans origin-top"
+            >
             <div className="px-3.5 py-2.5 mb-1.5 rounded-[16px] bg-[#F8FAFD] border border-[rgba(228,233,245,0.7)] text-left">
               <div className="text-[13px] font-bold text-[#111727]">Analyst AK</div>
               <div className="text-[11px] font-medium text-[#8591A5] mt-0.5">Role: Lead Observer</div>
@@ -93,8 +100,9 @@ export const UserMenu: React.FC = () => {
                 <span>Sign out</span>
               </button>
             </div>
-          </div>
+          </motion.div>
         )}
+      </AnimatePresence>
       </div>
 
       {/* Persistent Modals */}

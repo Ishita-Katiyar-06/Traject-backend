@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { Server, Activity, CheckCircle, AlertTriangle, XCircle, RefreshCw } from 'lucide-react';
 import { telemetryApi } from '../../services/telemetryApi';
 import { HealthResponse } from '../../types/api';
 import { formatCount, formatUtcDateTime } from '../../utils/telemetryFormatters';
 import { PipelineMetricsModal } from '../pipeline/PipelineMetricsModal';
+import { modalBackdrop, modalEnter } from '../../utils/motion';
 
 export interface SystemStatusProps {
   showLabel?: boolean;
@@ -87,14 +89,27 @@ export const SystemStatus: React.FC<SystemStatusProps> = ({
       </button>
 
       {/* System Health Diagnostic Modal */}
-      {isModalOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="system-status-dialog-title"
-          className="fixed inset-0 z-modal flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-150"
-        >
-          <div className="w-full max-w-md rounded-modal bg-surface-elevated border border-border shadow-modal p-6 text-text-primary font-sans space-y-5">
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="system-status-dialog-title"
+            variants={modalBackdrop}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="fixed inset-0 z-modal flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
+            onClick={() => setIsModalOpen(false)}
+          >
+            <motion.div
+              variants={modalEnter}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="w-full max-w-md rounded-modal bg-surface-elevated border border-border shadow-modal p-6 text-text-primary font-sans space-y-5"
+              onClick={(e) => e.stopPropagation()}
+            >
             <div className="flex items-center justify-between border-b border-border pb-3">
               <div className="flex items-center gap-2.5">
                 <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
@@ -197,9 +212,10 @@ export const SystemStatus: React.FC<SystemStatusProps> = ({
                 Close
               </button>
             </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Observability Telemetry Modal */}
       <PipelineMetricsModal

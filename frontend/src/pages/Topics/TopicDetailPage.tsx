@@ -15,6 +15,7 @@ import { Button } from '../../components/ui/Button';
 import { telemetryApi } from '../../services/telemetryApi';
 import { TopicDetailData } from '../../types/api';
 import { formatPercent, formatDecimal } from '../../utils/telemetryFormatters';
+import { KeywordScoresBarChart } from '../../components/ui/charts';
 
 export const TopicDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -168,15 +169,31 @@ export const TopicDetailPage: React.FC = () => {
           </span>
         </div>
 
-        <div className="flex flex-wrap gap-2 pt-2">
-          {topic.representative_keywords.map((kw, i) => (
-            <span
-              key={i}
-              className="px-3.5 py-1.5 rounded-full bg-[#F6F8FC] border border-slate-200/80 text-[#111727] text-[13px] font-medium font-mono"
-            >
-              #{kw.keyword} <span className="text-[#8591A5] text-[11px]">({kw.score.toFixed(2)})</span>
-            </span>
-          ))}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start pt-2">
+          {/* Keyword Badges */}
+          <div className="space-y-3">
+            <div className="text-[12px] font-semibold text-[#8591A5] uppercase tracking-wider">
+              Token Frequency Index
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {topic.representative_keywords.map((kw, i) => (
+                <span
+                  key={i}
+                  className="px-3.5 py-1.5 rounded-full bg-[#F6F8FC] border border-slate-200/80 text-[#111727] text-[13px] font-medium font-mono"
+                >
+                  #{kw.keyword} <span className="text-[#8591A5] text-[11px]">({kw.score.toFixed(2)})</span>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* c-TF-IDF Analytical Ranking Bar Chart */}
+          <div className="p-4 rounded-[20px] bg-[#F8FAFD] border border-slate-200/70">
+            <div className="text-[12px] font-bold text-[#111727] mb-2 font-sans">
+              Class-Based Term Weighting (c-TF-IDF)
+            </div>
+            <KeywordScoresBarChart keywords={topic.representative_keywords} />
+          </div>
         </div>
       </section>
 

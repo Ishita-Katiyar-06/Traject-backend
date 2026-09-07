@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 
 export interface TabItem {
   id: string;
@@ -53,7 +54,11 @@ export const Tabs: React.FC<TabsProps> = ({
               </span>
             )}
             {isActive && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-signal" />
+              <motion.span
+                layoutId="activeTabIndicator"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-signal"
+                transition={{ type: 'tween', duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              />
             )}
           </button>
         );

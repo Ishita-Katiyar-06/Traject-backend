@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { dropdownMenu } from '../../utils/motion';
 
 export interface DropdownItem {
   id: string;
@@ -54,36 +56,42 @@ export const Dropdown: React.FC<DropdownProps> = ({
         {trigger}
       </div>
 
-      {isOpen && (
-        <div
-          role="menu"
-          className={`absolute z-dropdown mt-2 min-w-[180px] rounded-[16px] bg-white border border-[rgba(228,233,245,0.85)] p-1.5 shadow-modal transition-all duration-150 ${
-            align === 'right' ? 'right-0' : 'left-0'
-          }`}
-        >
-          {items.map((item) => (
-            <button
-              key={item.id}
-              role="menuitem"
-              disabled={item.disabled}
-              onClick={() => {
-                item.onClick?.();
-                setIsOpen(false);
-              }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium rounded-[10px] text-left transition-colors duration-150 ${
-                item.disabled
-                  ? 'opacity-40 cursor-not-allowed'
-                  : item.danger
-                  ? 'text-[#C0503E] hover:bg-rose-50'
-                  : 'text-[#111727] hover:bg-[#F8FAFD] hover:text-[#2F65F6]'
-              }`}
-            >
-              {item.icon && <span className="w-4 h-4 shrink-0">{item.icon}</span>}
-              <span className="truncate">{item.label}</span>
-            </button>
-          ))}
-        </div>
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            role="menu"
+            variants={dropdownMenu}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className={`absolute z-dropdown mt-2 min-w-[180px] rounded-[16px] bg-white border border-[rgba(228,233,245,0.85)] p-1.5 shadow-modal origin-top ${
+              align === 'right' ? 'right-0' : 'left-0'
+            }`}
+          >
+            {items.map((item) => (
+              <button
+                key={item.id}
+                role="menuitem"
+                disabled={item.disabled}
+                onClick={() => {
+                  item.onClick?.();
+                  setIsOpen(false);
+                }}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium rounded-[10px] text-left transition-colors duration-150 ${
+                  item.disabled
+                    ? 'opacity-40 cursor-not-allowed'
+                    : item.danger
+                    ? 'text-[#C0503E] hover:bg-rose-50'
+                    : 'text-[#111727] hover:bg-[#F8FAFD] hover:text-[#2F65F6]'
+                }`}
+              >
+                {item.icon && <span className="w-4 h-4 shrink-0">{item.icon}</span>}
+                <span className="truncate">{item.label}</span>
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

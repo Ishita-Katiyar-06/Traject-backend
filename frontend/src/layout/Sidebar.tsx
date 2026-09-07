@@ -8,6 +8,7 @@ import {
   Share2,
   AlertCircle,
   Database,
+  ShieldCheck,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -26,31 +27,32 @@ export const Sidebar: React.FC = () => {
   return (
     <aside
       aria-label="Application sidebar"
-      className={`hidden md:flex flex-col h-full border-r border-[rgba(228,233,245,0.85)] bg-white transition-[width] duration-normal ease-in-out shrink-0 select-none z-sidebar overflow-hidden ${isSidebarCollapsed ? 'w-[72px]' : 'w-[240px]'
-        }`}
+      className={`hidden md:flex flex-col h-full border-r border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#13171C] transition-[width] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] shrink-0 select-none z-sidebar overflow-hidden ${
+        isSidebarCollapsed ? 'w-[72px]' : 'w-[240px]'
+      }`}
     >
       {/* Top Branding Area */}
-      <div className="h-16 shrink-0 flex items-center justify-between px-5 border-b border-[rgba(228,233,245,0.85)]">
+      <div className="h-16 shrink-0 flex items-center justify-between px-5 border-b border-[rgba(228,233,245,0.85)] dark:border-[#252B32]">
         {!isSidebarCollapsed ? (
           <div className="flex items-center gap-3">
-            {/* Geometric Brand Icon Mark */}
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#2563EB] to-[#60A5FA] flex items-center justify-center shadow-xs">
-              <span className="w-2.5 h-2.5 rounded-[2px] bg-white transform rotate-45" />
+            {/* Clean Authoritative Brand Mark */}
+            <div className="w-8 h-8 rounded-xl bg-[#2F65F6] flex items-center justify-center text-white font-bold font-mono text-[14px] shadow-xs">
+              T
             </div>
             <div className="flex flex-col">
-              <span className="text-[14px] font-bold tracking-wider font-sans text-[#111727] leading-tight">
-                TESSERA
+              <span className="text-[14px] font-bold tracking-wider font-sans text-[#111727] dark:text-[#F8FAFC] leading-tight">
+                TRAJECT
               </span>
-              <span className="text-[10px] font-mono tracking-normal text-[#8591A5] leading-tight">
-                Social Intelligence
+              <span className="text-[10px] font-mono tracking-normal text-[#8591A5] dark:text-[#94A3B8] leading-tight">
+                Narrative Intelligence
               </span>
             </div>
           </div>
         ) : (
           <div className="w-full flex justify-center">
-            <Tooltip content="Tessera Social Intelligence" position="right" delay={150}>
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#2563EB] to-[#60A5FA] flex items-center justify-center shadow-xs cursor-pointer">
-                <span className="w-3 h-3 rounded-[3px] bg-white transform rotate-45" />
+            <Tooltip content="TRAJECT Narrative Intelligence" position="right" delay={150}>
+              <div className="w-10 h-10 rounded-xl bg-[#2F65F6] flex items-center justify-center text-white font-bold font-mono text-[16px] shadow-xs cursor-pointer">
+                T
               </div>
             </Tooltip>
           </div>
@@ -60,79 +62,101 @@ export const Sidebar: React.FC = () => {
       {/* Semantic Navigation Link List */}
       <nav
         aria-label="Main Navigation"
-        className="flex-1 min-h-0 py-4 px-3 space-y-1.5 overflow-y-auto overflow-x-hidden"
+        className="flex-1 min-h-0 py-3 px-3 space-y-3 overflow-y-auto overflow-x-hidden"
       >
-        <div className="space-y-1">
-          <NavigationItem
-            name="Overview"
-            path="/overview"
-            icon={Activity}
-            isCollapsed={isSidebarCollapsed}
-          />
-          <NavigationItem
-            name="Signals"
-            path="/signals"
-            icon={Radio}
-            badge={3}
-            isCollapsed={isSidebarCollapsed}
-          />
-          <NavigationItem
-            name="Topics"
-            path="/topics"
-            icon={Hash}
-            isCollapsed={isSidebarCollapsed}
-          />
-          <NavigationItem
-            name="Narratives"
-            path="/narratives"
-            icon={GitBranch}
-            isCollapsed={isSidebarCollapsed}
-          />
-          <NavigationItem
-            name="Communities"
-            path="/communities"
-            icon={Users}
-            isCollapsed={isSidebarCollapsed}
-          />
-          <NavigationItem
-            name="Propagation"
-            path="/propagation"
-            icon={Share2}
-            isCollapsed={isSidebarCollapsed}
-          />
-          <NavigationItem
-            name="Alerts"
-            path="/alerts"
-            icon={AlertCircle}
-            badge={2}
-            isCollapsed={isSidebarCollapsed}
-          />
+        {/* Section 1: MONITOR */}
+        <div>
+          {!isSidebarCollapsed && (
+            <div className="text-[10px] font-mono uppercase font-bold tracking-wider text-[#8591A5] dark:text-[#7A8699] px-3 pb-1.5 select-none">
+              Monitor
+            </div>
+          )}
+          <div className="space-y-1">
+            <NavigationItem
+              name="Overview"
+              path="/overview"
+              icon={Activity}
+              isCollapsed={isSidebarCollapsed}
+            />
+            <NavigationItem
+              name="Signals"
+              path="/signals"
+              icon={Radio}
+              badge={3}
+              isCollapsed={isSidebarCollapsed}
+            />
+            <NavigationItem
+              name="Topics"
+              path="/topics"
+              icon={Hash}
+              isCollapsed={isSidebarCollapsed}
+            />
+            <NavigationItem
+              name="Narratives"
+              path="/narratives"
+              icon={GitBranch}
+              isCollapsed={isSidebarCollapsed}
+            />
+            <NavigationItem
+              name="Communities"
+              path="/communities"
+              icon={Users}
+              isCollapsed={isSidebarCollapsed}
+            />
+            <NavigationItem
+              name="Propagation"
+              path="/propagation"
+              icon={Share2}
+              isCollapsed={isSidebarCollapsed}
+            />
+            <NavigationItem
+              name="Alerts"
+              path="/alerts"
+              icon={AlertCircle}
+              badge={2}
+              isCollapsed={isSidebarCollapsed}
+            />
+          </div>
         </div>
 
-        <div className="py-2.5 px-2">
-          <div className="h-[1px] bg-[rgba(228,233,245,0.85)]" />
+        {/* Section 2: ANALYSIS */}
+        <div className="pt-1 border-t border-[rgba(228,233,245,0.7)] dark:border-[#20262E]">
+          {!isSidebarCollapsed && (
+            <div className="text-[10px] font-mono uppercase font-bold tracking-wider text-[#8591A5] dark:text-[#7A8699] px-3 pt-2 pb-1.5 select-none">
+              Analysis
+            </div>
+          )}
+          <div className="space-y-1">
+            <NavigationItem
+              name="Data Explorer"
+              path="/explorer"
+              icon={Database}
+              isCollapsed={isSidebarCollapsed}
+            />
+            <NavigationItem
+              name="Investigation"
+              path="/investigation"
+              icon={ShieldCheck}
+              isCollapsed={isSidebarCollapsed}
+            />
+          </div>
         </div>
 
-        <div className="space-y-1">
-          <NavigationItem
-            name="Data Explorer"
-            path="/explorer"
-            icon={Database}
-            isCollapsed={isSidebarCollapsed}
-          />
-        </div>
-
-        <div className="py-2.5 px-2">
-          <div className="h-[1px] bg-[rgba(228,233,245,0.85)]" />
-        </div>
-
-        <div className="space-y-1">
-          <NavigationItem
-            name="Settings"
-            path="/settings"
-            icon={Settings}
-            isCollapsed={isSidebarCollapsed}
-          />
+        {/* Section 3: SYSTEM */}
+        <div className="pt-1 border-t border-[rgba(228,233,245,0.7)] dark:border-[#20262E]">
+          {!isSidebarCollapsed && (
+            <div className="text-[10px] font-mono uppercase font-bold tracking-wider text-[#8591A5] dark:text-[#7A8699] px-3 pt-2 pb-1.5 select-none">
+              System
+            </div>
+          )}
+          <div className="space-y-1">
+            <NavigationItem
+              name="Settings"
+              path="/settings"
+              icon={Settings}
+              isCollapsed={isSidebarCollapsed}
+            />
+          </div>
         </div>
       </nav>
 

@@ -50,10 +50,36 @@ const NotFoundPage = lazy(() =>
 );
 
 const RouteLoadingFallback: React.FC = () => (
-  <div className="py-24 text-center font-mono text-small text-text-muted select-none">
-    Initializing telemetry workspace...
+  <div className="w-full min-h-[400px] flex flex-col items-center justify-center p-8 space-y-3">
+    <div className="w-6 h-6 border-2 border-[#2F65F6] border-t-transparent rounded-full animate-spin" />
+    <span className="font-mono text-[12px] text-[#8591A5]">Loading workspace...</span>
   </div>
 );
+
+// Preload route components in background to ensure instantaneous, zero-delay transitions
+if (typeof window !== 'undefined') {
+  const preloadRoutes = () => {
+    import('../pages/Overview/OverviewPage');
+    import('../pages/Signals/SignalsPage');
+    import('../pages/Signals/SignalDetailPage');
+    import('../pages/Topics/TopicsPage');
+    import('../pages/Topics/TopicDetailPage');
+    import('../pages/Narratives/NarrativesPage');
+    import('../pages/Narratives/NarrativeDetailPage');
+    import('../pages/Communities/CommunitiesPage');
+    import('../pages/Communities/CommunityDetailPage');
+    import('../pages/Propagation/PropagationPage');
+    import('../pages/Alerts/AlertsPage');
+    import('../pages/Explorer/ExplorerPage');
+    import('../pages/Settings/SettingsPage');
+    import('../pages/Investigation/InvestigationPage');
+  };
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(preloadRoutes);
+  } else {
+    setTimeout(preloadRoutes, 100);
+  }
+}
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -161,6 +187,14 @@ export const AppRoutes: React.FC = () => {
           element={
             <Suspense fallback={<RouteLoadingFallback />}>
               <SettingsPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="investigation"
+          element={
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <InvestigationPage />
             </Suspense>
           }
         />
