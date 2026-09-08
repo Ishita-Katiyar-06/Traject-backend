@@ -205,11 +205,11 @@ export const TopicDetailPage: React.FC = () => {
               Temporal & Propagation Features (Milestone 4F)
             </h3>
             <p className="text-[12px] text-[#8591A5]">
-              Burstiness (B), virality, and engagement velocity indicators
+              Burstiness (B), virality, and cascade indicators
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
             <div className="p-4 rounded-[20px] bg-[#F8FAFD] border border-slate-200/70 space-y-1">
               <div className="text-[11px] font-bold text-[#8591A5] uppercase">Burstiness Index</div>
               <div className="font-mono text-[24px] font-extrabold text-[#111727]">
@@ -219,18 +219,6 @@ export const TopicDetailPage: React.FC = () => {
               </div>
               <p className="text-[11px] text-[#64748B]">
                 Peak-to-mean temporal concentration.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-[20px] bg-[#F8FAFD] border border-slate-200/70 space-y-1">
-              <div className="text-[11px] font-bold text-[#8591A5] uppercase">Channel Velocity</div>
-              <div className="font-mono text-[24px] font-extrabold text-[#111727]">
-                {topic.temporal?.channel_entry_velocity !== null && topic.temporal?.channel_entry_velocity !== undefined
-                  ? formatDecimal(topic.temporal.channel_entry_velocity, 2)
-                  : '—'}
-              </div>
-              <p className="text-[11px] text-[#64748B]">
-                Distinct channels entry rate per hour.
               </p>
             </div>
 

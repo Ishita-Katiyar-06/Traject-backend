@@ -7,7 +7,7 @@ import { Pagination } from '../../components/ui/Pagination';
 import { TrendFilters, TrendApiFilterParams } from '../../components/trends/TrendFilters';
 import { TrendTable } from '../../components/trends/TrendTable';
 import { telemetryApi } from '../../services/telemetryApi';
-import { trendService, TrendWithNarratives } from '../../services/trendService';
+import { trendService, TrendWithNarratives, matchesTrendSearch } from '../../services/trendService';
 
 export const TrendsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -35,38 +35,50 @@ export const TrendsPage: React.FC = () => {
     }
     setIsError(false);
     try {
-      const apiParams: any = {
-        page: filters.page,
-        page_size: filters.page_size,
-        sort_by: filters.sort_by,
-        order: filters.order,
-      };
+      const isSearchActive = Boolean(filters.keyword && filters.keyword.trim());
 
-      const res = await trendService.getTrendsWithNarratives(apiParams, { skipCache: !isInitial });
+      if (isSearchActive) {
+        // Global search: search across all 345 trends in the dataset
+        const allTrends = await trendService.getAllTrendsWithNarratives({ skipCache: !isInitial });
+        const filtered = allTrends.filter((t) => matchesTrendSearch(t, filters.keyword || ''));
 
-      let items = res.trends;
-      if (filters.keyword && filters.keyword.trim()) {
-        const q = filters.keyword.toLowerCase().trim();
-        items = items.filter(
-          (t) =>
-            t.cleanId.toLowerCase().includes(q) ||
-            t.trend_id.toLowerCase().includes(q) ||
-            t.topic_id.toLowerCase().includes(q) ||
-            (t.trend_name && t.trend_name.toLowerCase().includes(q)) ||
-            (t.trend_summary && t.trend_summary.toLowerCase().includes(q)) ||
-            t.representative_keywords.some((k) => k.keyword.toLowerCase().includes(q)) ||
-            t.narratives.some(
-              (n) =>
-                (n.narrative_name && n.narrative_name.toLowerCase().includes(q)) ||
-                n.headline_claim.toLowerCase().includes(q) ||
-                n.narrative_id.toLowerCase().includes(q)
-            )
-        );
+        // Client-side sort respecting current sort_by and order
+        const sortBy = filters.sort_by || 'message_count';
+        const order = filters.order || 'desc';
+        filtered.sort((a, b) => {
+          let valA: any = (a as any)[sortBy] ?? 0;
+          let valB: any = (b as any)[sortBy] ?? 0;
+          if (sortBy === 'trend_id' || sortBy === 'topic_id') {
+            valA = parseInt(a.cleanId, 10) || 0;
+            valB = parseInt(b.cleanId, 10) || 0;
+          }
+          if (order === 'asc') return valA > valB ? 1 : valA < valB ? -1 : 0;
+          return valA < valB ? 1 : valA > valB ? -1 : 0;
+        });
+
+        const pageSize = filters.page_size || 10;
+        const page = filters.page || 1;
+        const total = filtered.length;
+        const computedPages = Math.max(1, Math.ceil(total / pageSize));
+        const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+        setTrends(paginated);
+        setTotalCount(total);
+        setTotalPages(computedPages);
+      } else {
+        // Standard paginated fetch from backend
+        const apiParams: any = {
+          page: filters.page,
+          page_size: filters.page_size,
+          sort_by: filters.sort_by,
+          order: filters.order,
+        };
+
+        const res = await trendService.getTrendsWithNarratives(apiParams, { skipCache: !isInitial });
+        setTrends(res.trends);
+        setTotalCount(res.meta.total);
+        setTotalPages(res.meta.total_pages);
       }
-
-      setTrends(items);
-      setTotalCount(res.meta.total);
-      setTotalPages(res.meta.total_pages);
     } catch (e) {
       console.error('Failed to load trends:', e);
       setIsError(true);
@@ -77,6 +89,7 @@ export const TrendsPage: React.FC = () => {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
+    trendService.clearCache();
     telemetryApi.clearCache();
     const minDelay = new Promise((resolve) => setTimeout(resolve, 600));
     try {
@@ -93,7 +106,7 @@ export const TrendsPage: React.FC = () => {
     if (filters.keyword) p.keyword = filters.keyword;
     if (filters.page && filters.page > 1) p.page = String(filters.page);
     setSearchParams(p, { replace: true });
-  }, [filters.page, filters.keyword, filters.sort_by, filters.order]);
+  }, [filters.page, filters.page_size, filters.keyword, filters.sort_by, filters.order]);
 
   const handleResetFilters = () => {
     setFilters({

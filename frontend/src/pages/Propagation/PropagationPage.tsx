@@ -621,7 +621,7 @@ export const PropagationPage: React.FC = () => {
       {/* 1. Page Header */}
       <PageHeader
         title="Propagation Cascades & Diffusion"
-        description="Cross-platform narrative migration tracking, forward cascades, and multi-channel velocity analysis."
+        description="Cross-platform narrative migration tracking, forward cascades, and multi-channel diffusion analysis."
         actions={
           <div className="flex items-center gap-2.5">
             {/* View Mode Toggle (Desktop / Mobile) */}
@@ -767,7 +767,7 @@ export const PropagationPage: React.FC = () => {
               {isLoading ? '...' : <AnimatedNumber value={totalForwardsCount} />}
             </div>
             <span className="text-[12px] text-[#8591A5] dark:text-slate-400 font-medium mt-2.5 block">
-              Forward propagation velocity
+              Forward propagation cascades
             </span>
           </div>
         </motion.div>

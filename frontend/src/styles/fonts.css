@@ -1,4 +1,4 @@
-/* Font Hierarchy and Typographic Utilities */
+/* Font Hierarchy and Typographic Utilities — TRAJECT Design System */
 
 .font-sans {
   font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -13,27 +13,44 @@
   font-family: 'IBM Plex Serif', Georgia, Cambria, 'Times New Roman', Times, serif;
 }
 
-/* Page, section and technical type scales */
+/* Page, section, card and analytical type scales */
 .text-page-title {
   font-family: 'IBM Plex Sans', sans-serif;
   font-size: 26px;
   line-height: 32px;
   font-weight: 600;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
   color: var(--color-text-primary);
 }
 
 @media (min-width: 768px) {
   .text-page-title {
-    font-size: 28px;
-    line-height: 34px;
+    font-size: 30px;
+    line-height: 36px;
   }
+}
+
+.text-page-subtitle {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
 }
 
 .text-section-title {
   font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 17px;
-  line-height: 22px;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--color-text-primary);
+}
+
+.text-card-title {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 15px;
+  line-height: 20px;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--color-text-primary);
@@ -68,6 +85,16 @@
   color: var(--color-text-muted);
 }
 
+.text-label-ui {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 11px;
+  line-height: 15px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
 .text-metric {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 26px;
@@ -78,10 +105,19 @@
   color: var(--color-text-primary);
 }
 
+@media (min-width: 768px) {
+  .text-metric {
+    font-size: 28px;
+    line-height: 34px;
+  }
+}
+
 .text-technical {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: 11px;
   line-height: 16px;
-  font-weight: 400;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
 }

@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Tooltip } from '../ui/Tooltip';
 import { usePrefersReducedMotion } from '../../utils/motion';
+import { scrollToTop } from '../../utils/scroll';
 
 export interface NavigationItemProps {
   name: string;
@@ -31,10 +32,15 @@ export const NavigationItem: React.FC<NavigationItemProps> = ({
 
   const prefersReduced = usePrefersReducedMotion();
 
+  const handleClick = () => {
+    scrollToTop(true);
+    onClick?.();
+  };
+
   const itemContent = (
     <NavLink
       to={path}
-      onClick={onClick}
+      onClick={handleClick}
       aria-label={name}
       title={isCollapsed ? name : undefined}
       aria-current={isActive ? 'page' : undefined}

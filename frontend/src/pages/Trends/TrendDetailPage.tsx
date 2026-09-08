@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft,
   Eye,
@@ -8,18 +8,25 @@ import {
   Clock,
   Tag,
   AlertTriangle,
-  FileText,
   GitBranch,
+  Sparkles,
+  Zap,
+  ArrowUpRight,
+  ChevronRight,
+  TrendingUp,
+  Compass,
 } from 'lucide-react';
-import { PageHeader } from '../../layout/PageHeader';
 import { Button } from '../../components/ui/Button';
 import { telemetryApi } from '../../services/telemetryApi';
+import { trendService, getCleanTrendId } from '../../services/trendService';
 import { TopicDetailData, NarrativeSummaryResponse } from '../../types/api';
-import { formatPercent, formatDecimal } from '../../utils/telemetryFormatters';
+import { formatPercent } from '../../utils/telemetryFormatters';
 import { KeywordScoresBarChart } from '../../components/ui/charts';
 import { TrendNodeGraph } from '../../components/trends/TrendNodeGraph';
 import { TrendSentimentChart } from '../../components/trends/TrendSentimentChart';
 import { NarrativeTreeNode } from '../../components/trends/TrendNarrativeTree';
+import { AnimatedNumber } from '../../components/ui/AnimatedNumber';
+import { scrollToTop } from '../../utils/scroll';
 
 export const TrendDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,38 +44,78 @@ export const TrendDetailPage: React.FC = () => {
 
     setIsLoading(true);
     setIsError(false);
-    Promise.all([
-      telemetryApi.getTrendById(id),
-      telemetryApi.getNarratives({ page: 1, page_size: 100 }),
-    ])
-      .then(([trendRes, narrativesRes]) => {
-        setTrend(trendRes.data);
+
+    const loadData = async () => {
+      try {
+        // 1. Fetch trend record and full catalog of all 345 narratives in parallel
+        const [trendRes, allNarratives] = await Promise.all([
+          telemetryApi.getTrendById(id),
+          trendService.getAllNarratives(),
+        ]);
+
         const t = trendRes.data;
-        const cleanId = (t.topic_id || id).replace(/^trend_|^topic_/, '');
-        const allN = narrativesRes.data || [];
-        const matched = allN.filter(
-          (n) =>
-            (t.associated_narrative_ids && t.associated_narrative_ids.includes(n.narrative_id)) ||
-            n.promoted_from_topic_id.replace(/^trend_|^topic_/, '') === cleanId
+        setTrend(t);
+
+        const cleanId = getCleanTrendId(t.topic_id || (t as any).trend_id || id || '');
+        const rawTopicId = t.topic_id?.trim() || '';
+        const rawTrendId = ((t as any).trend_id || '').trim();
+        const associatedIds = new Set(t.associated_narrative_ids || []);
+
+        // 2. Comprehensive matching across associated IDs, clean ID, raw topic ID, and numeric normalization
+        const matched: NarrativeSummaryResponse[] = allNarratives.filter((n) => {
+          // A. Direct narrative ID in trend's associated_narrative_ids
+          if (associatedIds.has(n.narrative_id)) return true;
+
+          // B. Match by promoted_from_topic_id
+          const nTopicClean = getCleanTrendId(n.promoted_from_topic_id);
+          if (nTopicClean && nTopicClean === cleanId) return true;
+          if (n.promoted_from_topic_id === rawTopicId || n.promoted_from_topic_id === rawTrendId) return true;
+
+          // C. Numeric ID normalization (e.g. "89" === "089")
+          const cleanInt = parseInt(cleanId, 10);
+          const nTopicInt = parseInt(nTopicClean, 10);
+          if (!isNaN(cleanInt) && !isNaN(nTopicInt) && cleanInt === nTopicInt) return true;
+
+          return false;
+        });
+
+        // 3. Fallback: If trend has associated_narrative_ids not captured in allNarratives, fetch directly
+        const missingIds = (t.associated_narrative_ids || []).filter(
+          (nid) => !matched.some((m) => m.narrative_id === nid)
         );
+        if (missingIds.length > 0) {
+          const directResults = await Promise.allSettled(
+            missingIds.map((nid) => telemetryApi.getNarrativeById(nid))
+          );
+          for (const res of directResults) {
+            if (res.status === 'fulfilled' && res.value?.data) {
+              matched.push(res.value.data as any);
+            }
+          }
+        }
+
+        // 4. Deterministic sort by priority_signal_score descending
         matched.sort((a, b) => b.priority_signal_score - a.priority_signal_score);
         setAssociatedNarratives(matched);
-      })
-      .catch((err) => {
+      } catch (err: any) {
         console.error('Failed to load trend detail:', err);
         setIsError(true);
         setErrorMessage(err.message || 'Trend could not be retrieved from /api/v1/trends/{id}.');
-      })
-      .finally(() => {
+      } finally {
         setIsLoading(false);
-      });
+      }
+    };
+
+    loadData();
   }, [id]);
 
   if (isLoading) {
     return (
-      <div className="py-20 text-center font-sans space-y-3">
-        <div className="w-8 h-8 border-3 border-[#2F65F6] border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-[14px] text-[#64748B] dark:text-slate-400">Querying trend cluster record...</p>
+      <div className="py-32 text-center font-sans space-y-4">
+        <div className="w-9 h-9 border-3 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-[14px] text-slate-600 dark:text-slate-400 font-medium">
+          Retrieving trend cluster #{id}...
+        </p>
       </div>
     );
   }
@@ -76,10 +123,8 @@ export const TrendDetailPage: React.FC = () => {
   if (isError || !trend) {
     return (
       <div className="space-y-6 font-sans">
-        <PageHeader
-          title="Trend Record"
-          description="Error retrieving backend trend cluster record."
-          actions={
+        <div className="flex items-center justify-between pb-4 border-b border-slate-200/80 dark:border-[#2B323D]">
+          <div className="flex items-center gap-3">
             <Button
               variant="secondary"
               size="sm"
@@ -88,9 +133,10 @@ export const TrendDetailPage: React.FC = () => {
             >
               Return to Trends
             </Button>
-          }
-        />
-        <div className="p-8 rounded-[24px] bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-center space-y-3">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Trend Not Found</h1>
+          </div>
+        </div>
+        <div className="p-8 rounded-[28px] bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 text-center space-y-3">
           <AlertTriangle className="w-8 h-8 text-rose-600 dark:text-rose-400 mx-auto" />
           <h3 className="text-[16px] font-bold text-rose-900 dark:text-rose-200">Trend Record Not Found</h3>
           <p className="text-[13px] text-rose-700 dark:text-rose-300 max-w-md mx-auto">
@@ -107,122 +153,263 @@ export const TrendDetailPage: React.FC = () => {
   const cleanTrendId = ((trend as any).trend_id || trend.topic_id || id || '').replace(/^topic_|^trend_/, '');
 
   return (
-    <div className="space-y-6 sm:space-y-8 font-sans pb-10">
-      {/* 1. Page Header */}
-      <PageHeader
-        title={
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[12px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-[#2F65F6] dark:text-[#93C5FD] border border-blue-200/70 dark:border-blue-900/40">
-                TREND #{cleanTrendId}
-              </span>
-            </div>
-            <h1 className="text-[26px] sm:text-[32px] font-bold text-[#111727] dark:text-[#F8FAFC] tracking-tight leading-tight font-sans">
-              {trend.trend_name || `Trend #${cleanTrendId}`}
-            </h1>
-          </div>
-        }
-        description={`Algorithmic trend cluster #${cleanTrendId} discovered via multilingual sentence embeddings and HDBSCAN density clustering.`}
-        actions={
-          <div className="flex items-center gap-2">
+    <div className="space-y-7 sm:space-y-8 font-sans pb-16 relative">
+      {/* =========================================================================
+          ZONE 1: HIGH-IMPACT PROMINENT NAVIGATION & IDENTITY DOCK
+          Authoritative, big Trend ID presence with breadcrumb context
+          ========================================================================= */}
+      <section className="space-y-4 pt-1">
+        {/* Navigation Ribbon Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-slate-200/70 dark:border-[#262C36]">
+          {/* Left: Clean, Authentic Breadcrumbs */}
+          <nav aria-label="Breadcrumb context" className="flex items-center gap-2 text-[12.5px] font-sans">
+            <Link
+              to="/overview"
+              onClick={() => scrollToTop(true)}
+              className="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+            >
+              Traject
+            </Link>
+            <ChevronRight className="w-3 h-3 text-slate-300 dark:text-slate-600 shrink-0" />
+            <Link
+              to="/trends"
+              onClick={() => scrollToTop(true)}
+              className="text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+            >
+              Trends
+            </Link>
+            <ChevronRight className="w-3 h-3 text-slate-300 dark:text-slate-600 shrink-0" />
+            <span className="font-mono text-[12px] font-semibold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-slate-700/60">
+              #{cleanTrendId}
+            </span>
+          </nav>
+
+          {/* Right: Quick Action Controls */}
+          <div className="flex items-center gap-2.5 shrink-0">
             <Button
               variant="secondary"
               size="sm"
               leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
               onClick={() => navigate('/trends')}
             >
-              Trends
+              Back to Trends
             </Button>
-
             <Button
               variant={isWatching ? 'primary' : 'secondary'}
               size="sm"
-              leftIcon={isWatching ? <Check className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              leftIcon={isWatching ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Eye className="w-3.5 h-3.5 text-amber-500" />}
               onClick={() => setIsWatching(!isWatching)}
             >
-              {isWatching ? 'Tracking' : 'Track Trend'}
+              {isWatching ? 'Tracking Signal' : 'Track Trend'}
             </Button>
           </div>
-        }
-      />
-
-      {/* Metadata Pill Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 rounded-[20px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] text-[13px] font-sans text-[#64748B] dark:text-slate-400 shadow-dashboard">
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <span className="text-[#111727] dark:text-slate-200 uppercase font-bold text-[11px] font-mono bg-[#F1F4F9] dark:bg-[#12161C] px-2.5 py-0.5 rounded-full border border-slate-200/60 dark:border-[#2B323A]">
-            TREND #{cleanTrendId}
-          </span>
-          <span className="text-slate-300 dark:text-slate-700">•</span>
-          <span className="text-[11px] font-mono font-semibold text-[#2F65F6] dark:text-[#93C5FD] bg-blue-50 dark:bg-blue-950/40 px-2.5 py-0.5 rounded-full border border-blue-100 dark:border-blue-900/40">
-            {formatPercent(trend.percentage_of_dataset)} of dataset
-          </span>
-          <span className="text-slate-300 dark:text-slate-700">•</span>
-          <span className="inline-flex items-center gap-1 text-[#475569] dark:text-slate-300">
-            <Layers className="w-3.5 h-3.5 text-slate-400" />
-            <span><strong className="text-[#111727] dark:text-slate-100">{trend.message_count.toLocaleString()}</strong> messages</span>
-          </span>
         </div>
 
-        <div className="flex items-center gap-3 text-[12px]">
-          {trend.temporal?.first_published_at && (
-            <span className="inline-flex items-center gap-1 font-mono text-[#64748B] dark:text-slate-400">
-              <Clock className="w-3.5 h-3.5 text-slate-400" />
-              <span>First: {new Date(trend.temporal.first_published_at).toLocaleDateString()}</span>
-            </span>
-          )}
-          {trend.temporal?.last_published_at && (
-            <>
-              <span className="text-slate-300 dark:text-slate-700">•</span>
-              <span className="inline-flex items-center gap-1 font-mono text-[#64748B] dark:text-slate-400">
-                <span>Last: {new Date(trend.temporal.last_published_at).toLocaleDateString()}</span>
+        {/* Executive Hero Title & 3 Crextio Executive KPIs */}
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pt-1">
+          {/* Title & Metadata Left */}
+          <div className="space-y-3 max-w-3xl">
+            {/* Pill Cluster */}
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="inline-flex items-center gap-2 font-mono text-[13px] font-bold text-white bg-[#181D24] dark:bg-[#222833] dark:border dark:border-[#333C4A] px-3.5 py-1 rounded-full shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                <span>TREND #{cleanTrendId}</span>
               </span>
-            </>
-          )}
-        </div>
-      </div>
 
-      {/* Dedicated Section: What this Trend represents */}
-      <section className="p-6 md:p-8 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-3 transition-all">
-        <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-[#252B32] pb-3">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#2F65F6]" />
-          <h2 className="text-[18px] sm:text-[20px] font-bold text-[#111727] dark:text-slate-100 tracking-tight">
-            What this Trend represents
-          </h2>
+              <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50/90 dark:bg-indigo-950/50 px-3.5 py-1 rounded-full border border-indigo-200/80 dark:border-indigo-800/60 shadow-2xs">
+                <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                <span>Discovered Cluster</span>
+              </span>
+
+              <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50/90 dark:bg-emerald-950/50 px-3.5 py-1 rounded-full border border-emerald-200/80 dark:border-emerald-800/60 shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>HDBSCAN Core</span>
+              </span>
+
+              <span className="inline-flex items-center gap-1.5 text-[12px] font-mono font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#1E232B] px-3 py-1 rounded-full border border-slate-200 dark:border-[#2C333E] shadow-2xs">
+                <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
+                <span>{formatPercent(trend.percentage_of_dataset)} Share</span>
+              </span>
+            </div>
+
+            {/* Big Headline */}
+            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight font-sans">
+              {trend.trend_name || `Trend #${cleanTrendId}`}
+            </h1>
+
+            {/* Description Subtitle */}
+            <p className="text-[14px] sm:text-[15px] text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
+              Algorithmic trend cluster #{cleanTrendId} discovered via multilingual sentence embeddings and HDBSCAN density clustering.
+            </p>
+          </div>
+
+          {/* Crextio 3 Big Executive KPIs on Right */}
+          <div className="flex items-center gap-7 sm:gap-9 shrink-0 pt-2 lg:pt-0">
+            {/* KPI 1: Message Count */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-white/90 dark:bg-[#181C22]/90 border border-slate-200/80 dark:border-[#333C48] flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-2xs">
+                <Layers className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-3xl sm:text-[34px] font-light font-sans text-slate-900 dark:text-slate-100 tracking-tight leading-none">
+                  <AnimatedNumber value={trend.message_count} />
+                </div>
+                <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1">
+                  Messages
+                </div>
+              </div>
+            </div>
+
+            {/* KPI 2: Dominance Share */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-100/80 dark:bg-amber-950/50 border border-amber-300/60 dark:border-amber-900/50 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-2xs">
+                <Zap className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-3xl sm:text-[34px] font-light font-sans text-slate-900 dark:text-slate-100 tracking-tight leading-none">
+                  {formatPercent(trend.percentage_of_dataset)}
+                </div>
+                <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1">
+                  Dominance
+                </div>
+              </div>
+            </div>
+
+            {/* KPI 3: Narratives */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-white/90 dark:bg-[#181C22]/90 border border-slate-200/80 dark:border-[#333C48] flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-2xs">
+                <GitBranch className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-3xl sm:text-[34px] font-light font-sans text-slate-900 dark:text-slate-100 tracking-tight leading-none">
+                  <AnimatedNumber value={associatedNarratives.length} />
+                </div>
+                <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1">
+                  Narratives
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <p className="text-[14px] sm:text-[15px] text-[#334155] dark:text-slate-300 leading-relaxed font-sans font-normal">
-          {trend.trend_summary || 'Semantic trend cluster synthesized from dense embedding spaces and representative class-based term frequencies.'}
-        </p>
       </section>
 
-      {/* 2. c-TF-IDF Representative Terms */}
-      <section className="p-6 md:p-8 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-6 transition-all">
+      {/* =========================================================================
+          ZONE 2: CREXTIO SEGMENTED HORIZON CAPSULE RIBBON
+          Continuous segmented capsules reflecting dataset share and telemetry
+          ========================================================================= */}
+      <section className="flex flex-wrap items-center justify-between gap-3 p-3 sm:p-3.5 rounded-[26px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs text-[13px] font-sans">
+        {/* Left: Continuous Segmented Status Bar */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="inline-flex items-center gap-2 bg-[#181D24] dark:bg-[#222832] text-white px-3.5 py-1.5 rounded-full text-[12px] font-bold font-mono shadow-xs">
+            <span>SHARE</span>
+            <span className="text-amber-400">{formatPercent(trend.percentage_of_dataset)}</span>
+          </div>
+
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-400 dark:bg-amber-400 text-slate-950 font-bold text-[12px] shadow-xs">
+            <Layers className="w-3.5 h-3.5 text-slate-950" />
+            <span>{trend.message_count.toLocaleString()} Messages</span>
+          </div>
+
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-100 dark:bg-[#13171C] border border-slate-200/80 dark:border-[#2B323D] text-[12px] font-medium text-slate-700 dark:text-slate-300">
+            <GitBranch className="w-3.5 h-3.5 text-slate-400" />
+            <span>{associatedNarratives.length} Associated Narratives</span>
+          </div>
+        </div>
+
+        {/* Right: Active Date Span & Explorer Link */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {trend.temporal?.first_published_at && (
+            <div className="inline-flex items-center gap-1.5 text-[11.5px] font-mono text-slate-500 dark:text-slate-400 px-3.5 py-1.5 rounded-full bg-slate-50 dark:bg-[#13171C] border border-slate-200/60 dark:border-[#2B323D]">
+              <Clock className="w-3.5 h-3.5 text-slate-400" />
+              <span>
+                {new Date(trend.temporal.first_published_at).toLocaleDateString()} — {trend.temporal.last_published_at ? new Date(trend.temporal.last_published_at).toLocaleDateString() : 'Active'}
+              </span>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => navigate(`/explorer?topic_id=${trend.topic_id}`)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-bold text-[#2F65F6] dark:text-[#5878C7] hover:underline transition-colors cursor-pointer"
+          >
+            <span>Corpus Explorer</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          ZONE 3: HERO BENTO CARD - "What this Trend represents"
+          Crextio editorial warmth, subtle ambient golden aura, clean typography
+          ========================================================================= */}
+      <section className="p-7 sm:p-8 rounded-[30px] border border-[#E6DFC9] dark:border-[#2D333F] bg-gradient-to-br from-[#FFFDF9] via-white to-[#F8F5ED]/90 dark:from-[#1E2229] dark:to-[#171A21] backdrop-blur-md shadow-[0_6px_28px_rgba(245,158,11,0.03)] space-y-4 relative overflow-hidden transition-all">
+        {/* Ambient warm golden glow auras */}
+        <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-amber-400/12 dark:bg-amber-400/5 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-amber-500/8 dark:bg-amber-500/5 blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex items-center justify-between border-b border-slate-200/70 dark:border-[#272D37] pb-3.5">
+          <div className="flex items-center gap-2.5">
+            <span className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-400/20 text-amber-900 dark:text-amber-300 border border-amber-400/40">
+              DOMINANT DISCOURSE
+            </span>
+            <h2 className="text-[18px] sm:text-[20px] font-bold text-slate-900 dark:text-white tracking-tight">
+              What this Trend represents
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-1.5 text-[11.5px] font-mono text-slate-400">
+            <Compass className="w-3.5 h-3.5 text-amber-500" />
+            <span>Dense Cluster Centroid</span>
+          </div>
+        </div>
+
+        <p className="relative z-10 text-[15.5px] sm:text-[17px] text-slate-700 dark:text-slate-200 leading-relaxed font-sans font-normal">
+          {trend.trend_summary || 'Semantic trend cluster synthesized from dense embedding spaces and representative class-based term frequencies.'}
+        </p>
+
+        <div className="relative z-10 pt-2 border-t border-slate-200/50 dark:border-[#252B35] flex items-center justify-between text-[11.5px] text-slate-500 dark:text-slate-400">
+          <span>Synthesized via multilingual sentence embeddings and HDBSCAN density clustering</span>
+          <span className="font-mono font-semibold text-amber-600 dark:text-amber-400">c-TF-IDF Centroid Verified</span>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          ZONE 4: REPRESENTATIVE LEXICAL FEATURES (c-TF-IDF MATRIX)
+          ========================================================================= */}
+      <section className="p-6 sm:p-8 rounded-[30px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs space-y-6 transition-all">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#252B32] pb-4">
           <div>
-            <h3 className="text-[17px] font-bold text-[#111727] dark:text-slate-100 tracking-tight">
-              Representative Lexical Features
-            </h3>
-            <p className="text-[12px] text-[#8591A5] dark:text-slate-400 font-medium mt-0.5">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-md text-[10.5px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-400/40">
+                TF-IDF MATRIX
+              </span>
+              <h3 className="text-[17px] font-bold text-slate-900 dark:text-white tracking-tight">
+                Representative Lexical Features
+              </h3>
+            </div>
+            <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium mt-1">
               Top keywords identified by class-based TF-IDF across clustered messages
             </p>
           </div>
         </div>
 
         <div className="space-y-4">
+          {/* Keyword Chips */}
           <div className="flex flex-wrap gap-2">
             {trend.representative_keywords.map((kw, idx) => (
               <span
                 key={idx}
-                className="px-3 py-1.5 rounded-full bg-[#F6F8FC] dark:bg-[#1D232A] text-[13px] font-semibold text-[#111727] dark:text-slate-200 border border-slate-200/80 dark:border-[#2B323A] flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-full bg-slate-100/90 dark:bg-[#13171C] text-[13px] font-semibold text-slate-900 dark:text-white border border-slate-200/80 dark:border-[#2B323D] flex items-center gap-1.5 shadow-2xs hover:border-amber-400/50 transition-colors"
               >
-                <span className="text-[#2F65F6] dark:text-[#93C5FD]">#</span>
+                <span className="text-amber-500 font-bold">#</span>
                 <span>{kw.keyword}</span>
-                <span className="text-[11px] font-mono text-[#8591A5] dark:text-slate-400">({kw.score.toFixed(3)})</span>
+                <span className="text-[11px] font-mono text-slate-400 dark:text-slate-500">({kw.score.toFixed(3)})</span>
               </span>
             ))}
           </div>
 
           <div className="pt-2">
-            <div className="text-[12px] font-bold text-[#111727] dark:text-slate-100 mb-2 font-sans">
+            <div className="text-[12px] font-bold text-slate-900 dark:text-white mb-2 font-sans">
               Class-Based Term Weighting (c-TF-IDF)
             </div>
             <KeywordScoresBarChart keywords={trend.representative_keywords} />
@@ -230,28 +417,34 @@ export const TrendDetailPage: React.FC = () => {
         </div>
       </section>
 
-      {/* 2.5 Converging Relationship Flow Graph */}
+      {/* =========================================================================
+          ZONE 5: TREND RELATIONSHIP TOPOLOGY (COMPLETELY UNTOUCHED AS REQUESTED)
+          ========================================================================= */}
       <TrendNodeGraph trendId={trend.topic_id} />
 
-      {/* 2.6 Trend Sentiment Trajectory */}
+      {/* =========================================================================
+          ZONE 6: TREND SENTIMENT TRAJECTORY
+          ========================================================================= */}
       <TrendSentimentChart trendId={trend.topic_id} />
 
-      {/* 2.7 Trend -> Associated Narratives Tree */}
-      <section className="p-6 md:p-8 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-4 transition-all">
+      {/* =========================================================================
+          ZONE 7: ASSOCIATED NARRATIVES HIERARCHY TREE
+          ========================================================================= */}
+      <section className="p-6 sm:p-8 rounded-[30px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs space-y-4 transition-all">
         <div className="border-b border-slate-100 dark:border-[#252B32] pb-4 flex items-center justify-between">
           <div>
-            <h3 className="text-[17px] font-bold text-[#111727] dark:text-slate-100 tracking-tight flex items-center gap-2">
+            <h3 className="text-[17px] font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
               <GitBranch className="w-5 h-5 text-rose-500" />
               <span>Associated Narratives ({associatedNarratives.length})</span>
             </h3>
-            <p className="text-[12px] text-[#8591A5] dark:text-slate-400 font-medium mt-0.5">
+            <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
               Hierarchical narrative candidates synthesized from Trend #{cleanTrendId}
             </p>
           </div>
         </div>
 
         {associatedNarratives.length > 0 ? (
-          <div className="relative pl-6 ml-3 border-l-2 border-slate-200 dark:border-[#2B323A] space-y-2.5 pt-2">
+          <div className="relative pl-6 ml-3 border-l-2 border-slate-200 dark:border-[#2B323D] space-y-2.5 pt-2">
             {associatedNarratives.map((n, idx) => (
               <NarrativeTreeNode
                 key={n.narrative_id}
@@ -263,125 +456,46 @@ export const TrendDetailPage: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="py-4 text-center text-[13px] text-[#8591A5] dark:text-slate-400">
+          <div className="py-6 text-center text-[13px] text-slate-500 dark:text-slate-400">
             No narratives are currently associated with this Trend.
           </div>
         )}
       </section>
 
-      {/* 3. 4F Feature Telemetry (Temporal & Propagation Dynamics) */}
-      {(trend.temporal || trend.engagement || trend.propagation) && (
-        <section className="p-6 md:p-8 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-5 transition-all">
-          <div className="border-b border-slate-100 dark:border-[#252B32] pb-4">
-            <h3 className="text-[17px] font-bold text-[#111727] dark:text-slate-100 tracking-tight">
-              Temporal & Propagation Features (Milestone 4F)
-            </h3>
-            <p className="text-[12px] text-[#8591A5] dark:text-slate-400 font-medium mt-0.5">
-              Burstiness (B), virality, and engagement velocity indicators
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
-            <div className="p-4 rounded-[20px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32] space-y-1">
-              <div className="text-[11px] font-bold text-[#8591A5] dark:text-slate-400 uppercase tracking-wider">Burstiness Index</div>
-              <div className="font-mono text-[24px] font-extrabold text-[#111727] dark:text-slate-100">
-                {trend.temporal?.burstiness_index !== null && trend.temporal?.burstiness_index !== undefined
-                  ? formatDecimal(trend.temporal.burstiness_index, 3)
-                  : '—'}
+      {/* =========================================================================
+          ZONE 8: EXTRACTED ENTITIES
+          ========================================================================= */}
+      {trend.entities && trend.entities.length > 0 && (
+        <section className="p-6 sm:p-8 rounded-[30px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs space-y-4 transition-all">
+          <div className="border-b border-slate-100 dark:border-[#252B32] pb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-900/40 flex items-center justify-center">
+                <Tag className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               </div>
-              <p className="text-[11px] text-[#64748B] dark:text-slate-400">
-                Peak-to-mean temporal concentration.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-[20px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32] space-y-1">
-              <div className="text-[11px] font-bold text-[#8591A5] dark:text-slate-400 uppercase tracking-wider">Channel Velocity</div>
-              <div className="font-mono text-[24px] font-extrabold text-[#111727] dark:text-slate-100">
-                {trend.temporal?.channel_entry_velocity !== null && trend.temporal?.channel_entry_velocity !== undefined
-                  ? formatDecimal(trend.temporal.channel_entry_velocity, 2)
-                  : '—'}
+              <div>
+                <h3 className="text-[17px] font-bold text-slate-900 dark:text-white tracking-tight">
+                  Extracted Entities
+                </h3>
+                <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                  Named entities and domain sources detected across this Trend ({trend.entities.length})
+                </p>
               </div>
-              <p className="text-[11px] text-[#64748B] dark:text-slate-400">
-                Distinct channels entry rate per hour.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-[20px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32] space-y-1">
-              <div className="text-[11px] font-bold text-[#8591A5] dark:text-slate-400 uppercase tracking-wider">Observed Forwards</div>
-              <div className="font-mono text-[24px] font-extrabold text-[#111727] dark:text-slate-100">
-                {trend.propagation?.observed_forward_count?.toLocaleString() || '0'}
-              </div>
-              <p className="text-[11px] text-[#64748B] dark:text-slate-400">
-                Forward cascade events recorded.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-[20px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32] space-y-1">
-              <div className="text-[11px] font-bold text-[#8591A5] dark:text-slate-400 uppercase tracking-wider">Entities Extracted</div>
-              <div className="font-mono text-[24px] font-extrabold text-[#111727] dark:text-slate-100">
-                {trend.entities?.length ?? 0}
-              </div>
-              <p className="text-[11px] text-[#64748B] dark:text-slate-400">
-                Distinct entities in cluster.
-              </p>
             </div>
           </div>
 
-          {/* Extracted Named Entities */}
-          {trend.entities && trend.entities.length > 0 && (
-            <div className="pt-3 border-t border-slate-100 dark:border-[#252B32]">
-              <div className="text-[12px] font-bold text-[#111727] dark:text-slate-100 mb-2 flex items-center gap-1.5">
-                <Tag className="w-3.5 h-3.5 text-[#2F65F6]" />
-                <span>Extracted Entities</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {trend.entities.slice(0, 15).map((ent, idx) => (
-                  <span
-                    key={idx}
-                    className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-[#1D232A] text-[#334155] dark:text-slate-300 text-[12px] font-medium border border-slate-200/60 dark:border-[#2B323A]"
-                  >
-                    {ent.text} <span className="text-slate-400 text-[10px]">({ent.category})</span>
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* 4. Representative Message IDs & Corpus Link */}
-      <section className="p-6 md:p-8 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-4 transition-all">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#252B32] pb-4">
-          <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-[#2F65F6]" />
-            <h3 className="text-[17px] font-bold text-[#111727] dark:text-slate-100 tracking-tight">
-              Representative Message Captures
-            </h3>
-          </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => navigate(`/explorer?topic_id=${trend.topic_id}`)}
-          >
-            Explore in Corpus Explorer
-          </Button>
-        </div>
-
-        {trend.representative_message_ids && trend.representative_message_ids.length > 0 ? (
-          <div className="flex flex-wrap gap-2 pt-2">
-            {trend.representative_message_ids.map((msgId, idx) => (
+          <div className="flex flex-wrap gap-2.5 pt-1">
+            {trend.entities.map((ent, idx) => (
               <span
                 key={idx}
-                className="px-3 py-1.5 rounded-full bg-[#F8FAFD] dark:bg-[#1D232A] border border-slate-200/80 dark:border-[#2B323A] font-mono text-[12px] text-[#2F65F6] dark:text-[#93C5FD]"
+                className="px-3.5 py-1.5 rounded-full bg-slate-50/90 dark:bg-[#13171C] text-slate-800 dark:text-slate-200 text-[12.5px] font-medium border border-slate-200/80 dark:border-[#2B323D] shadow-2xs hover:border-amber-400/50 transition-colors"
               >
-                {msgId}
+                {ent.text} <span className="text-slate-400 dark:text-slate-500 text-[11px] font-mono">({ent.category})</span>
               </span>
             ))}
           </div>
-        ) : (
-          <p className="text-[13px] text-[#8591A5] dark:text-slate-400">No representative message IDs recorded.</p>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   );
 };
+

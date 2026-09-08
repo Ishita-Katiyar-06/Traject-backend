@@ -7,6 +7,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .font-brand {
+    font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif !important;
+  }
+}
+
 @layer base {
   *, ::before, ::after {
     box-sizing: border-box;
@@ -180,8 +186,7 @@ html.dark [class*="text-slate-300"] {
 html.dark [class*="group"]:hover [class*="group-hover:text-[#2F65F6]"],
 html.dark [class*="group-hover:text-[#2F65F6]"]:hover,
 html.dark a:hover [class*="group-hover:text-[#2F65F6]"],
-html.dark .group:hover .group-hover\:text-\[\#2F65F6\],
-html.dark [class*="group"]:hover h3 {
+html.dark .group:hover .group-hover\:text-\[\#2F65F6\] {
   color: #6E8ED4 !important;
 }
 

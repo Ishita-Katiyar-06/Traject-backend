@@ -7,7 +7,11 @@ import { AnalystProfileModal } from './AnalystProfileModal';
 import { telemetryApi } from '../../services/telemetryApi';
 import { dropdownMenu } from '../../utils/motion';
 
-export const UserMenu: React.FC = () => {
+interface UserMenuProps {
+  triggerStyle?: 'pill' | 'circle';
+}
+
+export const UserMenu: React.FC<UserMenuProps> = ({ triggerStyle = 'pill' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isWatchlistOpen, setIsWatchlistOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -52,26 +56,38 @@ export const UserMenu: React.FC = () => {
 
   return (
     <>
-      <div ref={menuRef} className="relative inline-flex">
-        <button
-          type="button"
-          aria-label="User account menu"
-          aria-expanded={isOpen}
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2.5 h-10 pl-1.5 pr-3.5 rounded-full bg-white dark:bg-[#171C22] border border-[rgba(228,233,245,0.85)] dark:border-[#2B323A] hover:bg-[#F8FAFD] dark:hover:bg-[#1D232A] hover:border-slate-300 dark:hover:border-[#37404B] shadow-subtle transition-all duration-150 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#2F65F6]/30 cursor-pointer"
-        >
-          <div className="w-7 h-7 rounded-full bg-[#2F65F6]/10 dark:bg-[#5878C7]/20 text-[#2F65F6] dark:text-[#93C5FD] border border-[#2F65F6]/20 flex items-center justify-center font-semibold text-[11px]">
-            AK
-          </div>
-          <span className="hidden sm:inline-block text-[13px] font-sans text-[#111727] dark:text-[#F8FAFC] font-semibold">
-            Analyst
-          </span>
-          <ChevronDown
-            className={`w-3.5 h-3.5 text-[#8591A5] dark:text-[#7A8699] transition-transform duration-150 ${
-              isOpen ? 'rotate-180 text-[#2F65F6]' : ''
-            }`}
-          />
-        </button>
+      <div ref={menuRef} className="relative inline-flex shrink-0">
+        {triggerStyle === 'circle' ? (
+          <button
+            type="button"
+            aria-label="User account menu"
+            aria-expanded={isOpen}
+            onClick={() => setIsOpen(!isOpen)}
+            className="w-10 h-10 rounded-full border border-slate-300/80 dark:border-[#333C48] bg-white/80 dark:bg-[#181C22]/80 backdrop-blur-md flex items-center justify-center text-slate-700 dark:text-slate-300 shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:bg-slate-50 dark:hover:bg-[#20262E] hover:border-slate-400 dark:hover:border-slate-600 transition-colors shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-slate-400 cursor-pointer"
+          >
+            <User className="w-4 h-4 text-slate-700 dark:text-slate-300" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            aria-label="User account menu"
+            aria-expanded={isOpen}
+            onClick={() => setIsOpen(!isOpen)}
+            className="flex items-center gap-2 h-9 pl-1 pr-3 rounded-full bg-white dark:bg-[#171C22] border border-[rgba(228,233,245,0.85)] dark:border-[#2B323A] hover:bg-[#F8FAFD] dark:hover:bg-[#1D232A] hover:border-slate-300 dark:hover:border-[#37404B] shadow-subtle transition-all duration-150 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#2F65F6]/30 cursor-pointer"
+          >
+            <div className="w-6 h-6 rounded-full bg-[#2F65F6]/10 dark:bg-[#5878C7]/20 text-[#2F65F6] dark:text-[#93C5FD] border border-[#2F65F6]/20 flex items-center justify-center font-semibold text-[10px]">
+              AK
+            </div>
+            <span className="hidden sm:inline-block text-[12px] font-sans text-[#111727] dark:text-[#F8FAFC] font-semibold">
+              Analyst
+            </span>
+            <ChevronDown
+              className={`w-3.5 h-3.5 text-[#8591A5] dark:text-[#7A8699] transition-transform duration-150 ${
+                isOpen ? 'rotate-180 text-[#2F65F6]' : ''
+              }`}
+            />
+          </button>
+        )}
 
         <AnimatePresence>
           {isOpen && (

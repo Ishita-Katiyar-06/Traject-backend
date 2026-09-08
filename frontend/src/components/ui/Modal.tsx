@@ -67,37 +67,37 @@ export const Modal: React.FC<ModalProps> = ({
             initial="initial"
             animate="animate"
             exit="exit"
-            className={`relative w-full ${widthClasses[maxWidth]} rounded-modal bg-white dark:bg-[#171C22] border border-[rgba(228,233,245,0.9)] dark:border-[#2B323A] shadow-modal overflow-hidden flex flex-col max-h-[88vh]`}
+            className={`relative w-full ${widthClasses[maxWidth]} rounded-[26px] bg-white dark:bg-[#181C22] border border-slate-200/90 dark:border-[#2B323D] shadow-2xl overflow-hidden flex flex-col max-h-[88vh]`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-start justify-between px-6 py-5 border-b border-[rgba(228,233,245,0.85)] dark:border-[#2B323A]">
+            <div className="flex items-start justify-between px-6 py-5 border-b border-slate-100 dark:border-[#2B323D]">
               <div>
-                <h2 className="text-[17px] sm:text-[18px] font-bold text-[#111727] dark:text-[#F8FAFC] font-sans">
+                <h2 className="text-[17px] sm:text-[18px] font-bold text-slate-900 dark:text-slate-100 font-sans">
                   {title}
                 </h2>
                 {subtitle && (
-                  <p className="text-[12px] sm:text-[13px] text-[#8591A5] dark:text-[#94A3B8] font-medium mt-0.5">
+                  <p className="text-[12px] sm:text-[13px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                     {subtitle}
                   </p>
                 )}
               </div>
               <IconButton
                 aria-label="Close dialog"
-                icon={<X className="w-4 h-4 text-[#8591A5] dark:text-[#94A3B8] hover:text-[#111727] dark:hover:text-[#F8FAFC]" />}
+                icon={<X className="w-4 h-4 text-slate-400 hover:text-slate-700 dark:hover:text-white" />}
                 size="sm"
                 onClick={onClose}
               />
             </div>
 
             {/* Modal Body */}
-            <div className="px-6 py-5 overflow-y-auto flex-1 text-[13px] sm:text-[14px] text-[#475569] dark:text-[#CBD5E1]">
+            <div className="px-6 py-5 overflow-y-auto flex-1 text-[13px] sm:text-[14px] text-slate-600 dark:text-slate-300">
               {children}
             </div>
 
             {/* Modal Footer */}
             {footer && (
-              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[rgba(228,233,245,0.85)] dark:border-[#2B323A] bg-[#F8FAFD] dark:bg-[#13171C]">
+              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 dark:border-[#2B323D] bg-slate-50/70 dark:bg-[#13171C]">
                 {footer}
               </div>
             )}

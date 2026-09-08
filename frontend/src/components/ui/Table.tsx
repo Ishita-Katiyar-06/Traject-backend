@@ -44,27 +44,27 @@ export function Table<T>({
 }: TableProps<T>) {
   if (isLoading) {
     return (
-      <div className={`w-full border border-[rgba(228,233,245,0.85)] dark:border-[#2B323A] bg-white dark:bg-[#171C22] shadow-dashboard overflow-hidden rounded-[22px] ${className}`}>
-        <div className="p-4 border-b border-slate-100 dark:border-[#252B32] bg-[#F8FAFD] dark:bg-[#13171C] flex gap-4">
+      <div className={`w-full border border-slate-200/80 dark:border-[#2B323D] bg-white/90 dark:bg-[#181C22]/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden rounded-[22px] ${className}`}>
+        <div className="p-4 border-b border-slate-100 dark:border-[#252B32] bg-slate-50/70 dark:bg-[#13171C] flex gap-4">
           <Skeleton className="h-4 w-28 rounded-full" />
           <Skeleton className="h-4 w-40 rounded-full" />
           <Skeleton className="h-4 w-20 rounded-full" />
         </div>
         <div className="p-6 space-y-3.5">
-          <Skeleton className="h-8 w-full rounded-[10px]" />
-          <Skeleton className="h-8 w-full rounded-[10px]" />
-          <Skeleton className="h-8 w-full rounded-[10px]" />
-          <Skeleton className="h-8 w-full rounded-[10px]" />
+          <Skeleton className="h-8 w-full rounded-full" />
+          <Skeleton className="h-8 w-full rounded-full" />
+          <Skeleton className="h-8 w-full rounded-full" />
+          <Skeleton className="h-8 w-full rounded-full" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`w-full overflow-x-auto border border-[rgba(228,233,245,0.85)] dark:border-[#2B323A] bg-white dark:bg-[#171C22] shadow-dashboard rounded-[22px] ${className}`}>
+    <div className={`w-full overflow-x-auto border border-slate-200/80 dark:border-[#2B323D] bg-white/90 dark:bg-[#181C22]/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)] rounded-[22px] ${className}`}>
       <table className="w-full text-left border-collapse font-sans text-body-ui">
         <thead>
-          <tr className="border-b border-slate-100 dark:border-[#252B32] bg-[#F8FAFD] dark:bg-[#13171C]">
+          <tr className="border-b border-slate-100 dark:border-[#2B323D] bg-slate-50/70 dark:bg-[#13171C]">
             {columns.map((col) => {
               const isSorted = sortColumn === col.key;
               return (
@@ -74,8 +74,8 @@ export function Table<T>({
                   onClick={() => col.sortable && onSort?.(col.key)}
                   className={`px-5 py-3.5 text-[12px] font-medium select-none tracking-normal ${
                     isSorted
-                      ? 'text-[#2F65F6] dark:text-[#93C5FD] font-semibold'
-                      : 'text-[#64748B] dark:text-[#94A3B8]'
+                      ? 'text-slate-900 dark:text-white font-semibold'
+                      : 'text-slate-500 dark:text-slate-400'
                   } ${
                     col.align === 'right' || col.isNumeric
                       ? 'text-right'

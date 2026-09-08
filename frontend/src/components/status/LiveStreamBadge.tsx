@@ -79,7 +79,7 @@ export const LiveStreamBadge: React.FC = () => {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex items-center gap-2 h-9 px-3 rounded-full bg-white dark:bg-[#161B21] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] shadow-xs hover:border-[#2F65F6]/40 transition-all cursor-pointer"
+        className="flex items-center gap-2 h-10 px-3 rounded-full bg-white/90 dark:bg-[#181C22]/90 border border-slate-300/80 dark:border-[#333C48] shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:border-slate-400 dark:hover:border-slate-600 transition-all cursor-pointer shrink-0"
         aria-label="Toggle live stream monitor"
       >
         <Radio className="w-3.5 h-3.5 text-[#2F65F6]" />

@@ -13,21 +13,21 @@ export const Badge: React.FC<BadgeProps> = ({
   ...props
 }) => {
   const sizeClasses = {
-    sm: 'px-2 py-0.5 text-[11px] font-mono leading-tight gap-1',
-    md: 'px-2.5 py-0.5 text-[12px] font-sans gap-1.5',
+    sm: 'px-2.5 py-0.5 text-[11px] font-mono font-medium leading-tight gap-1',
+    md: 'px-3 py-1 text-[12px] font-sans font-medium gap-1.5',
   };
 
   const variantClasses = {
     neutral:
-      'bg-[#F1F4F9] dark:bg-[#191F26] text-[#475569] dark:text-[#94A3B8] border border-slate-200/60 dark:border-[#2B323A]',
+      'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700',
     signal:
-      'bg-[#E9A23B]/10 dark:bg-[#FBBF24]/15 text-[#E9A23B] dark:text-[#FBBF24] border border-[#E9A23B]/25 dark:border-[#FBBF24]/30',
+      'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50',
     data:
-      'bg-[#2F65F6]/10 dark:bg-[#5878C7]/15 text-[#2F65F6] dark:text-[#93C5FD] border border-[#2F65F6]/25 dark:border-[#5878C7]/30',
+      'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/50',
     critical:
-      'bg-[#E35D5D]/10 dark:bg-[#F87171]/15 text-[#E35D5D] dark:text-[#F87171] border border-[#E35D5D]/25 dark:border-[#F87171]/30',
+      'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50',
     confirmed:
-      'bg-[#22A06B]/10 dark:bg-[#34D399]/15 text-[#22A06B] dark:text-[#34D399] border border-[#22A06B]/25 dark:border-[#34D399]/30',
+      'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/50',
   };
 
   return (

@@ -4,14 +4,22 @@
      ========================================================================== */
 
   /* Surface Hierarchy */
-  --dash-canvas: #EEF1F8;
+  --dash-canvas: #FAF8F3;
   --dash-card: #FFFFFF;
-  --dash-surface-soft: #F6F8FC;
-  --dash-surface-pill: #E5E9F4;
-  --dash-surface-capsule: #F6F8FC;
-  --dash-surface-hover: #F8FAFD;
-  --dash-border: rgba(228, 233, 245, 0.85);
-  --dash-border-subtle: rgba(235, 239, 248, 0.6);
+  --dash-surface-soft: #F6F3EB;
+  --dash-surface-pill: #EAE6DC;
+  --dash-surface-capsule: #F6F3EB;
+  --dash-surface-hover: #F9F7F1;
+  --dash-border: rgba(226, 221, 208, 0.85);
+  --dash-border-subtle: rgba(235, 231, 220, 0.6);
+
+  /* Reference Design Accent Palette (Warm Cream, Marigold Yellow, Charcoal Contrast) */
+  --dash-canvas-warm: #FAF8F3;
+  --dash-surface-cream: #F5F1E5;
+  --dash-yellow-accent: #FBBF24;
+  --dash-yellow-subtle: #FEF3C7;
+  --dash-charcoal-card: #181D24;
+  --dash-border-warm: rgba(220, 214, 198, 0.75);
 
   /* Typography Palette */
   --dash-text-title: #111727;
@@ -36,6 +44,7 @@
   --color-surface-elevated: var(--dash-card);
   --color-surface-soft: var(--dash-surface-soft);
   --color-surface-hover: var(--dash-surface-hover);
+  --color-surface-selected: rgba(47, 101, 246, 0.08);
 
   --color-border: var(--dash-border);
   --color-border-subtle: var(--dash-border-subtle);
@@ -95,7 +104,8 @@
   /* Layout Constants */
   --sidebar-width-expanded: 240px;
   --sidebar-width-collapsed: 72px;
-  --header-height: 64px;
+  --header-height: 56px;
+  --top-nav-height: 56px;
 
   /* Diffused Soft Elevation Shadows */
   --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.02);
@@ -150,6 +160,13 @@
   --dash-border: #2B323A;
   --dash-border-subtle: #252B32;
 
+  --dash-canvas-warm: #0D1014;
+  --dash-surface-cream: #171C22;
+  --dash-yellow-accent: #FBBF24;
+  --dash-yellow-subtle: rgba(251, 191, 36, 0.15);
+  --dash-charcoal-card: #12151A;
+  --dash-border-warm: #2B323A;
+
   /* Typography Palette - Clear Contrast & Readability */
   --dash-text-title: #F8FAFC;
   --dash-text-body: #CBD5E1;
@@ -172,6 +189,7 @@
   --color-surface-elevated: #1D232A;
   --color-surface-soft: var(--dash-surface-soft);
   --color-surface-hover: var(--dash-surface-hover);
+  --color-surface-selected: rgba(88, 120, 199, 0.16);
 
   --color-border: var(--dash-border);
   --color-border-subtle: var(--dash-border-subtle);

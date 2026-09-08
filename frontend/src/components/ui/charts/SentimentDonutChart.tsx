@@ -74,13 +74,13 @@ export const SentimentDonutChart: React.FC<SentimentDonutChartProps> = ({
     typeof neutralRatio === 'number' &&
     typeof negativeRatio === 'number';
 
-  // Optimized, Airy Canvas Dimensions (Ample padding, seamless blending, zero shadow clipping)
-  const viewBoxWidth = 540;
-  const viewBoxHeight = 285;
-  const cx = 165;
-  const cy = 130;
-  const rCore = 46;
-  const strokeW = 12;
+  // Scaled Canvas Dimensions to perfectly fill the Corpus Sentiment card
+  const viewBoxWidth = 640;
+  const viewBoxHeight = 310;
+  const cx = 175;
+  const cy = 150;
+  const rCore = 56;
+  const strokeW = 15;
 
   // Geometry configuration: Arcs start at bottom-right (80°), sweep clockwise around circle
   const startAngle = 80;
@@ -99,43 +99,43 @@ export const SentimentDonutChart: React.FC<SentimentDonutChartProps> = ({
     const neuPct = Math.round((rawNeu / total) * 1000) / 10;
     const negPct = Math.round((rawNeg / total) * 1000) / 10;
 
-    // Three distinct concentric radii (Outer, Middle, Inner)
+    // Three distinct concentric radii (Outer, Middle, Inner) scaled up to fill container
     const trackDefs = [
       {
         id: 'neutral' as const,
         label: 'Neutral',
         percentage: neuPct,
         count: Math.round(evaluatedCount * (rawNeu / total)),
-        radius: 118,
+        radius: 142,
         color: '#3B82F6',
         colorDark: '#60A5FA',
         gradId: 'radial-grad-neutral',
-        targetX: 345,
-        targetY: 48,
+        targetX: 385,
+        targetY: 50,
       },
       {
         id: 'negative' as const,
         label: 'Negative',
         percentage: negPct,
         count: Math.round(evaluatedCount * (rawNeg / total)),
-        radius: 94,
+        radius: 113,
         color: '#EF4444',
         colorDark: '#F87171',
         gradId: 'radial-grad-negative',
-        targetX: 345,
-        targetY: 130,
+        targetX: 385,
+        targetY: 150,
       },
       {
         id: 'positive' as const,
         label: 'Positive',
         percentage: posPct,
         count: Math.round(evaluatedCount * (rawPos / total)),
-        radius: 70,
+        radius: 84,
         color: '#10B981',
         colorDark: '#34D399',
         gradId: 'radial-grad-positive',
-        targetX: 345,
-        targetY: 212,
+        targetX: 385,
+        targetY: 250,
       },
     ];
 
@@ -150,11 +150,11 @@ export const SentimentDonutChart: React.FC<SentimentDonutChartProps> = ({
       const tipPoint = polarToCartesian(cx, cy, def.radius, endAngle);
 
       // Smooth S-Curve Leader Line connecting arc tip to horizontal shelf
-      const cp1X = tipPoint.x + Math.max(25, (def.targetX - tipPoint.x) * 0.45);
+      const cp1X = tipPoint.x + Math.max(30, (def.targetX - tipPoint.x) * 0.45);
       const cp1Y = tipPoint.y;
-      const cp2X = def.targetX - Math.max(25, (def.targetX - tipPoint.x) * 0.45);
+      const cp2X = def.targetX - Math.max(30, (def.targetX - tipPoint.x) * 0.45);
       const cp2Y = def.targetY;
-      const leaderPath = `M ${tipPoint.x.toFixed(2)} ${tipPoint.y.toFixed(2)} C ${cp1X.toFixed(2)} ${cp1Y.toFixed(2)}, ${cp2X.toFixed(2)} ${cp2Y.toFixed(2)}, ${def.targetX} ${def.targetY} L ${def.targetX + 140} ${def.targetY}`;
+      const leaderPath = `M ${tipPoint.x.toFixed(2)} ${tipPoint.y.toFixed(2)} C ${cp1X.toFixed(2)} ${cp1Y.toFixed(2)}, ${cp2X.toFixed(2)} ${cp2Y.toFixed(2)}, ${def.targetX} ${def.targetY} L ${def.targetX + 190} ${def.targetY}`;
 
       return {
         ...def,
@@ -204,7 +204,7 @@ export const SentimentDonutChart: React.FC<SentimentDonutChartProps> = ({
       <div className="relative w-full flex justify-center">
         <svg
           viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
-          className="w-full h-auto max-w-[540px] select-none"
+          className="w-full h-auto max-w-[680px] select-none"
           role="img"
           aria-label="Concentric sentiment radial gauge"
         >
@@ -315,28 +315,28 @@ export const SentimentDonutChart: React.FC<SentimentDonutChartProps> = ({
               <>
                 <text
                   x={cx}
-                  y={cy - 9}
+                  y={cy - 12}
                   textAnchor="middle"
                   fill={isDark ? activeTrack.colorDark : activeTrack.color}
-                  className="text-[10px] font-extrabold font-sans uppercase tracking-widest"
+                  className="text-[11px] font-extrabold font-sans uppercase tracking-widest"
                 >
                   {activeTrack.label}
                 </text>
                 <text
                   x={cx}
-                  y={cy + 12}
+                  y={cy + 13}
                   textAnchor="middle"
                   fill={isDark ? '#F1F5F9' : '#0F172A'}
-                  className="text-[20px] font-mono font-extrabold tracking-tight"
+                  className="text-[22px] font-mono font-extrabold tracking-tight"
                 >
                   {activeTrack.percentage}%
                 </text>
                 <text
                   x={cx}
-                  y={cy + 25}
+                  y={cy + 29}
                   textAnchor="middle"
                   fill="#94A3B8"
-                  className="text-[9px] font-mono font-medium"
+                  className="text-[10px] font-mono font-medium"
                 >
                   {activeTrack.count.toLocaleString()} msgs
                 </text>
@@ -345,28 +345,28 @@ export const SentimentDonutChart: React.FC<SentimentDonutChartProps> = ({
               <>
                 <text
                   x={cx}
-                  y={cy - 11}
+                  y={cy - 13}
                   textAnchor="middle"
                   fill={isDark ? '#94A3B8' : '#64748B'}
-                  className="text-[9px] font-extrabold font-sans uppercase tracking-[0.2em]"
+                  className="text-[10px] font-extrabold font-sans uppercase tracking-[0.2em]"
                 >
                   CORPUS
                 </text>
                 <text
                   x={cx}
-                  y={cy + 6}
+                  y={cy + 7}
                   textAnchor="middle"
                   fill={isDark ? '#F8FAFC' : '#0F172A'}
-                  className="text-[12px] font-bold font-sans uppercase tracking-wider"
+                  className="text-[13px] font-bold font-sans uppercase tracking-wider"
                 >
                   SENTIMENT
                 </text>
                 <text
                   x={cx}
-                  y={cy + 22}
+                  y={cy + 26}
                   textAnchor="middle"
                   fill="#94A3B8"
-                  className="text-[9.5px] font-mono font-bold"
+                  className="text-[10.5px] font-mono font-bold"
                 >
                   {formattedCount}
                 </text>
@@ -393,7 +393,7 @@ export const SentimentDonutChart: React.FC<SentimentDonutChartProps> = ({
                   d={t.leaderPath}
                   fill="none"
                   stroke={strokeColor}
-                  strokeWidth={isHovered ? 2.2 : 1.5}
+                  strokeWidth={isHovered ? 2.4 : 1.8}
                   strokeLinecap="round"
                   className="pointer-events-none"
                   initial={{ pathLength: 0, opacity: 0 }}
@@ -403,20 +403,20 @@ export const SentimentDonutChart: React.FC<SentimentDonutChartProps> = ({
 
                 {/* Big Clean Monospace Metric */}
                 <text
-                  x={t.targetX + 8}
-                  y={t.targetY - 6}
+                  x={t.targetX + 10}
+                  y={t.targetY - 8}
                   fill={strokeColor}
-                  className="text-[24px] font-extrabold font-mono tracking-tight"
+                  className="text-[28px] sm:text-[30px] font-extrabold font-mono tracking-tight"
                 >
                   {t.percentage}%
                 </text>
 
                 {/* Clean Category Label */}
                 <text
-                  x={t.targetX + 8}
-                  y={t.targetY + 16}
+                  x={t.targetX + 10}
+                  y={t.targetY + 18}
                   fill={isDark ? '#E2E8F0' : '#475569'}
-                  className="text-[13px] font-bold font-sans tracking-tight"
+                  className="text-[14px] font-bold font-sans tracking-tight"
                 >
                   {t.label}
                 </text>

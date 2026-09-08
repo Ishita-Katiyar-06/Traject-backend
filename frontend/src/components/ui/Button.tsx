@@ -20,22 +20,22 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const sizeClasses = {
-    sm: 'h-8 px-3.5 text-[12px] gap-1.5 rounded-[10px]',
-    md: 'h-9 sm:h-10 px-4 text-[13px] gap-2 rounded-control',
-    lg: 'h-11 px-5 text-[14px] gap-2.5 rounded-control',
+    sm: 'h-8 px-3.5 text-[12px] gap-1.5 rounded-full',
+    md: 'h-10 px-4 text-[13px] gap-2 rounded-full',
+    lg: 'h-11 px-5 text-[14px] gap-2.5 rounded-full',
   };
 
   const variantClasses = {
     primary:
-      'bg-[#2F65F6] hover:bg-[#2152DE] active:bg-[#1A42BA] text-white font-medium shadow-subtle border border-transparent dark:bg-[#5878C7] dark:hover:bg-[#6E8ED4]',
+      'bg-[#21252C] hover:bg-[#15181C] active:bg-black text-white font-medium shadow-[0_1px_3px_rgba(0,0,0,0.08)] border border-transparent dark:bg-[#F8FAFC] dark:text-[#0D1014] dark:hover:bg-white',
     secondary:
-      'bg-white dark:bg-[#171C22] text-[#111727] dark:text-[#F8FAFC] font-medium hover:bg-[#F8FAFD] dark:hover:bg-[#22282F] border border-[rgba(228,233,245,0.85)] dark:border-[#2B323A] shadow-subtle active:bg-slate-50 dark:active:bg-[#1D232A]',
+      'bg-white/90 dark:bg-[#181C22]/90 text-slate-700 dark:text-slate-200 font-medium hover:bg-slate-50 dark:hover:bg-[#20262E] border border-slate-300/80 dark:border-[#333C48] shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:border-slate-400 dark:hover:border-slate-500 active:bg-slate-100 dark:active:bg-[#1D232A]',
     subtle:
-      'bg-transparent text-[#475569] dark:text-[#CBD5E1] font-medium hover:text-[#111727] dark:hover:text-[#F8FAFC] hover:bg-[#F1F4F9] dark:hover:bg-[#191F26] active:bg-[#E5E9F4] dark:active:bg-[#22282F] border border-transparent',
+      'bg-transparent text-slate-600 dark:text-slate-400 font-medium hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-[#181C22] border border-transparent',
     danger:
-      'bg-[#E35D5D]/10 text-[#E35D5D] dark:text-[#F87171] font-medium border border-[#E35D5D]/20 hover:bg-[#E35D5D]/15 active:bg-[#E35D5D]/20',
+      'bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 font-medium border border-rose-200/80 dark:border-rose-900/40 hover:bg-rose-100/70 dark:hover:bg-rose-900/40',
     data:
-      'bg-[#E5E9F4] dark:bg-[#191F26] text-[#111727] dark:text-[#F8FAFC] font-medium hover:bg-white dark:hover:bg-[#1D232A] border border-[rgba(228,233,245,0.85)] dark:border-[#2B323A] active:bg-slate-100',
+      'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium hover:bg-slate-200/70 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700',
   };
 
   return (

@@ -13,8 +13,21 @@ import type { ErrorEnvelope } from '../types/api.ts';
 
 const env = (import.meta as unknown as { env?: Record<string, string> }).env;
 
+const getDefaultApiBaseUrl = (): string => {
+  if (typeof window !== 'undefined' && window.location) {
+    const { hostname, protocol } = window.location;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:8000/api/v1';
+    }
+    // For external LAN devices or remote deployment without an explicit VITE_API_BASE_URL,
+    // connect to backend on the same host machine at port 8000
+    return `${protocol}//${hostname}:8000/api/v1`;
+  }
+  return 'http://localhost:8000/api/v1';
+};
+
 export const API_BASE_URL =
-  env?.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+  env?.VITE_API_BASE_URL || getDefaultApiBaseUrl();
 
 // In production, live API is default. Mock data is active ONLY when explicitly set to 'true'.
 export const USE_MOCK_DATA =

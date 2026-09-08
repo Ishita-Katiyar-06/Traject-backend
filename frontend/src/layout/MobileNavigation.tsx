@@ -17,6 +17,7 @@ import { useNavigation } from '../contexts/NavigationContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { SystemStatus } from '../components/status/SystemStatus';
 import { useAlertsCount } from '../services/alertService';
+import { scrollToTop } from '../utils/scroll';
 
 const PRIMARY_BOTTOM_ITEMS = [
   { name: 'Overview', path: '/overview', icon: Activity },
@@ -25,9 +26,13 @@ const PRIMARY_BOTTOM_ITEMS = [
   { name: 'Alerts', path: '/alerts', icon: AlertCircle },
 ];
 
-const MORE_SECONDARY_ITEMS = [
+const ALL_DRAWER_ITEMS = [
+  { name: 'Overview', path: '/overview', icon: Activity },
+  { name: 'Trends', path: '/trends', icon: Hash },
+  { name: 'Narratives', path: '/narratives', icon: GitBranch },
   { name: 'Communities', path: '/communities', icon: Users },
   { name: 'Propagation', path: '/propagation', icon: Share2 },
+  { name: 'Alerts', path: '/alerts', icon: AlertCircle },
   { name: 'Data Explorer', path: '/explorer', icon: Database },
 ];
 
@@ -56,17 +61,17 @@ export const MobileNavigation: React.FC = () => {
 
   return (
     <>
-      {/* "More" Secondary Drawer Overlay - Positioned cleanly above bottom bar */}
+      {/* Navigation Drawer Overlay - Positioned for mobile and tablet */}
       {isMobileMoreOpen && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Additional Navigation"
-          className="fixed inset-0 bottom-16 z-[60] md:hidden flex flex-col justify-end bg-slate-900/50 backdrop-blur-[3px] transition-opacity duration-150"
+          aria-label="Navigation Menu"
+          className="fixed inset-0 z-[60] lg:hidden flex flex-col justify-end bg-slate-900/50 backdrop-blur-[3px] transition-opacity duration-150"
           onClick={() => setIsMobileMoreOpen(false)}
         >
           <div
-            className="w-full bg-white dark:bg-[#171C22] border-t border-[rgba(228,233,245,0.9)] dark:border-[#2B323A] rounded-t-[24px] p-5 space-y-3.5 shadow-modal max-h-[calc(80vh-4rem)] overflow-y-auto font-sans transition-colors duration-150"
+            className="w-full bg-white dark:bg-[#171C22] border-t border-[rgba(228,233,245,0.9)] dark:border-[#2B323A] rounded-t-[24px] p-5 space-y-3.5 shadow-modal max-h-[85vh] overflow-y-auto font-sans transition-colors duration-150"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header: Title & Close Button */}
@@ -91,25 +96,35 @@ export const MobileNavigation: React.FC = () => {
               <SystemStatus className="w-full justify-center" />
             </div>
 
-            {/* Secondary Navigation Links */}
-            <nav aria-label="Secondary Navigation" className="space-y-1">
-              {MORE_SECONDARY_ITEMS.map((item) => {
+            {/* Complete Navigation Destinations */}
+            <nav aria-label="Mobile All Navigation" className="space-y-1">
+              {ALL_DRAWER_ITEMS.map((item) => {
                 const Icon = item.icon;
                 return (
                   <NavLink
                     key={item.path}
                     to={item.path}
-                    onClick={() => setIsMobileMoreOpen(false)}
+                    onClick={() => {
+                      scrollToTop(true);
+                      setIsMobileMoreOpen(false);
+                    }}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-3.5 py-2.5 rounded-[12px] text-[13px] font-sans transition-colors ${
+                      `flex items-center justify-between px-3.5 py-2.5 rounded-[12px] text-[13px] font-sans transition-colors ${
                         isActive
                           ? 'bg-[#2F65F6]/10 dark:bg-[#5878C7]/15 text-[#2F65F6] dark:text-[#93C5FD] font-semibold'
                           : 'text-[#475569] dark:text-[#CBD5E1] hover:text-[#111727] dark:hover:text-[#F8FAFC] hover:bg-[#F1F4F9] dark:hover:bg-[#191F26]'
                       }`
                     }
                   >
-                    <Icon className="w-4 h-4 text-[#8591A5] dark:text-[#7A8699]" />
-                    <span>{item.name}</span>
+                    <div className="flex items-center gap-3">
+                      <Icon className="w-4 h-4 text-[#8591A5] dark:text-[#7A8699]" />
+                      <span>{item.name}</span>
+                    </div>
+                    {item.path === '/alerts' && openAlertsCount > 0 && (
+                      <span className="min-w-[18px] h-[18px] px-1.5 rounded-full bg-[#E9A23B] dark:bg-[#FBBF24] text-white dark:text-[#0D1014] text-[10px] font-bold font-mono flex items-center justify-center leading-none">
+                        {openAlertsCount}
+                      </span>
+                    )}
                   </NavLink>
                 );
               })}
@@ -172,6 +187,7 @@ export const MobileNavigation: React.FC = () => {
               key={item.path}
               to={item.path}
               onClick={(e) => {
+                scrollToTop(true);
                 setIsMobileMoreOpen(false);
                 e.currentTarget.blur();
               }}

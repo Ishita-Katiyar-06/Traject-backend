@@ -22,14 +22,19 @@ export interface NarrativeIdentitySource {
 export function getNarrativeDisplayName(narrative?: NarrativeIdentitySource | null): string {
   if (!narrative) return '';
   if (narrative.narrative_name && narrative.narrative_name.trim().length > 0) {
-    return narrative.narrative_name;
+    return narrative.narrative_name.replace(/#/g, '').trim();
   }
 
   // Fallback: derive clean title from headline claim if backend property is absent
   if (narrative.headline_claim) {
-    const claim = narrative.headline_claim.replace(/^\[[^\]]+\]\s*/, '').trim();
-    if (claim.length > 0) {
-      const words = claim.split(/,\s*|\s+/).filter((w) => w.length >= 3);
+    const sanitized = narrative.headline_claim.replace(/#/g, '');
+    const claim = sanitized.replace(/^\[[^\]]+\]\s*/, '').trim();
+    const sourceClaim = claim.length > 0 ? claim : sanitized.replace(/[[\]]/g, '').trim();
+    if (sourceClaim.length > 0) {
+      const words = sourceClaim
+        .split(/,\s*|\s+/)
+        .map((w) => w.replace(/^topic_\d+/i, '').trim())
+        .filter((w) => w.length >= 3);
       if (words.length >= 2) {
         const titleWords = words.slice(0, 3).map((w) => w.charAt(0).toUpperCase() + w.slice(1));
         return `${titleWords[0]}–${titleWords.slice(1).join(' ')} Discourse`;

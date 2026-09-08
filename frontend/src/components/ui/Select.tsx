@@ -128,20 +128,20 @@ export const Select: React.FC<SelectProps> = ({
             setIsOpen(!isOpen);
           }
         }}
-        className={`w-full h-10 px-3.5 bg-white dark:bg-[#171C22] border rounded-full text-[13px] font-medium text-[#111727] dark:text-[#F8FAFC] flex items-center justify-between gap-2 shadow-subtle transition-all duration-150 outline-none cursor-pointer select-none ${
+        className={`w-full h-10 px-4 bg-white/90 dark:bg-[#181C22]/90 border rounded-full text-[13px] font-medium text-slate-800 dark:text-slate-100 flex items-center justify-between gap-2 shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-150 outline-none cursor-pointer select-none ${
           isError
-            ? 'border-[#E35D5D] bg-[#E35D5D]/5 dark:bg-[#E35D5D]/10'
+            ? 'border-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
             : isOpen
-            ? 'border-[#2F65F6] ring-2 ring-[#2F65F6]/20'
-            : 'border-[rgba(228,233,245,0.85)] dark:border-[#2B323A] hover:border-slate-300 dark:hover:border-slate-600 hover:bg-[#F8FAFD] dark:hover:bg-[#1D232A]'
+            ? 'border-amber-400 ring-2 ring-amber-400/20'
+            : 'border-slate-300/80 dark:border-[#333C48] hover:border-slate-400 dark:hover:border-slate-500 hover:bg-slate-50 dark:hover:bg-[#20262E]'
         } ${disabled ? 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-[#13171C]' : ''}`}
       >
         <span className="truncate text-left">
           {selectedOption ? selectedOption.label : placeholder}
         </span>
         <ChevronDown
-          className={`w-4 h-4 text-[#8591A5] shrink-0 transition-transform duration-150 ${
-            isOpen ? 'rotate-180 text-[#2F65F6]' : ''
+          className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-150 ${
+            isOpen ? 'rotate-180 text-amber-500' : ''
           }`}
         />
       </button>
@@ -164,7 +164,7 @@ export const Select: React.FC<SelectProps> = ({
                 width: `${menuCoords.width}px`,
                 transform: menuCoords.openUpwards ? 'translateY(-100%)' : 'none',
               }}
-              className="rounded-[18px] bg-white dark:bg-[#171C22] border border-[rgba(228,233,245,0.9)] dark:border-[#2B323A] shadow-modal p-1.5 z-[10001] font-sans"
+              className="rounded-[20px] bg-white dark:bg-[#181C22] border border-slate-200/90 dark:border-[#2B323D] shadow-2xl p-1.5 z-[10001] font-sans"
             >
               <div className="max-h-60 overflow-y-auto space-y-0.5">
                 {options.map((opt) => {
@@ -177,18 +177,16 @@ export const Select: React.FC<SelectProps> = ({
                       aria-selected={isSelected}
                       disabled={opt.disabled}
                       onClick={() => handleSelect(opt)}
-                      className={`w-full px-3 py-2 rounded-[12px] text-left text-[13px] flex items-center justify-between transition-colors cursor-pointer select-none ${
+                      className={`w-full px-3.5 py-2 rounded-full text-left text-[13px] flex items-center justify-between transition-colors cursor-pointer select-none ${
                         opt.disabled
                           ? 'opacity-40 cursor-not-allowed'
                           : isSelected
-                          ? 'bg-[#2F65F6]/10 dark:bg-[#5878C7]/20 text-[#2F65F6] dark:text-[#93C5FD] font-semibold'
-                          : 'text-[#475569] dark:text-slate-300 hover:bg-[#F1F4F9] dark:hover:bg-[#1E2630] hover:text-[#111727] dark:hover:text-white font-medium'
+                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-semibold'
+                          : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60'
                       }`}
                     >
                       <span className="truncate">{opt.label}</span>
-                      {isSelected && (
-                        <Check className="w-3.5 h-3.5 text-[#2F65F6] dark:text-[#93C5FD] shrink-0 ml-1.5" />
-                      )}
+                      {isSelected && <Check className="w-3.5 h-3.5 text-amber-500 shrink-0 ml-2" />}
                     </button>
                   );
                 })}

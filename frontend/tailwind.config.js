@@ -17,6 +17,7 @@ export default {
           pill: 'var(--dash-surface-pill)',
           capsule: 'var(--dash-surface-capsule)',
           hover: 'var(--color-surface-hover)',
+          selected: 'var(--color-surface-selected)',
         },
         border: {
           DEFAULT: 'var(--color-border)',
@@ -39,11 +40,22 @@ export default {
         confirmed: 'var(--color-confirmed)',
         success: 'var(--dash-success)',
         warning: 'var(--dash-warning)',
+        warm: {
+          canvas: 'var(--dash-canvas-warm)',
+          cream: 'var(--dash-surface-cream)',
+          yellow: 'var(--dash-yellow-accent)',
+          subtle: 'var(--dash-yellow-subtle)',
+          border: 'var(--dash-border-warm)',
+        },
+        charcoal: {
+          card: 'var(--dash-charcoal-card)',
+        },
       },
       fontFamily: {
         sans: ['"IBM Plex Sans"', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
         serif: ['"IBM Plex Serif"', 'ui-serif', 'Georgia', 'serif'],
+        brand: ['"Outfit"', '"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         sm: '10px',
@@ -80,13 +92,17 @@ export default {
         fast: '150ms',
       },
       fontSize: {
-        'page-title': ['32px', { lineHeight: '38px', letterSpacing: '-0.02em' }],
-        'section-title': ['22px', { lineHeight: '28px', letterSpacing: '-0.015em' }],
-        'card-title': ['16px', { lineHeight: '22px', letterSpacing: '-0.01em' }],
+        'page-title': ['30px', { lineHeight: '36px', letterSpacing: '-0.02em' }],
+        'page-subtitle': ['14px', { lineHeight: '20px' }],
+        'section-title': ['18px', { lineHeight: '24px', letterSpacing: '-0.015em' }],
+        'card-title': ['15px', { lineHeight: '20px', letterSpacing: '-0.01em' }],
         'body': ['14px', { lineHeight: '20px' }],
         'data': ['13px', { lineHeight: '18px' }],
         'secondary': ['13px', { lineHeight: '18px' }],
+        'caption': ['12px', { lineHeight: '16px' }],
         'small': ['12px', { lineHeight: '16px' }],
+        'label': ['11px', { lineHeight: '15px', letterSpacing: '0.02em' }],
+        'technical': ['11px', { lineHeight: '16px', letterSpacing: '0.01em' }],
         'metric': ['28px', { lineHeight: '34px', letterSpacing: '-0.02em' }],
       },
       zIndex: {

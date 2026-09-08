@@ -80,12 +80,12 @@ export const TrendTreeNode: React.FC<TrendTreeNodeProps> = ({
       variants={listItemEnter}
       initial="initial"
       animate="animate"
-      className="rounded-[22px] border border-slate-200/80 dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-xs hover:border-[#2F65F6]/40 dark:hover:border-[#2F65F6]/40 transition-all duration-200 overflow-hidden"
+      className="rounded-[24px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs hover:border-amber-400/40 dark:hover:border-amber-400/30 transition-all duration-200 overflow-hidden"
       role="treeitem"
       aria-expanded={isExpanded}
     >
       {/* 1. Parent Trend Node Header */}
-      <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 select-none">
+      <div className="p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 select-none">
         {/* Left Side: Expand/Collapse control + Trend Identity + Metadata */}
         <div className="flex items-start md:items-center gap-3.5 flex-1 min-w-0">
           {/* Dedicated Expand/Collapse button */}
@@ -93,12 +93,12 @@ export const TrendTreeNode: React.FC<TrendTreeNodeProps> = ({
             type="button"
             onClick={handleToggleExpand}
             aria-label={isExpanded ? `Collapse Trend #${cleanTrendId}` : `Expand Trend #${cleanTrendId}`}
-            className="mt-0.5 md:mt-0 p-1.5 rounded-lg text-[#8591A5] hover:text-[#111727] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1D232A] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F65F6]/40 shrink-0 cursor-pointer"
+            className="mt-0.5 md:mt-0 p-1.5 rounded-full text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#20262E] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/40 shrink-0 cursor-pointer"
           >
             {isExpanded ? (
-              <ChevronDown className="w-4 h-4 text-[#2F65F6]" />
+              <ChevronDown className="w-4 h-4 text-amber-500" />
             ) : (
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500" />
             )}
           </button>
 
@@ -109,24 +109,24 @@ export const TrendTreeNode: React.FC<TrendTreeNodeProps> = ({
                 type="button"
                 onClick={handleNavigateTrend}
                 onKeyDown={handleTrendKeyDown}
-                className="group/btn inline-flex items-center gap-1.5 font-mono text-[12px] font-bold text-[#2F65F6] dark:text-[#93C5FD] bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 px-3 py-1 rounded-full border border-blue-200/70 dark:border-blue-900/40 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F65F6]"
+                className="group/btn inline-flex items-center gap-1.5 font-mono text-[12px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/15 hover:bg-amber-500/20 px-3 py-1 rounded-full border border-amber-500/25 dark:border-amber-400/25 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
                 title={`Open dossier for Trend #${cleanTrendId}`}
               >
-                <Radio className="w-3 h-3 text-[#2F65F6] dark:text-[#93C5FD]" />
+                <Radio className="w-3 h-3 text-amber-500 dark:text-amber-400" />
                 <span>TREND #{cleanTrendId}</span>
               </button>
 
               {trend.percentage_of_dataset > 0 && (
                 <>
                   <span className="text-slate-300 dark:text-slate-700 text-[11px]">•</span>
-                  <span className="text-[11px] font-mono font-semibold text-[#64748B] dark:text-slate-400 bg-slate-100 dark:bg-[#12161C] px-2.5 py-0.5 rounded-full border border-slate-200/60 dark:border-[#2B323A]">
+                  <span className="text-[11px] font-mono font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-[#13171C] px-2.5 py-0.5 rounded-full border border-slate-200/70 dark:border-[#2B323D]">
                     {formatPercent(trend.percentage_of_dataset)} of dataset
                   </span>
                 </>
               )}
 
               <span className="text-slate-300 dark:text-slate-700 text-[11px]">•</span>
-              <span className="text-[11px] font-medium text-[#64748B] dark:text-slate-400">
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                 {narrativeCount === 1 ? '1 Associated Narrative' : `${narrativeCount} Associated Narratives`}
               </span>
             </div>
@@ -135,7 +135,7 @@ export const TrendTreeNode: React.FC<TrendTreeNodeProps> = ({
             {trend.trend_name && (
               <h3
                 onClick={handleNavigateTrend}
-                className="text-[16px] font-bold text-[#111727] dark:text-slate-100 hover:text-[#2F65F6] dark:hover:text-[#93C5FD] transition-colors cursor-pointer mt-1"
+                className="text-[16px] font-bold text-slate-900 dark:text-white hover:text-[#2F65F6] dark:hover:text-[#60A5FA] transition-colors cursor-pointer mt-1"
               >
                 {trend.trend_name}
               </h3>
@@ -143,21 +143,21 @@ export const TrendTreeNode: React.FC<TrendTreeNodeProps> = ({
 
             {/* Evidence-Grounded Summary Preview */}
             {trend.trend_summary && (
-              <p className="text-[12.5px] text-[#64748B] dark:text-slate-400 line-clamp-2 mt-1 leading-relaxed">
+              <p className="text-[12.5px] text-slate-600 dark:text-slate-400 line-clamp-2 mt-1 leading-relaxed">
                 {trend.trend_summary}
               </p>
             )}
 
-            {/* Representative Keywords (analytical metadata, not presented as primary identity) */}
+            {/* Representative Keywords */}
             {trend.representative_keywords && trend.representative_keywords.length > 0 && (
               <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                <span className="text-[10px] font-bold text-[#8591A5] dark:text-slate-500 uppercase tracking-wider mr-0.5">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mr-0.5">
                   Keywords:
                 </span>
                 {trend.representative_keywords.slice(0, 5).map((kw, i) => (
                   <span
                     key={i}
-                    className="text-[11px] font-medium text-[#475569] dark:text-slate-300 bg-[#F6F8FC] dark:bg-[#1D232A] px-2 py-0.5 rounded-md border border-slate-200/60 dark:border-[#2B323A]"
+                    className="text-[11px] font-medium text-slate-700 dark:text-slate-300 bg-slate-100/80 dark:bg-[#20262E] px-2.5 py-0.5 rounded-full border border-slate-200/60 dark:border-[#2B323D]"
                   >
                     #{kw.keyword}
                   </span>
@@ -170,10 +170,10 @@ export const TrendTreeNode: React.FC<TrendTreeNodeProps> = ({
         {/* Right Side: Message Volume & Trend Navigation Action */}
         <div className="flex items-center justify-between md:justify-end gap-5 shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-[#252B32]">
           <div className="text-left md:text-right">
-            <div className="text-[10px] font-bold text-[#8591A5] dark:text-slate-400 uppercase tracking-wider mb-0.5">
+            <div className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-0.5">
               Messages Observed
             </div>
-            <div className="font-mono text-[18px] font-bold text-[#111727] dark:text-slate-100">
+            <div className="font-mono text-[18px] font-bold text-slate-900 dark:text-white">
               <AnimatedNumber value={trend.message_count} />
             </div>
           </div>
@@ -182,7 +182,7 @@ export const TrendTreeNode: React.FC<TrendTreeNodeProps> = ({
             type="button"
             onClick={handleNavigateTrend}
             aria-label={`View dossier for Trend #${cleanTrendId}`}
-            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#1D232A] flex items-center justify-center text-[#8591A5] dark:text-slate-400 hover:bg-[#2F65F6] hover:text-white transition-all duration-150 shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F65F6]"
+            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#20262E] flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-[#2F65F6] hover:text-white dark:hover:bg-[#2F65F6] dark:hover:text-white transition-all duration-150 shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F65F6]"
             title={`View Trend #${cleanTrendId} Dossier`}
           >
             <ArrowUpRight className="w-4 h-4" />
@@ -198,10 +198,10 @@ export const TrendTreeNode: React.FC<TrendTreeNodeProps> = ({
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2, ease: 'easeInOut' }}
-            className="border-t border-slate-100 dark:border-[#252B32] bg-[#F9FAFC] dark:bg-[#13171C] px-5 py-4"
+            className="border-t border-slate-100 dark:border-[#252B32] bg-slate-50/50 dark:bg-[#13171C]/90 px-5 py-4"
           >
             {trend.narratives.length > 0 ? (
-              <div className="relative pl-6 ml-3 border-l-2 border-slate-200 dark:border-[#2B323A] space-y-2.5 my-1" role="group">
+              <div className="relative pl-6 ml-3 border-l-2 border-slate-200 dark:border-[#2B323D] space-y-2.5 my-1" role="group">
                 {trend.narratives.map((narrative, idx) => {
                   const isLast = idx === trend.narratives.length - 1;
                   return (
@@ -217,9 +217,9 @@ export const TrendTreeNode: React.FC<TrendTreeNodeProps> = ({
               </div>
             ) : (
               /* Truthful Empty State */
-              <div className="relative pl-6 ml-3 border-l-2 border-slate-200 dark:border-[#2B323A] py-3">
-                <div className="absolute -left-[25px] top-1/2 -translate-y-1/2 w-6 h-[2px] bg-slate-200 dark:bg-[#2B323A]" />
-                <div className="flex items-center gap-2.5 text-[12px] text-[#8591A5] dark:text-slate-400 py-1.5 px-3 rounded-xl bg-white dark:bg-[#171C22] border border-slate-200/60 dark:border-[#252B32] w-fit">
+              <div className="relative pl-6 ml-3 border-l-2 border-slate-200 dark:border-[#2B323D] py-3">
+                <div className="absolute -left-[25px] top-1/2 -translate-y-1/2 w-6 h-[2px] bg-slate-200 dark:border-[#2B323D]" />
+                <div className="flex items-center gap-2.5 text-[12px] text-slate-500 dark:text-slate-400 py-1.5 px-3 rounded-full bg-white dark:bg-[#181C22] border border-slate-200/60 dark:border-[#2B323D] w-fit">
                   <FileText className="w-3.5 h-3.5 text-slate-400" />
                   <span>No narratives are currently associated with this Trend.</span>
                 </div>
@@ -269,7 +269,7 @@ export const NarrativeTreeNode: React.FC<NarrativeTreeNodeProps> = ({
     <div className="relative group">
       {/* Tree Connector Branch Line */}
       <div
-        className="absolute -left-[26px] top-1/2 -translate-y-1/2 w-6 h-[2px] bg-slate-200 dark:bg-[#2B323A] group-hover:bg-[#2F65F6]/60 transition-colors"
+        className="absolute -left-[26px] top-1/2 -translate-y-1/2 w-6 h-[2px] bg-slate-200 dark:border-[#2B323D] group-hover:bg-[#2F65F6]/60 transition-colors"
         aria-hidden="true"
       />
 
@@ -279,7 +279,7 @@ export const NarrativeTreeNode: React.FC<NarrativeTreeNodeProps> = ({
         tabIndex={0}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-[16px] bg-white dark:bg-[#171C22] border border-slate-200/80 dark:border-[#252B32] hover:bg-[#F8FAFD] dark:hover:bg-[#1C222A] hover:border-[#2F65F6]/50 dark:hover:border-[#2F65F6]/50 shadow-2xs hover:shadow-xs transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F65F6]"
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-[18px] bg-white dark:bg-[#161B22] border border-slate-200/80 dark:border-[#2B323D] hover:bg-slate-50 dark:hover:bg-[#1E242E] hover:border-[#2F65F6]/50 dark:hover:border-[#2F65F6]/40 shadow-2xs hover:shadow-xs transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F65F6]"
       >
         {/* Left Column: Narrative ID, Priority Badge, Headline Claim */}
         <div className="flex-1 min-w-0 pr-2">
@@ -311,27 +311,27 @@ export const NarrativeTreeNode: React.FC<NarrativeTreeNodeProps> = ({
             })()}
 
             <span className="text-slate-300 dark:text-slate-700 text-[11px]">•</span>
-            <span className="font-mono text-[11px] text-[#64748B] dark:text-slate-400">
+            <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
               Score: {narrative.priority_signal_score.toFixed(3)}
             </span>
           </div>
 
-          <div className="text-[14px] font-bold text-[#111727] dark:text-slate-100 group-hover:text-[#2F65F6] dark:group-hover:text-[#5878C7] transition-colors line-clamp-1">
+          <div className="text-[14px] font-bold text-slate-900 dark:text-white group-hover:text-[#2F65F6] dark:group-hover:text-[#60A5FA] transition-colors line-clamp-1">
             {narrative.narrative_name || narrative.headline_claim}
           </div>
           {narrative.narrative_summary && (
-            <div className="text-[12px] text-[#64748B] dark:text-slate-400 line-clamp-1 mt-0.5">
+            <div className="text-[12px] text-slate-600 dark:text-slate-400 line-clamp-1 mt-0.5">
               {narrative.narrative_summary}
             </div>
           )}
         </div>
 
         {/* Right Column: Message Count & Arrow indicator */}
-        <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-[#252B32] text-[11px] text-[#8591A5] dark:text-slate-400">
+        <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-[#252B32] text-[11px] text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-1.5 font-mono">
             <Layers className="w-3 h-3 text-slate-400" />
             <span>
-              <strong className="text-[#111727] dark:text-slate-200">{narrative.message_count}</strong> msgs
+              <strong className="text-slate-900 dark:text-white">{narrative.message_count}</strong> msgs
             </span>
           </div>
 
@@ -342,7 +342,7 @@ export const NarrativeTreeNode: React.FC<NarrativeTreeNodeProps> = ({
             </div>
           )}
 
-          <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-[#1D232A] flex items-center justify-center text-slate-400 group-hover:bg-[#2F65F6] group-hover:text-white transition-all duration-150 shrink-0">
+          <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-[#20262E] flex items-center justify-center text-slate-400 group-hover:bg-[#2F65F6] group-hover:text-white transition-all duration-150 shrink-0">
             <ArrowUpRight className="w-3 h-3" />
           </div>
         </div>
