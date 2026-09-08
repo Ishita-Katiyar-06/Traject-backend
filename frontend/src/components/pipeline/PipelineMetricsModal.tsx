@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { X, Activity, Cpu, CheckCircle2, Clock, Zap } from 'lucide-react';
 import { telemetryApi } from '../../services/telemetryApi';
@@ -20,6 +21,23 @@ export const PipelineMetricsModal: React.FC<PipelineMetricsModalProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isOpen, onClose]);
+
+  useEffect(() => {
     if (isOpen) {
       setIsLoading(true);
       setError(null);
@@ -36,7 +54,7 @@ export const PipelineMetricsModal: React.FC<PipelineMetricsModalProps> = ({
     }
   }, [isOpen]);
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -222,6 +240,7 @@ export const PipelineMetricsModal: React.FC<PipelineMetricsModalProps> = ({
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };

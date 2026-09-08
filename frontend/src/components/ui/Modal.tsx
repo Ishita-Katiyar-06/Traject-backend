@@ -31,13 +31,15 @@ export const Modal: React.FC<ModalProps> = ({
       }
     };
     if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
     }
-    return () => {
-      document.body.style.overflow = '';
-      window.removeEventListener('keydown', handleKeyDown);
-    };
   }, [isOpen, onClose]);
 
   const widthClasses = {
@@ -57,7 +59,7 @@ export const Modal: React.FC<ModalProps> = ({
           initial="initial"
           animate="animate"
           exit="exit"
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-[2px]"
+          className="fixed inset-0 z-modal flex items-center justify-center p-4 sm:p-6 bg-slate-950/45 backdrop-blur-[4px]"
           onClick={onClose}
         >
           <motion.div
@@ -65,33 +67,37 @@ export const Modal: React.FC<ModalProps> = ({
             initial="initial"
             animate="animate"
             exit="exit"
-            className={`relative w-full ${widthClasses[maxWidth]} rounded-[26px] bg-white border border-[rgba(228,233,245,0.9)] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]`}
+            className={`relative w-full ${widthClasses[maxWidth]} rounded-modal bg-white dark:bg-[#171C22] border border-[rgba(228,233,245,0.9)] dark:border-[#2B323A] shadow-modal overflow-hidden flex flex-col max-h-[88vh]`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-start justify-between px-6 py-5 border-b border-[rgba(228,233,245,0.85)]">
+            <div className="flex items-start justify-between px-6 py-5 border-b border-[rgba(228,233,245,0.85)] dark:border-[#2B323A]">
               <div>
-                <h2 className="text-[18px] font-bold text-[#111727] font-sans">{title}</h2>
+                <h2 className="text-[17px] sm:text-[18px] font-bold text-[#111727] dark:text-[#F8FAFC] font-sans">
+                  {title}
+                </h2>
                 {subtitle && (
-                  <p className="text-[13px] text-[#8591A5] font-medium mt-0.5">{subtitle}</p>
+                  <p className="text-[12px] sm:text-[13px] text-[#8591A5] dark:text-[#94A3B8] font-medium mt-0.5">
+                    {subtitle}
+                  </p>
                 )}
               </div>
               <IconButton
                 aria-label="Close dialog"
-                icon={<X className="w-4 h-4 text-[#8591A5] hover:text-[#111727]" />}
+                icon={<X className="w-4 h-4 text-[#8591A5] dark:text-[#94A3B8] hover:text-[#111727] dark:hover:text-[#F8FAFC]" />}
                 size="sm"
                 onClick={onClose}
               />
             </div>
 
             {/* Modal Body */}
-            <div className="px-6 py-5 overflow-y-auto flex-1 text-[14px] text-[#475569]">
+            <div className="px-6 py-5 overflow-y-auto flex-1 text-[13px] sm:text-[14px] text-[#475569] dark:text-[#CBD5E1]">
               {children}
             </div>
 
             {/* Modal Footer */}
             {footer && (
-              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[rgba(228,233,245,0.85)] bg-[#F8FAFD]">
+              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[rgba(228,233,245,0.85)] dark:border-[#2B323A] bg-[#F8FAFD] dark:bg-[#13171C]">
                 {footer}
               </div>
             )}
@@ -102,5 +108,3 @@ export const Modal: React.FC<ModalProps> = ({
     document.body
   );
 };
-
-

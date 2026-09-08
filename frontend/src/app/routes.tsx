@@ -6,11 +6,11 @@ import { AppShell } from '../layout/AppShell';
 const OverviewPage = lazy(() =>
   import('../pages/Overview/OverviewPage').then((m) => ({ default: m.OverviewPage }))
 );
-const TopicsPage = lazy(() =>
-  import('../pages/Topics/TopicsPage').then((m) => ({ default: m.TopicsPage }))
+const TrendsPage = lazy(() =>
+  import('../pages/Trends/TrendsPage').then((m) => ({ default: m.TrendsPage }))
 );
-const TopicDetailPage = lazy(() =>
-  import('../pages/Topics/TopicDetailPage').then((m) => ({ default: m.TopicDetailPage }))
+const TrendDetailPage = lazy(() =>
+  import('../pages/Trends/TrendDetailPage').then((m) => ({ default: m.TrendDetailPage }))
 );
 const NarrativesPage = lazy(() =>
   import('../pages/Narratives/NarrativesPage').then((m) => ({ default: m.NarrativesPage }))
@@ -54,8 +54,8 @@ const RouteLoadingFallback: React.FC = () => (
 if (typeof window !== 'undefined') {
   const preloadRoutes = () => {
     import('../pages/Overview/OverviewPage');
-    import('../pages/Topics/TopicsPage');
-    import('../pages/Topics/TopicDetailPage');
+    import('../pages/Trends/TrendsPage');
+    import('../pages/Trends/TrendDetailPage');
     import('../pages/Narratives/NarrativesPage');
     import('../pages/Narratives/NarrativeDetailPage');
     import('../pages/Communities/CommunitiesPage');
@@ -86,22 +86,26 @@ export const AppRoutes: React.FC = () => {
             </Suspense>
           }
         />
+        {/* Primary Trends Routes */}
         <Route
-          path="topics"
+          path="trends"
           element={
             <Suspense fallback={<RouteLoadingFallback />}>
-              <TopicsPage />
+              <TrendsPage />
             </Suspense>
           }
         />
         <Route
-          path="topics/:id"
+          path="trends/:id"
           element={
             <Suspense fallback={<RouteLoadingFallback />}>
-              <TopicDetailPage />
+              <TrendDetailPage />
             </Suspense>
           }
         />
+        {/* Backward-compatibility redirects for legacy /topics URLs */}
+        <Route path="topics" element={<Navigate to="/trends" replace />} />
+        <Route path="topics/:id" element={<Navigate to="/trends" replace />} />
         <Route
           path="narratives"
           element={

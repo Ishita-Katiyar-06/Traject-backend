@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { AnimatePresence, motion } from 'motion/react';
 
 export interface TooltipProps {
   content: string | React.ReactNode;
@@ -12,7 +13,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   content,
   children,
   position = 'top',
-  delay = 150,
+  delay = 120,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [coords, setCoords] = useState<{ top: number; left: number; transform: string }>({
@@ -23,43 +24,57 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const triggerRef = useRef<HTMLDivElement | null>(null);
 
-  const updatePosition = () => {
+  const updatePosition = useCallback(() => {
     if (!triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
-    const offset = 8;
+    const offset = 7;
+    const padding = 12;
 
-    switch (position) {
+    let effPosition = position;
+
+    // Viewport boundary collision checks & auto-flipping
+    if (effPosition === 'top' && rect.top - 36 < 0) {
+      effPosition = 'bottom';
+    } else if (effPosition === 'bottom' && rect.bottom + 36 > window.innerHeight) {
+      effPosition = 'top';
+    } else if (effPosition === 'left' && rect.left - 80 < 0) {
+      effPosition = 'right';
+    } else if (effPosition === 'right' && rect.right + 80 > window.innerWidth) {
+      effPosition = 'left';
+    }
+
+    switch (effPosition) {
       case 'right':
         setCoords({
-          top: rect.top + rect.height / 2,
-          left: rect.right + offset,
+          top: Math.max(padding, Math.min(window.innerHeight - padding, rect.top + rect.height / 2)),
+          left: Math.min(window.innerWidth - padding, rect.right + offset),
           transform: 'translateY(-50%)',
         });
         break;
       case 'left':
         setCoords({
-          top: rect.top + rect.height / 2,
-          left: rect.left - offset,
+          top: Math.max(padding, Math.min(window.innerHeight - padding, rect.top + rect.height / 2)),
+          left: Math.max(padding, rect.left - offset),
           transform: 'translate(-100%, -50%)',
         });
         break;
       case 'bottom':
         setCoords({
           top: rect.bottom + offset,
-          left: rect.left + rect.width / 2,
+          left: Math.max(padding, Math.min(window.innerWidth - padding, rect.left + rect.width / 2)),
           transform: 'translateX(-50%)',
         });
         break;
       case 'top':
       default:
         setCoords({
-          top: rect.top - offset,
-          left: rect.left + rect.width / 2,
+          top: Math.max(padding, rect.top - offset),
+          left: Math.max(padding, Math.min(window.innerWidth - padding, rect.left + rect.width / 2)),
           transform: 'translate(-50%, -100%)',
         });
         break;
     }
-  };
+  }, [position]);
 
   const show = () => {
     updatePosition();
@@ -77,12 +92,26 @@ export const Tooltip: React.FC<TooltipProps> = ({
   };
 
   useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+    if (!isVisible) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') hide();
     };
-  }, []);
+
+    const handleScrollOrResize = () => {
+      updatePosition();
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    window.addEventListener('resize', handleScrollOrResize);
+    window.addEventListener('scroll', handleScrollOrResize, true);
+
+    return () => {
+      window.removeEventListener('keydown', handleEscape);
+      window.removeEventListener('resize', handleScrollOrResize);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+    };
+  }, [isVisible, updatePosition]);
 
   return (
     <div
@@ -90,24 +119,33 @@ export const Tooltip: React.FC<TooltipProps> = ({
       className="relative inline-flex"
       onMouseEnter={show}
       onMouseLeave={hide}
+      onFocus={show}
+      onBlur={hide}
     >
       {children}
-      {isVisible &&
-        createPortal(
-          <div
-            role="tooltip"
-            style={{
-              position: 'fixed',
-              top: `${coords.top}px`,
-              left: `${coords.left}px`,
-              transform: coords.transform,
-            }}
-            className="z-[99999] pointer-events-none whitespace-nowrap rounded-[8px] bg-[#111727] px-2.5 py-1 text-[11px] font-semibold font-sans text-white shadow-lg transition-opacity duration-150"
-          >
-            {content}
-          </div>,
-          document.body
-        )}
+      {createPortal(
+        <AnimatePresence>
+          {isVisible && (
+            <motion.div
+              role="tooltip"
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.14, ease: [0.16, 1, 0.3, 1] }}
+              style={{
+                position: 'fixed',
+                top: `${coords.top}px`,
+                left: `${coords.left}px`,
+                transform: coords.transform,
+              }}
+              className="z-tooltip pointer-events-none whitespace-nowrap rounded-[10px] bg-white dark:bg-[#1C232B] border border-[rgba(228,233,245,0.9)] dark:border-[#2D3748] px-3 py-1.5 text-[12px] font-medium font-sans text-[#111727] dark:text-[#F8FAFC] shadow-tooltip"
+            >
+              {content}
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };

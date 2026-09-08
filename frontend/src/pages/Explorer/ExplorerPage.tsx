@@ -39,10 +39,13 @@ export const ExplorerPage: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<MessageSummaryResponse | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isError, setIsError] = useState(false);
 
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
+  const loadData = useCallback(async (isInitial = false) => {
+    if (isInitial) {
+      setIsLoading(true);
+    }
     setIsError(false);
     try {
       const apiParams: MessageQueryParams = {
@@ -55,7 +58,7 @@ export const ExplorerPage: React.FC = () => {
       if (filters.language) apiParams.language = filters.language;
       if (filters.topic_id) apiParams.topic_id = filters.topic_id;
 
-      const res = await telemetryApi.getMessages(apiParams);
+      const res = await telemetryApi.getMessages(apiParams, { skipCache: !isInitial });
 
       let items = res.data;
       if (filters.keyword && filters.keyword.trim()) {
@@ -73,15 +76,26 @@ export const ExplorerPage: React.FC = () => {
       setTotalItems(res.meta.total);
       setTotalPages(res.meta.total_pages);
     } catch (e) {
-      console.error('Failed to load explorer observations from /api/v1/messages:', e);
+      console.error('Failed to load canonical messages:', e);
       setIsError(true);
     } finally {
       setIsLoading(false);
     }
   }, [filters]);
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    telemetryApi.clearCache();
+    const minDelay = new Promise((resolve) => setTimeout(resolve, 600));
+    try {
+      await Promise.all([loadData(false), minDelay]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   useEffect(() => {
-    loadData();
+    loadData(true);
 
     // Sync filter state to URL query parameters
     const params: Record<string, string> = {};
@@ -159,9 +173,9 @@ export const ExplorerPage: React.FC = () => {
             <Button
               variant="secondary"
               size="sm"
-              leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />}
-              onClick={loadData}
-              disabled={isLoading}
+              leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />}
+              onClick={handleRefresh}
+              disabled={isRefreshing || isLoading}
             >
               Refresh
             </Button>

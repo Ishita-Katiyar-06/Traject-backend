@@ -45,11 +45,11 @@ export const NarrativeFilters: React.FC<NarrativeFiltersProps> = ({
   };
 
   return (
-    <div className="p-5 sm:p-6 rounded-[26px] border border-[rgba(228,233,245,0.85)] bg-white shadow-xs space-y-5 font-sans select-none">
+    <div className="p-5 sm:p-6 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-5 font-sans select-none transition-all">
       {/* Search Input Bar + Counts */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-lg">
-          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8591A5] pointer-events-none">
+          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8591A5] dark:text-slate-500 pointer-events-none">
             <Search className="w-4 h-4" />
           </div>
           <input
@@ -57,30 +57,30 @@ export const NarrativeFilters: React.FC<NarrativeFiltersProps> = ({
             value={filters.query || ''}
             onChange={handleSearch}
             placeholder="Search narrative candidates by label or representative text..."
-            className="w-full h-10 pl-10 pr-9 bg-white border border-[rgba(228,233,245,0.85)] rounded-full text-[13px] font-medium text-[#111727] placeholder:text-[#8591A5] shadow-xs hover:border-slate-300 focus:outline-none focus:border-[#2F65F6] focus:ring-2 focus:ring-[#2F65F6]/20 transition-all"
+            className="w-full h-10 pl-10 pr-9 bg-white dark:bg-[#13171C] border border-[rgba(228,233,245,0.85)] dark:border-[#2B323A] rounded-full text-[13px] font-medium text-[#111727] dark:text-[#F8FAFC] placeholder:text-[#8591A5] dark:placeholder:text-slate-500 shadow-xs hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:border-[#2F65F6] focus:ring-2 focus:ring-[#2F65F6]/20 transition-all"
           />
           {filters.query && (
             <button
               type="button"
               onClick={handleClearQuery}
               aria-label="Clear search"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8591A5] hover:text-[#111727] p-1 cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8591A5] hover:text-[#111727] dark:hover:text-white p-1 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
 
-        <div className="flex items-center gap-3 text-[13px] text-[#8591A5] font-sans self-end sm:self-center">
+        <div className="flex items-center gap-3 text-[13px] text-[#8591A5] dark:text-slate-400 font-sans self-end sm:self-center">
           <span>
-            Showing <strong className="text-[#111727] font-bold">{filteredCount}</strong> of{' '}
+            Showing <strong className="text-[#111727] dark:text-slate-200 font-bold">{filteredCount}</strong> of{' '}
             {totalCount} candidates
           </span>
           {isFiltered && (
             <button
               type="button"
               onClick={onReset}
-              className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#2F65F6] hover:underline cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#2F65F6] dark:text-[#93C5FD] hover:text-[#2152DE] cursor-pointer transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset</span>
@@ -90,10 +90,10 @@ export const NarrativeFilters: React.FC<NarrativeFiltersProps> = ({
       </div>
 
       {/* Select Controls Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-4 border-t border-[rgba(228,233,245,0.85)]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-4 border-t border-slate-100 dark:border-[#252B32]">
         {/* Priority Tier Filter */}
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8591A5] mb-1.5">
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8591A5] dark:text-slate-400 mb-1.5">
             Priority Tier
           </label>
           <Select
@@ -113,7 +113,7 @@ export const NarrativeFilters: React.FC<NarrativeFiltersProps> = ({
 
         {/* Coordination Signal Filter */}
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8591A5] mb-1.5">
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8591A5] dark:text-slate-400 mb-1.5">
             {COORDINATION_WORDING.primary}
           </label>
           <Select
@@ -142,7 +142,7 @@ export const NarrativeFilters: React.FC<NarrativeFiltersProps> = ({
 
         {/* Sort Metric */}
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8591A5] mb-1.5">
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8591A5] dark:text-slate-400 mb-1.5">
             Sort Metric
           </label>
           <Select
@@ -164,7 +164,7 @@ export const NarrativeFilters: React.FC<NarrativeFiltersProps> = ({
 
         {/* Sort Order */}
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8591A5] mb-1.5">
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8591A5] dark:text-slate-400 mb-1.5">
             Sort Direction
           </label>
           <Select

@@ -1,11 +1,12 @@
 :root {
   /* ==========================================================================
-     TESSERA PREMIUM LIGHT ANALYTICAL DESIGN SYSTEM
+     TRAJECT PREMIUM SAAS DESIGN SYSTEM (BEHANCE-INSPIRED VISUAL FOUNDATION)
      ========================================================================== */
 
-  /* Canvas & Surfaces */
+  /* Surface Hierarchy */
   --dash-canvas: #EEF1F8;
   --dash-card: #FFFFFF;
+  --dash-surface-soft: #F6F8FC;
   --dash-surface-pill: #E5E9F4;
   --dash-surface-capsule: #F6F8FC;
   --dash-surface-hover: #F8FAFD;
@@ -18,48 +19,52 @@
   --dash-text-muted: #8591A5;
   --dash-text-subtle: #B0B9C6;
 
-  /* Semantic Accent Palette */
+  /* Primary Brand Accent */
+  --dash-brand: #2F65F6;
+  --dash-brand-hover: #2152DE;
   --dash-accent-blue: #2F65F6;
   --dash-accent-blue-hover: #2152DE;
-  --dash-accent-coral: #FF6D5A;
-  --dash-accent-orange: #FF8833;
-  --dash-accent-purple: #9B72F4;
-  --dash-accent-aqua: #53E5C3;
-  --dash-accent-cyan: #38BDF8;
+
+  /* Semantic Color Palette (Strictly Semantic) */
+  --dash-success: #22A06B;
+  --dash-warning: #E9A23B;
+  --dash-critical: #E35D5D;
 
   /* Standard Application Color Mappings */
   --color-bg: var(--dash-canvas);
   --color-surface: var(--dash-card);
   --color-surface-elevated: var(--dash-card);
+  --color-surface-soft: var(--dash-surface-soft);
   --color-surface-hover: var(--dash-surface-hover);
 
   --color-border: var(--dash-border);
   --color-border-subtle: var(--dash-border-subtle);
-  --color-border-focus: var(--dash-accent-blue);
+  --color-border-focus: var(--dash-brand);
 
   --color-text-primary: var(--dash-text-title);
   --color-text-secondary: var(--dash-text-body);
   --color-text-muted: var(--dash-text-muted);
+  --color-text-subtle: var(--dash-text-subtle);
 
-  --color-selection: var(--dash-accent-blue);
+  --color-selection: var(--dash-brand);
   --color-selection-text: #FFFFFF;
 
-  /* Semantic Accents */
-  --color-signal: var(--dash-accent-coral);
-  --color-signal-subtle: rgba(255, 109, 90, 0.12);
-  --color-signal-border: rgba(255, 109, 90, 0.35);
+  /* Semantic Mappings */
+  --color-signal: var(--dash-warning);
+  --color-signal-subtle: rgba(233, 162, 59, 0.12);
+  --color-signal-border: rgba(233, 162, 59, 0.25);
 
-  --color-data: var(--dash-accent-blue);
+  --color-data: var(--dash-brand);
   --color-data-subtle: rgba(47, 101, 246, 0.12);
-  --color-data-border: rgba(47, 101, 246, 0.35);
+  --color-data-border: rgba(47, 101, 246, 0.25);
 
-  --color-critical: #C0503E;
-  --color-critical-subtle: rgba(192, 80, 62, 0.12);
-  --color-critical-border: rgba(192, 80, 62, 0.35);
+  --color-critical: var(--dash-critical);
+  --color-critical-subtle: rgba(227, 93, 93, 0.12);
+  --color-critical-border: rgba(227, 93, 93, 0.25);
 
-  --color-confirmed: #6B9E78;
-  --color-confirmed-subtle: rgba(107, 158, 120, 0.12);
-  --color-confirmed-border: rgba(107, 158, 120, 0.35);
+  --color-confirmed: var(--dash-success);
+  --color-confirmed-subtle: rgba(34, 160, 107, 0.12);
+  --color-confirmed-border: rgba(34, 160, 107, 0.25);
 
   /* Spacing Scale (4px base) */
   --space-1: 4px;
@@ -74,21 +79,25 @@
   --space-16: 64px;
 
   /* Radii Scale */
-  --radius-sm: 12px;
-  --radius-input: 14px;
-  --radius-card: 26px;
+  --radius-sm: 10px;
+  --radius-control: 12px;
+  --radius-input: 12px;
+  --radius-icon: 14px;
+  --radius-card: 24px;
   --radius-modal: 26px;
-  --dash-radius-card: 26px;
-  --dash-radius-card-lg: 28px;
-  --dash-radius-control: 14px;
+  --radius-pill: 9999px;
+
+  --dash-radius-card: 24px;
+  --dash-radius-card-lg: 26px;
+  --dash-radius-control: 12px;
   --dash-radius-pill: 9999px;
 
   /* Layout Constants */
   --sidebar-width-expanded: 240px;
-  --sidebar-width-collapsed: 68px;
+  --sidebar-width-collapsed: 72px;
   --header-height: 64px;
 
-  /* Diffused Ambient Shadows */
+  /* Diffused Soft Elevation Shadows */
   --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.02);
   --shadow-elevated: 0 10px 30px -5px rgba(112, 128, 176, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02);
   --shadow-modal: 0 16px 40px -6px rgba(112, 128, 176, 0.16);
@@ -102,61 +111,92 @@
   --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Z-Index Layers */
-  --z-header: 30;
-  --z-sidebar: 40;
-  --z-dropdown: 50;
-  --z-modal-backdrop: 60;
-  --z-modal: 70;
-  --z-tooltip: 80;
+  --z-header: 40;
+  --z-sidebar: 50;
+  --z-dropdown: 100;
+  --z-modal-backdrop: 9990;
+  --z-popover: 10001;
+  --z-tooltip: 10002;
+
+  /* Data Visualization Semantic Palette (Phase 5 Centralized) */
+  --chart-primary: #2F65F6;
+  --chart-primary-subtle: rgba(47, 101, 246, 0.12);
+  --chart-secondary: #6366F1;
+  --chart-tertiary: #0EA5E9;
+  --chart-success: #22A06B;
+  --chart-warning: #E9A23B;
+  --chart-critical: #E35D5D;
+  --chart-neutral: #8591A5;
+  --chart-grid: rgba(0, 0, 0, 0.05);
+  --chart-axis-text: #8591A5;
+  --chart-tooltip-bg: #FFFFFF;
+  --chart-tooltip-border: rgba(228, 233, 245, 0.9);
+  --chart-tooltip-text: #111727;
 }
 
 /* ==========================================================================
-   TESSERA DARK MODE VARIABLE OVERRIDES (Authentic Charcoal & Slate Enterprise)
+   TRAJECT DARK MODE VARIABLE OVERRIDES (Refined Slate/Charcoal Enterprise)
+   Deep charcoal canvas (#0D1014) + elevated matte cards (#171C22) +
+   controlled blue brand accent (#5878C7 / #2F65F6) + readable high contrast.
    ========================================================================== */
 .dark {
   /* Authentic Charcoal & Slate Canvas & Surfaces */
   --dash-canvas: #0D1014;
   --dash-card: #171C22;
+  --dash-surface-soft: #1D232A;
   --dash-surface-pill: #191F26;
   --dash-surface-capsule: #1D232A;
   --dash-surface-hover: #22282F;
   --dash-border: #2B323A;
   --dash-border-subtle: #252B32;
 
-  /* Typography Palette - Clear Information Contrast & Readability */
+  /* Typography Palette - Clear Contrast & Readability */
   --dash-text-title: #F8FAFC;
   --dash-text-body: #CBD5E1;
-  --dash-text-body-ui: #E2E8F0;
   --dash-text-muted: #94A3B8;
   --dash-text-subtle: #7A8699;
 
-  /* Semantic Accent Palette - Restrained & Professional (Blue is strictly limited) */
+  /* Semantic Accent Palette - Restrained & Professional */
+  --dash-brand: #5878C7;
+  --dash-brand-hover: #6E8ED4;
   --dash-accent-blue: #5878C7;
   --dash-accent-blue-hover: #6E8ED4;
-  --dash-accent-coral: #E87868;
-  --dash-accent-orange: #D49A5F;
-  --dash-accent-aqua: #5BB8A8;
-  --dash-accent-cyan: #5BB8A8;
-  --dash-accent-purple: #8876BE;
+
+  --dash-success: #34D399;
+  --dash-warning: #FBBF24;
+  --dash-critical: #F87171;
 
   /* Standard Application Color Mappings */
   --color-bg: var(--dash-canvas);
   --color-surface: var(--dash-card);
   --color-surface-elevated: #1D232A;
+  --color-surface-soft: var(--dash-surface-soft);
   --color-surface-hover: var(--dash-surface-hover);
 
   --color-border: var(--dash-border);
   --color-border-subtle: var(--dash-border-subtle);
-  --color-border-focus: var(--dash-accent-blue);
+  --color-border-focus: var(--dash-brand);
 
   --color-text-primary: var(--dash-text-title);
   --color-text-secondary: var(--dash-text-body);
   --color-text-muted: var(--dash-text-muted);
+  --color-text-subtle: var(--dash-text-subtle);
 
-  --color-signal: #FFA194;
+  --color-signal: #FBBF24;
+  --color-signal-subtle: rgba(251, 191, 36, 0.12);
+  --color-signal-border: rgba(251, 191, 36, 0.25);
+
   --color-data: #93C5FD;
-  --color-critical: #FFA194;
-  --color-confirmed: #6EE7D0;
+  --color-data-subtle: rgba(147, 197, 253, 0.12);
+  --color-data-border: rgba(147, 197, 253, 0.25);
+
+  --color-critical: #F87171;
+  --color-critical-subtle: rgba(248, 113, 113, 0.12);
+  --color-critical-border: rgba(248, 113, 113, 0.25);
+
+  --color-confirmed: #34D399;
+  --color-confirmed-subtle: rgba(52, 211, 153, 0.12);
+  --color-confirmed-border: rgba(52, 211, 153, 0.25);
 
   /* Restrained, Clean Shadows in Dark Mode (Zero Glow) */
   --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.30);
@@ -165,4 +205,19 @@
   --dash-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.30);
   --dash-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.20);
   --dash-shadow-tooltip: 0 4px 16px rgba(0, 0, 0, 0.40);
+
+  /* Data Visualization Semantic Palette - Dark Mode (Phase 5 Centralized) */
+  --chart-primary: #5878C7;
+  --chart-primary-subtle: rgba(88, 120, 199, 0.16);
+  --chart-secondary: #818CF8;
+  --chart-tertiary: #38BDF8;
+  --chart-success: #34D399;
+  --chart-warning: #FBBF24;
+  --chart-critical: #F87171;
+  --chart-neutral: #94A3B8;
+  --chart-grid: rgba(255, 255, 255, 0.06);
+  --chart-axis-text: #94A3B8;
+  --chart-tooltip-bg: #1C232B;
+  --chart-tooltip-border: #2D3748;
+  --chart-tooltip-text: #F8FAFC;
 }

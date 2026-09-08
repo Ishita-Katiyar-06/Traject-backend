@@ -302,6 +302,142 @@ export interface TopicQueryParams {
 }
 
 // =============================================================================
+// Phase 1: Trend, Node Graph & Sentiment Schemas
+// =============================================================================
+
+export interface TrendKeywordResponse {
+  keyword: string;
+  score: number;
+}
+
+export interface TrendChannelSummary {
+  channel_id: string;
+  channel_title: string | null;
+  author_username: string | null;
+  message_count: number;
+  total_views: number | null;
+}
+
+export interface TrendSummaryResponse {
+  trend_id: string;
+  topic_id: string;
+  cluster_label: number;
+  label: string;
+  message_count: number;
+  percentage_of_dataset: number;
+  representative_keywords: TrendKeywordResponse[];
+}
+
+export interface TrendListResponse {
+  data: TrendSummaryResponse[];
+  meta: PaginationMeta;
+}
+
+export interface TrendDetailData {
+  trend_id: string;
+  topic_id: string;
+  cluster_label: number;
+  label: string;
+  message_count: number;
+  percentage_of_dataset: number;
+  representative_keywords: TrendKeywordResponse[];
+  representative_message_ids: string[];
+  sample_message_ids: string[];
+  entities: TopicEntity[];
+  engagement: TopicEngagementFeatures | null;
+  propagation: TopicPropagationFeatures | null;
+  temporal: TopicTemporalFeatures | null;
+  channels: TrendChannelSummary[];
+  associated_narrative_ids: string[];
+}
+
+export interface TrendDetailResponse {
+  data: TrendDetailData;
+}
+
+export interface TrendQueryParams {
+  page?: number;
+  page_size?: number;
+  min_messages?: number;
+  sort_by?: 'message_count' | 'percentage_of_dataset' | 'trend_id' | 'topic_id';
+  order?: 'asc' | 'desc';
+}
+
+export interface GraphNode {
+  id: string;
+  type: 'trend' | 'channel' | 'entity' | 'narrative' | 'message';
+  label: string;
+  metadata: Record<string, any>;
+}
+
+export interface GraphEdge {
+  id: string;
+  source: string;
+  target: string;
+  relationship_type: 'observed_in' | 'cited_in' | 'promoted_to' | 'contributes_evidence' | 'associated_with';
+  label: string;
+  metadata: Record<string, any>;
+}
+
+export interface TrendGraphData {
+  trend_id: string;
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  node_count: number;
+  edge_count: number;
+}
+
+export interface TrendGraphResponse {
+  data: TrendGraphData;
+}
+
+export interface SentimentBucket {
+  bucket_start_utc: string;
+  bucket_end_utc: string;
+  positive: number;
+  neutral: number;
+  negative: number;
+  unassigned: number;
+  total: number;
+  net_sentiment: number | null;
+}
+
+export interface SentimentSummary {
+  total_messages: number;
+  evaluated_messages: number;
+  unassigned_messages: number;
+  positive_ratio: number | null;
+  neutral_ratio: number | null;
+  negative_ratio: number | null;
+  sentiment_model_id: string | null;
+}
+
+export interface TrendSentimentData {
+  trend_id: string;
+  topic_id: string;
+  bucket_size: string;
+  time_series: SentimentBucket[];
+  summary: SentimentSummary;
+}
+
+export interface TrendSentimentResponse {
+  data: TrendSentimentData;
+}
+
+export interface NarrativeSentimentData {
+  narrative_id: string;
+  promoted_from_trend_id: string;
+  bucket_size: string;
+  time_series: SentimentBucket[];
+  summary: SentimentSummary;
+}
+
+export interface NarrativeSentimentResponse {
+  data: NarrativeSentimentData;
+}
+
+
+// =============================================================================
 // 10.7 & 10.8 Message Schemas (/api/v1/messages & /api/v1/messages/{id})
 // =============================================================================
 

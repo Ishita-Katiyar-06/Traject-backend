@@ -5,6 +5,8 @@ import { EmptyState } from '../feedback/EmptyState';
 import { ErrorState } from '../feedback/ErrorState';
 import { Skeleton } from '../ui/Skeleton';
 import { BookOpen } from 'lucide-react';
+import { motion } from 'motion/react';
+import { staggerContainer } from '../../utils/motion';
 
 export interface NarrativeTableProps {
   narratives: NarrativeSummaryResponse[];
@@ -67,10 +69,17 @@ export const NarrativeTable: React.FC<NarrativeTableProps> = ({
   }
 
   return (
-    <div className="space-y-3" role="feed" aria-label="Monitored Narrative Candidates">
+    <motion.div
+      variants={staggerContainer}
+      initial="initial"
+      animate="animate"
+      className="space-y-3"
+      role="feed"
+      aria-label="Monitored Narrative Candidates"
+    >
       {narratives.map((narrative) => (
         <NarrativeRow key={narrative.narrative_id} narrative={narrative} />
       ))}
-    </div>
+    </motion.div>
   );
 };

@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import type { EChartsOption } from 'echarts';
 import { EChartBase } from './EChartBase';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { getChartTheme, renderSaaSTooltip } from '../../../utils/chartTokens';
 import { REACH_WORDING } from '../../../utils/telemetryFormatters';
 
 export interface NarrativeSubScoresData {
@@ -25,6 +26,7 @@ export const NarrativeSubScoresRadar: React.FC<NarrativeSubScoresRadarProps> = (
   className = '',
 }) => {
   const { isDark } = useTheme();
+  const theme = getChartTheme(isDark);
 
   const option = useMemo<EChartsOption>(() => {
     const spread = subScores?.spread_score ?? 0;
@@ -34,100 +36,97 @@ export const NarrativeSubScoresRadar: React.FC<NarrativeSubScoresRadarProps> = (
 
     const indicatorData = [
       { name: 'Spread (30%)', max: 1.0 },
-      { name: `Coordination (30%)`, max: 1.0 },
+      { name: 'Coordination (30%)', max: 1.0 },
       { name: `${REACH_WORDING.primary} (20%)`, max: 1.0 },
       { name: 'Friction (20%)', max: 1.0 },
     ];
 
+    const tooltipItems = [
+      { label: 'Spread Score', value: spread.toFixed(4), color: theme.primary, isMono: true },
+      { label: 'Coordination Signal', value: coord.toFixed(4), color: theme.warning, isMono: true },
+      { label: 'Observed Reach', value: reach.toFixed(4), color: theme.tertiary, isMono: true },
+      { label: 'Friction Counter', value: friction.toFixed(4), color: theme.neutral, isMono: true },
+    ];
+
+    if (typeof priorityScore === 'number') {
+      tooltipItems.push({
+        label: 'Composite Score',
+        value: priorityScore.toFixed(4),
+        color: theme.primary,
+        isMono: true,
+      });
+    }
+
     return {
-    tooltip: {
-      trigger: 'item',
-      formatter: () => `
-        <div style="font-weight: 600; margin-bottom: 6px; color: ${isDark ? '#F8FAFC' : '#111727'};">
-          Priority Signal Sub-Scores Profile
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 11px;">
-          <div style="display: flex; justify-content: space-between; gap: 16px;">
-            <span style="color: #64748B;">Spread Score:</span>
-            <strong>${spread.toFixed(4)}</strong>
-          </div>
-          <div style="display: flex; justify-content: space-between; gap: 16px;">
-            <span style="color: #64748B;">Coordination Signal:</span>
-            <strong>${coord.toFixed(4)}</strong>
-          </div>
-          <div style="display: flex; justify-content: space-between; gap: 16px;">
-            <span style="color: #64748B;">Observed Reach:</span>
-            <strong>${reach.toFixed(4)}</strong>
-          </div>
-          <div style="display: flex; justify-content: space-between; gap: 16px;">
-            <span style="color: #64748B;">Friction Counter:</span>
-            <strong>${friction.toFixed(4)}</strong>
-          </div>
-          ${typeof priorityScore === 'number' ? `
-          <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}; display: flex; justify-content: space-between; gap: 16px;">
-            <span style="color: #2F65F6; font-weight: 600;">Composite Score:</span>
-            <strong style="color: #2F65F6;">${priorityScore.toFixed(4)}</strong>
-          </div>
-          ` : ''}
-        </div>
-      `,
-    },
-    radar: {
-      shape: 'polygon',
-      indicator: indicatorData,
-      radius: '62%',
-      center: ['50%', '52%'],
-      splitNumber: 4,
-      axisName: {
-        fontFamily: '"IBM Plex Sans", -apple-system, sans-serif',
-        fontSize: 11,
-        color: isDark ? '#94A3B8' : '#475569',
+      tooltip: {
+        trigger: 'item',
+        formatter: () =>
+          renderSaaSTooltip(
+            'Priority Signal Sub-Scores Profile',
+            tooltipItems,
+            '4G multidimensional narrative vector',
+            isDark
+          ),
       },
-      splitLine: {
-        lineStyle: {
-          color: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)',
+      radar: {
+        shape: 'polygon',
+        indicator: indicatorData,
+        radius: '62%',
+        center: ['50%', '52%'],
+        splitNumber: 4,
+        axisName: {
+          fontFamily: '"IBM Plex Sans", -apple-system, sans-serif',
+          fontSize: 11,
+          fontWeight: 500,
+          color: theme.textSecondary,
         },
-      },
-      splitArea: {
-        show: true,
-        areaStyle: {
-          color: isDark
-            ? ['rgba(255, 255, 255, 0.01)', 'rgba(255, 255, 255, 0.03)']
-            : ['rgba(0, 0, 0, 0.01)', 'rgba(0, 0, 0, 0.02)'],
-        },
-      },
-      axisLine: {
-        lineStyle: {
-          color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-        },
-      },
-    },
-    series: [
-      {
-        name: '4G Sub-Scores',
-        type: 'radar',
-        data: [
-          {
-            value: [spread, coord, reach, friction],
-            name: 'Observed Telemetry',
-            symbol: 'circle',
-            symbolSize: 5,
-            itemStyle: {
-              color: '#2F65F6',
-            },
-            lineStyle: {
-              width: 2,
-              color: '#2F65F6',
-            },
-            areaStyle: {
-              color: 'rgba(47, 101, 246, 0.22)',
-            },
+        splitLine: {
+          lineStyle: {
+            color: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
           },
-        ],
+        },
+        splitArea: {
+          show: true,
+          areaStyle: {
+            color: isDark
+              ? ['rgba(255, 255, 255, 0.01)', 'rgba(255, 255, 255, 0.025)']
+              : ['rgba(0, 0, 0, 0.01)', 'rgba(0, 0, 0, 0.02)'],
+          },
+        },
+        axisLine: {
+          lineStyle: {
+            color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+          },
+        },
       },
-    ],
-  };
-  }, [subScores, isDark]);
+      series: [
+        {
+          name: '4G Sub-Scores',
+          type: 'radar',
+          animationDuration: 750,
+          animationEasing: 'cubicOut',
+          data: [
+            {
+              value: [spread, coord, reach, friction],
+              name: 'Observed Telemetry',
+              symbol: 'circle',
+              symbolSize: 5,
+              itemStyle: {
+                color: theme.primary,
+              },
+              lineStyle: {
+                width: 2,
+                color: theme.primary,
+              },
+              areaStyle: {
+                color: isDark ? 'rgba(88, 120, 199, 0.20)' : 'rgba(47, 101, 246, 0.16)',
+              },
+            },
+          ],
+        },
+      ],
+    };
+  }, [subScores, priorityScore, isDark, theme]);
 
   return (
     <EChartBase

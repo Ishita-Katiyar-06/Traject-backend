@@ -55,7 +55,7 @@ export const WatchlistModal: React.FC<WatchlistModalProps> = ({ isOpen, onClose 
       maxWidth="md"
       footer={
         <div className="flex items-center justify-between w-full">
-          <span className="text-[12px] font-medium text-[#8591A5]">
+          <span className="text-[12px] font-medium text-[#8591A5] dark:text-[#94A3B8]">
             {items.length} entity {items.length === 1 ? 'item' : 'items'} in watchlist
           </span>
           <Button variant="secondary" size="sm" onClick={onClose}>
@@ -66,7 +66,7 @@ export const WatchlistModal: React.FC<WatchlistModalProps> = ({ isOpen, onClose 
     >
       <div className="space-y-2.5 font-sans py-1 max-h-96 overflow-y-auto select-none">
         {items.length === 0 ? (
-          <div className="py-8 text-center text-[#8591A5] text-[13px]">
+          <div className="py-8 text-center text-[#8591A5] dark:text-[#94A3B8] text-[13px]">
             No entities currently pinned to your watchlist.
           </div>
         ) : (
@@ -74,24 +74,24 @@ export const WatchlistModal: React.FC<WatchlistModalProps> = ({ isOpen, onClose 
             <div
               key={item.id}
               onClick={() => handleNavigate(item.route)}
-              className="p-3.5 rounded-[18px] bg-[#F8FAFD] border border-[rgba(228,233,245,0.85)] flex items-center justify-between hover:bg-white hover:border-[#2F65F6]/40 hover:shadow-xs transition-all duration-150 cursor-pointer group"
+              className="p-3.5 rounded-[18px] bg-[#F8FAFD] dark:bg-[#13171C] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] flex items-center justify-between hover:bg-white dark:hover:bg-[#1A2027] hover:border-[#2F65F6]/40 dark:hover:border-[#2F65F6]/50 hover:shadow-xs transition-all duration-150 cursor-pointer group"
             >
               <div className="flex items-center gap-3 min-w-0 pr-2">
-                <div className="w-8 h-8 rounded-full bg-white border border-[rgba(228,233,245,0.85)] flex items-center justify-center shrink-0 shadow-2xs">
+                <div className="w-8 h-8 rounded-full bg-white dark:bg-[#1A2027] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] flex items-center justify-center shrink-0 shadow-2xs">
                   {getTypeIcon(item.type)}
                 </div>
 
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-bold text-[#8591A5] uppercase tracking-wider">
+                    <span className="text-[10px] font-bold text-[#8591A5] dark:text-[#94A3B8] uppercase tracking-wider">
                       {item.type}
                     </span>
-                    <span className="text-slate-300">•</span>
+                    <span className="text-slate-300 dark:text-slate-600">•</span>
                     <span className="text-[11px] text-[#FF6D5A] font-semibold">
                       {item.lastChange}
                     </span>
                   </div>
-                  <div className="text-[14px] font-bold text-[#111727] group-hover:text-[#2F65F6] transition-colors truncate">
+                  <div className="text-[14px] font-bold text-[#111727] dark:text-[#F8FAFC] group-hover:text-[#2F65F6] transition-colors truncate">
                     {item.title}
                   </div>
                 </div>
@@ -105,13 +105,13 @@ export const WatchlistModal: React.FC<WatchlistModalProps> = ({ isOpen, onClose 
                 <button
                   type="button"
                   onClick={(e) => handleRemove(item.id, e)}
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-[#8591A5] hover:text-[#FF6D5A] hover:bg-[#FFF1F0] transition-colors"
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-[#8591A5] dark:text-[#94A3B8] hover:text-[#FF6D5A] hover:bg-[#FFF1F0] dark:hover:bg-[#FF6D5A]/10 transition-colors"
                   title="Remove from watchlist"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
 
-                <div className="w-7 h-7 rounded-full bg-white border border-[rgba(228,233,245,0.85)] flex items-center justify-center text-[#8591A5] group-hover:bg-[#2F65F6] group-hover:text-white transition-colors">
+                <div className="w-7 h-7 rounded-full bg-white dark:bg-[#1A2027] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] flex items-center justify-center text-[#8591A5] dark:text-[#94A3B8] group-hover:bg-[#2F65F6] group-hover:text-white dark:group-hover:border-[#2F65F6] transition-colors">
                   <ArrowUpRight className="w-3.5 h-3.5" />
                 </div>
               </div>

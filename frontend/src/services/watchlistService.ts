@@ -5,7 +5,7 @@
  * (Topics, Narratives, Communities, Investigations).
  */
 
-export type WatchEntityType = 'Topic' | 'Narrative' | 'Community' | 'Investigation';
+export type WatchEntityType = 'Topic' | 'Trend' | 'Narrative' | 'Community' | 'Investigation';
 
 export interface WatchItem {
   id: string;
@@ -22,11 +22,11 @@ const WATCHLIST_STORAGE_KEY = 'tessera_watchlist_items';
 const DEFAULT_WATCHLIST: WatchItem[] = [
   {
     id: 'top-101',
-    type: 'Topic',
+    type: 'Trend',
     title: 'Regional power supply disruption',
     currentStatus: 'Rising',
     lastChange: '+27%',
-    route: '/topics/top-101',
+    route: '/trends/top-101',
     addedAt: '2026-09-02T19:00:00Z',
   },
   {

@@ -58,18 +58,18 @@ export const ExplorerTable: React.FC<ExplorerTableProps> = ({
     () => [
       columnHelper.accessor('published_at', {
         id: 'published_at',
-        header: 'Post Time',
+        header: 'Post time',
         size: 110,
         enableSorting: true,
         cell: (info) => (
-          <span className="text-[#8591A5] font-medium whitespace-nowrap font-mono text-[12px]">
+          <span className="text-[#8591A5] dark:text-[#94A3B8] font-medium whitespace-nowrap font-mono text-[12px]">
             {info.getValue() ? formatTimeOnly(info.getValue()) : '—'}
           </span>
         ),
       }),
       columnHelper.accessor((row) => row.channel_title || row.author_id, {
         id: 'platform',
-        header: 'Platform / Channel',
+        header: 'Platform & channel',
         size: 200,
         enableSorting: true,
         cell: (info) => {
@@ -82,7 +82,10 @@ export const ExplorerTable: React.FC<ExplorerTableProps> = ({
               >
                 {item.platform.toUpperCase()}
               </Badge>
-              <span className="font-semibold text-[#111727] text-[12px] truncate max-w-[140px]" title={item.channel_title || item.author_id}>
+              <span
+                className="font-semibold text-[#111727] dark:text-[#F8FAFC] text-[12px] truncate max-w-[140px]"
+                title={item.channel_title || item.author_id}
+              >
                 {item.channel_title || item.author_id}
               </span>
             </div>
@@ -91,10 +94,10 @@ export const ExplorerTable: React.FC<ExplorerTableProps> = ({
       }),
       columnHelper.accessor('text_content', {
         id: 'text_content',
-        header: 'Canonical Text Excerpt',
+        header: 'Canonical text excerpt',
         enableSorting: false,
         cell: (info) => (
-          <p className="text-[#111727] font-normal leading-relaxed line-clamp-2 max-w-lg">
+          <p className="text-[#111727] dark:text-[#CBD5E1] font-normal leading-relaxed line-clamp-2 max-w-lg">
             {info.getValue() || '<media attachment / no text>'}
           </p>
         ),
@@ -107,16 +110,16 @@ export const ExplorerTable: React.FC<ExplorerTableProps> = ({
         cell: (info) => {
           const item = info.row.original;
           return (
-            <div className="flex items-center gap-3 text-[11px] font-mono text-[#64748B]">
+            <div className="flex items-center gap-3 text-[11px] font-mono text-[#64748B] dark:text-[#94A3B8]">
               {item.views_count !== null && item.views_count !== undefined && (
                 <span className="inline-flex items-center gap-1" title="Observed Views">
-                  <Eye className="w-3 h-3 text-slate-400" />
+                  <Eye className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                   <span>{item.views_count.toLocaleString()}</span>
                 </span>
               )}
               {item.forwards_count !== null && item.forwards_count !== undefined && (
                 <span className="inline-flex items-center gap-1" title="Forwards">
-                  <Share2 className="w-3 h-3 text-slate-400" />
+                  <Share2 className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                   <span>{item.forwards_count}</span>
                 </span>
               )}
@@ -129,7 +132,7 @@ export const ExplorerTable: React.FC<ExplorerTableProps> = ({
         header: 'Inspect',
         size: 80,
         cell: () => (
-          <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#2F65F6] group-hover:underline">
+          <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#2F65F6] dark:text-[#93C5FD] group-hover:underline">
             <span>Inspect</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
           </span>
@@ -158,13 +161,13 @@ export const ExplorerTable: React.FC<ExplorerTableProps> = ({
         {[1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
-            className="p-4 rounded-[18px] border border-border bg-surface flex items-center justify-between"
+            className="p-4 rounded-[20px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] flex items-center justify-between"
           >
             <div className="space-y-2 flex-1">
-              <Skeleton className="h-3 w-44" />
-              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-3.5 w-44 rounded-full" />
+              <Skeleton className="h-4 w-3/4 rounded-full" />
             </div>
-            <Skeleton className="h-6 w-20 shrink-0 ml-4" />
+            <Skeleton className="h-6 w-20 shrink-0 ml-4 rounded-full" />
           </div>
         ))}
       </div>
@@ -221,20 +224,20 @@ export const ExplorerTable: React.FC<ExplorerTableProps> = ({
   ];
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3 font-sans">
       {/* Table Toolbar / Controls */}
       <div className="flex items-center justify-between px-1">
-        <div className="text-[12px] font-mono text-[#8591A5]">
-          Showing {table.getRowModel().rows.length} operational records
+        <div className="text-[12px] font-mono text-[#8591A5] dark:text-[#94A3B8]">
+          Showing <span className="font-semibold text-[#111727] dark:text-[#F8FAFC]">{table.getRowModel().rows.length}</span> operational records
         </div>
         <Dropdown
           align="right"
           trigger={
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-white border border-[rgba(228,233,245,0.85)] hover:bg-[#F8FAFD] text-[12px] font-medium text-[#475569] shadow-2xs transition-colors"
+              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-white dark:bg-[#171C22] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] hover:bg-[#F8FAFD] dark:hover:bg-[#1D232A] text-[12px] font-medium text-[#475569] dark:text-[#CBD5E1] shadow-2xs transition-colors"
             >
-              <SlidersHorizontal className="w-3.5 h-3.5 text-[#8591A5]" />
+              <SlidersHorizontal className="w-3.5 h-3.5 text-[#8591A5] dark:text-[#94A3B8]" />
               <span>Columns</span>
             </button>
           }
@@ -243,10 +246,10 @@ export const ExplorerTable: React.FC<ExplorerTableProps> = ({
       </div>
 
       {/* TanStack Table Container */}
-      <div className="rounded-[26px] border border-[rgba(228,233,245,0.85)] bg-white shadow-xs overflow-hidden font-sans">
+      <div className="rounded-[22px] border border-[rgba(228,233,245,0.85)] dark:border-[#2B323A] bg-white dark:bg-[#171C22] shadow-dashboard overflow-hidden font-sans">
         <div className="hidden sm:block overflow-x-auto">
           <table className="w-full border-collapse text-left text-[13px]">
-            <thead className="sticky top-0 z-10 bg-[#F8FAFD] border-b border-[rgba(228,233,245,0.85)] text-[11px] font-bold text-[#8591A5] uppercase tracking-wider">
+            <thead className="sticky top-0 z-10 bg-[#F8FAFD] dark:bg-[#13171C] border-b border-slate-100 dark:border-[#252B32] text-[12px] font-medium text-[#64748B] dark:text-[#94A3B8]">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
@@ -256,8 +259,8 @@ export const ExplorerTable: React.FC<ExplorerTableProps> = ({
                       <th
                         key={header.id}
                         style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
-                        className={`py-3 px-4 select-none ${header.id === 'actions' ? 'text-right' : ''} ${
-                          canSort ? 'cursor-pointer hover:text-[#111727]' : ''
+                        className={`py-3.5 px-4 select-none ${header.id === 'actions' ? 'text-right' : ''} ${
+                          canSort ? 'cursor-pointer hover:text-[#111727] dark:hover:text-[#F8FAFC]' : ''
                         }`}
                         onClick={header.column.getToggleSortingHandler()}
                       >
@@ -268,13 +271,13 @@ export const ExplorerTable: React.FC<ExplorerTableProps> = ({
                         >
                           <span>{flexRender(header.column.columnDef.header, header.getContext())}</span>
                           {canSort && (
-                            <span className="text-[#8591A5]">
+                            <span className="text-[#8591A5] dark:text-[#94A3B8]">
                               {isSorted === 'asc' ? (
-                                <ArrowUp className="w-3 h-3 text-[#2F65F6]" />
+                                <ArrowUp className="w-3.5 h-3.5 text-[#2F65F6] dark:text-[#93C5FD]" />
                               ) : isSorted === 'desc' ? (
-                                <ArrowDown className="w-3 h-3 text-[#2F65F6]" />
+                                <ArrowDown className="w-3.5 h-3.5 text-[#2F65F6] dark:text-[#93C5FD]" />
                               ) : (
-                                <ArrowUpDown className="w-3 h-3 opacity-30 group-hover:opacity-100" />
+                                <ArrowUpDown className="w-3.5 h-3.5 opacity-30 group-hover:opacity-100" />
                               )}
                             </span>
                           )}
@@ -285,7 +288,7 @@ export const ExplorerTable: React.FC<ExplorerTableProps> = ({
                 </tr>
               ))}
             </thead>
-            <tbody className="divide-y divide-[rgba(228,233,245,0.6)]">
+            <tbody className="divide-y divide-slate-100 dark:divide-[#222830]">
               {table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
@@ -297,7 +300,7 @@ export const ExplorerTable: React.FC<ExplorerTableProps> = ({
                     }
                   }}
                   tabIndex={0}
-                  className="hover:bg-[#F8FAFD] transition-colors cursor-pointer group focus:bg-[#F1F4F9] focus:outline-none"
+                  className="hover:bg-[#F8FAFD] dark:hover:bg-[#1D232A] transition-colors cursor-pointer group focus:bg-[#F1F4F9] dark:focus:bg-[#252B32] focus:outline-none"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td
@@ -314,23 +317,25 @@ export const ExplorerTable: React.FC<ExplorerTableProps> = ({
         </div>
 
         {/* Mobile Card List View */}
-        <div className="sm:hidden divide-y divide-[rgba(228,233,245,0.85)]">
+        <div className="sm:hidden divide-y divide-slate-100 dark:divide-[#222830]">
           {items.map((item) => (
             <div
               key={item.canonical_id}
               onClick={() => onSelectItem(item)}
-              className="p-4 space-y-2 hover:bg-[#F8FAFD] transition-colors cursor-pointer"
+              className="p-4 space-y-2 hover:bg-[#F8FAFD] dark:hover:bg-[#1D232A] transition-colors cursor-pointer"
             >
               <div className="flex items-center justify-between text-[11px]">
                 <div className="flex items-center gap-1.5">
                   <Badge variant="neutral" size="sm">
                     {item.platform}
                   </Badge>
-                  <span className="font-semibold text-[#111727]">{item.channel_title || item.author_id}</span>
+                  <span className="font-semibold text-[#111727] dark:text-[#F8FAFC]">
+                    {item.channel_title || item.author_id}
+                  </span>
                 </div>
-                <span className="font-mono text-[#8591A5]">{item.published_at}</span>
+                <span className="font-mono text-[#8591A5] dark:text-[#94A3B8]">{item.published_at}</span>
               </div>
-              <p className="text-[13px] text-[#111727] line-clamp-2">
+              <p className="text-[13px] text-[#111727] dark:text-[#CBD5E1] line-clamp-2">
                 {item.text_content}
               </p>
             </div>

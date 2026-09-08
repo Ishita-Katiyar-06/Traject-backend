@@ -74,6 +74,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
   const getCategoryIcon = (category: SearchCategory) => {
     switch (category) {
       case 'Topics':
+      case 'Trends':
         return <Hash className="w-3.5 h-3.5 text-[#2F65F6]" />;
       case 'Narratives':
         return <GitBranch className="w-3.5 h-3.5 text-[#FF6D5A]" />;
@@ -86,7 +87,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
 
   // Group results
   const narrativeResults = results.filter((r) => r.category === 'Narratives');
-  const topicResults = results.filter((r) => r.category === 'Topics');
+  const topicResults = results.filter((r) => r.category === 'Topics' || r.category === 'Trends');
   const communityResults = results.filter((r) => r.category === 'Communities');
 
   const searchNode = (
@@ -186,10 +187,10 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
                   </Command.Group>
                 )}
 
-                {/* Topic Group */}
+                {/* Trend / Topic Group */}
                 {topicResults.length > 0 && (
                   <Command.Group
-                    heading="Topic Clusters"
+                    heading="Trends"
                     className="p-1 text-[11px] font-mono uppercase font-bold text-[#8591A5] px-3 pt-2 pb-1"
                   >
                     {topicResults.map((item) => (
@@ -213,7 +214,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
                           </div>
                         </div>
                         <span className="text-[10px] font-mono uppercase font-bold text-blue-700 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-full border border-blue-200/60 shrink-0 ml-2">
-                          Topic
+                          {item.category === 'Trends' ? 'Trend' : 'Topic'}
                         </span>
                       </Command.Item>
                     ))}

@@ -8,6 +8,7 @@ export interface Column<T> {
   sortable?: boolean;
   width?: string;
   align?: 'left' | 'center' | 'right';
+  isNumeric?: boolean;
   render?: (item: T, index: number) => React.ReactNode;
 }
 
@@ -43,27 +44,27 @@ export function Table<T>({
 }: TableProps<T>) {
   if (isLoading) {
     return (
-      <div className="w-full border border-[rgba(228,233,245,0.85)] bg-white shadow-dashboard overflow-hidden rounded-[26px]">
-        <div className="p-4 border-b border-[rgba(228,233,245,0.85)] bg-[#F8FAFD] flex gap-4">
-          <Skeleton className="h-4 w-28" />
-          <Skeleton className="h-4 w-40" />
-          <Skeleton className="h-4 w-20" />
+      <div className={`w-full border border-[rgba(228,233,245,0.85)] dark:border-[#2B323A] bg-white dark:bg-[#171C22] shadow-dashboard overflow-hidden rounded-[22px] ${className}`}>
+        <div className="p-4 border-b border-slate-100 dark:border-[#252B32] bg-[#F8FAFD] dark:bg-[#13171C] flex gap-4">
+          <Skeleton className="h-4 w-28 rounded-full" />
+          <Skeleton className="h-4 w-40 rounded-full" />
+          <Skeleton className="h-4 w-20 rounded-full" />
         </div>
-        <div className="p-6 space-y-4">
-          <Skeleton className="h-7 w-full" />
-          <Skeleton className="h-7 w-full" />
-          <Skeleton className="h-7 w-full" />
-          <Skeleton className="h-7 w-full" />
+        <div className="p-6 space-y-3.5">
+          <Skeleton className="h-8 w-full rounded-[10px]" />
+          <Skeleton className="h-8 w-full rounded-[10px]" />
+          <Skeleton className="h-8 w-full rounded-[10px]" />
+          <Skeleton className="h-8 w-full rounded-[10px]" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`w-full overflow-x-auto border border-[rgba(228,233,245,0.85)] bg-white shadow-dashboard rounded-[26px] ${className}`}>
+    <div className={`w-full overflow-x-auto border border-[rgba(228,233,245,0.85)] dark:border-[#2B323A] bg-white dark:bg-[#171C22] shadow-dashboard rounded-[22px] ${className}`}>
       <table className="w-full text-left border-collapse font-sans text-body-ui">
         <thead>
-          <tr className="border-b border-[rgba(228,233,245,0.85)] bg-[#F8FAFD]">
+          <tr className="border-b border-slate-100 dark:border-[#252B32] bg-[#F8FAFD] dark:bg-[#13171C]">
             {columns.map((col) => {
               const isSorted = sortColumn === col.key;
               return (
@@ -71,28 +72,36 @@ export function Table<T>({
                   key={col.key}
                   style={{ width: col.width }}
                   onClick={() => col.sortable && onSort?.(col.key)}
-                  className={`px-4 py-3.5 text-[#8591A5] font-semibold text-[12px] select-none tracking-wide ${
-                    col.align === 'right'
+                  className={`px-5 py-3.5 text-[12px] font-medium select-none tracking-normal ${
+                    isSorted
+                      ? 'text-[#2F65F6] dark:text-[#93C5FD] font-semibold'
+                      : 'text-[#64748B] dark:text-[#94A3B8]'
+                  } ${
+                    col.align === 'right' || col.isNumeric
                       ? 'text-right'
                       : col.align === 'center'
                       ? 'text-center'
                       : 'text-left'
-                  } ${col.sortable ? 'cursor-pointer hover:text-[#111727]' : ''}`}
+                  } ${col.sortable ? 'cursor-pointer hover:text-[#111727] dark:hover:text-[#F8FAFC]' : ''}`}
                 >
                   <div
                     className={`inline-flex items-center gap-1.5 ${
-                      col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : 'justify-start'
+                      col.align === 'right' || col.isNumeric
+                        ? 'justify-end'
+                        : col.align === 'center'
+                        ? 'justify-center'
+                        : 'justify-start'
                     }`}
                   >
                     <span>{col.header}</span>
                     {col.sortable && (
-                      <span className="text-[#8591A5]">
+                      <span className="text-[#8591A5] dark:text-[#94A3B8]">
                         {isSorted && sortDirection === 'asc' ? (
-                          <ArrowUp className="w-3.5 h-3.5 text-[#2F65F6]" />
+                          <ArrowUp className="w-3.5 h-3.5 text-[#2F65F6] dark:text-[#93C5FD]" />
                         ) : isSorted && sortDirection === 'desc' ? (
-                          <ArrowDown className="w-3.5 h-3.5 text-[#2F65F6]" />
+                          <ArrowDown className="w-3.5 h-3.5 text-[#2F65F6] dark:text-[#93C5FD]" />
                         ) : (
-                          <ArrowUpDown className="w-3.5 h-3.5 opacity-40 hover:opacity-100" />
+                          <ArrowUpDown className="w-3.5 h-3.5 opacity-35 hover:opacity-100" />
                         )}
                       </span>
                     )}
@@ -102,10 +111,10 @@ export function Table<T>({
             })}
           </tr>
         </thead>
-        <tbody className="divide-y divide-[rgba(228,233,245,0.85)]">
+        <tbody className="divide-y divide-slate-100 dark:divide-[#222830]">
           {data.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="px-4 py-12 text-center text-[#8591A5]">
+              <td colSpan={columns.length} className="px-5 py-12 text-center text-[#8591A5] dark:text-[#94A3B8]">
                 {emptyMessage}
               </td>
             </tr>
@@ -122,18 +131,19 @@ export function Table<T>({
                     onRowClick ? 'cursor-pointer' : ''
                   } ${
                     isSelected
-                      ? 'bg-blue-50/60 border-l-4 border-l-[#2F65F6]'
-                      : 'hover:bg-[#F8FAFD]'
+                      ? 'bg-blue-50/60 dark:bg-[#2F65F6]/10 border-l-4 border-l-[#2F65F6]'
+                      : 'hover:bg-[#F8FAFD] dark:hover:bg-[#1D232A]'
                   }`}
                 >
                   {columns.map((col) => {
                     const value = (item as Record<string, unknown>)[col.key];
+                    const isNum = col.align === 'right' || col.isNumeric;
                     return (
                       <td
                         key={col.key}
-                        className={`px-4 py-3.5 text-[13px] text-[#111727] ${
-                          col.align === 'right'
-                            ? 'text-right'
+                        className={`px-5 py-3.5 text-[13px] text-[#111727] dark:text-[#CBD5E1] ${
+                          isNum
+                            ? 'text-right font-mono'
                             : col.align === 'center'
                             ? 'text-center'
                             : 'text-left'

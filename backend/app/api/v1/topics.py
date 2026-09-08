@@ -70,3 +70,62 @@ async def get_topic(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={"code": "ARTIFACT_NOT_FOUND", "message": str(exc)},
         )
+
+
+@router.get(
+    "/topics/{topic_id}/graph",
+    summary="Retrieve converging node graph for a specific topic (Trend compatibility alias)",
+    tags=["Topics"],
+)
+async def get_topic_graph(
+    topic_id: str,
+    service: AnalyticsService = Depends(get_analytics_service),
+):
+    """Retrieve converging relationship graph for this topic/trend."""
+    try:
+        graph = service.get_trend_graph(topic_id)
+        if not graph:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "code": "RESOURCE_NOT_FOUND",
+                    "message": f"Topic cluster '{topic_id}' not found for graph generation.",
+                    "details": {"resource_type": "topic", "identifier": topic_id},
+                },
+            )
+        return {"data": graph}
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "ARTIFACT_NOT_FOUND", "message": str(exc)},
+        )
+
+
+@router.get(
+    "/topics/{topic_id}/sentiment",
+    summary="Retrieve chronological sentiment time-series for a topic (Trend compatibility alias)",
+    tags=["Topics"],
+)
+async def get_topic_sentiment(
+    topic_id: str,
+    service: AnalyticsService = Depends(get_analytics_service),
+):
+    """Retrieve chronological sentiment time-series for this topic/trend."""
+    try:
+        sentiment = service.get_trend_sentiment(topic_id)
+        if not sentiment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "code": "RESOURCE_NOT_FOUND",
+                    "message": f"Topic cluster '{topic_id}' not found for sentiment analysis.",
+                    "details": {"resource_type": "topic", "identifier": topic_id},
+                },
+            )
+        return {"data": sentiment}
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "ARTIFACT_NOT_FOUND", "message": str(exc)},
+        )
+

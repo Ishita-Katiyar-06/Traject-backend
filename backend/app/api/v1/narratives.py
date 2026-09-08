@@ -90,3 +90,35 @@ async def get_narrative(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={"code": "ARTIFACT_NOT_FOUND", "message": str(exc)},
         )
+
+
+@router.get(
+    "/narratives/{narrative_id}/sentiment",
+    summary="Retrieve chronological sentiment time-series for a specific narrative candidate",
+    tags=["Narratives"],
+)
+async def get_narrative_sentiment(
+    narrative_id: str,
+    service: AnalyticsService = Depends(get_analytics_service),
+):
+    """Retrieve chronological sentiment time-series for a narrative candidate based on its constituent messages.
+    Includes the frozen narrative sentiment profile metrics alongside the temporal bucket progression.
+    """
+    try:
+        sentiment = service.get_narrative_sentiment(narrative_id)
+        if not sentiment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "code": "RESOURCE_NOT_FOUND",
+                    "message": f"Narrative candidate '{narrative_id}' not found for sentiment analysis.",
+                    "details": {"resource_type": "narrative", "identifier": narrative_id},
+                },
+            )
+        return {"data": sentiment}
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "ARTIFACT_NOT_FOUND", "message": str(exc)},
+        )
+

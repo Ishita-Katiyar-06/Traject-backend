@@ -1,3 +1,4 @@
+# pyrefly: ignore [missing-import]
 from fastapi import APIRouter
 
 from app.api.v1.analytics import router as analytics_router
@@ -7,6 +8,7 @@ from app.api.v1.narratives import router as narratives_router
 from app.api.v1.pipeline import router as pipeline_router
 from app.api.v1.temporal import router as temporal_router
 from app.api.v1.topics import router as topics_router
+from app.api.v1.trends import router as trends_router
 
 v1_router = APIRouter()
 
@@ -14,6 +16,7 @@ v1_router.include_router(health_router)
 v1_router.include_router(analytics_router)
 v1_router.include_router(narratives_router)
 v1_router.include_router(topics_router)
+v1_router.include_router(trends_router)
 v1_router.include_router(messages_router)
 v1_router.include_router(pipeline_router)
 v1_router.include_router(temporal_router)

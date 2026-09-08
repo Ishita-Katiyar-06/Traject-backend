@@ -14,19 +14,19 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
   ...props
 }) => {
   const dotColor = {
-    signal: 'bg-[#FF6D5A]',
-    data: 'bg-[#2F65F6]',
-    critical: 'bg-[#C0503E]',
-    confirmed: 'bg-[#6B9E78]',
-    neutral: 'bg-[#8591A5]',
+    signal: 'bg-[#E9A23B] dark:bg-[#FBBF24]',
+    data: 'bg-[#2F65F6] dark:bg-[#5878C7]',
+    critical: 'bg-[#E35D5D] dark:bg-[#F87171]',
+    confirmed: 'bg-[#22A06B] dark:bg-[#34D399]',
+    neutral: 'bg-[#8591A5] dark:bg-[#7A8699]',
   };
 
   const badgeStyles = {
-    signal: 'bg-[#FF6D5A]/10 text-[#FF6D5A] border-[#FF6D5A]/25',
-    data: 'bg-[#2F65F6]/10 text-[#2F65F6] border-[#2F65F6]/25',
-    critical: 'bg-rose-50 text-[#C0503E] border-rose-200',
-    confirmed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    neutral: 'bg-[#F1F4F9] text-[#475569] border-slate-200/80',
+    signal: 'bg-[#E9A23B]/10 dark:bg-[#FBBF24]/15 text-[#E9A23B] dark:text-[#FBBF24] border-[#E9A23B]/25 dark:border-[#FBBF24]/30',
+    data: 'bg-[#2F65F6]/10 dark:bg-[#5878C7]/15 text-[#2F65F6] dark:text-[#93C5FD] border-[#2F65F6]/25 dark:border-[#5878C7]/30',
+    critical: 'bg-[#E35D5D]/10 dark:bg-[#F87171]/15 text-[#E35D5D] dark:text-[#F87171] border-[#E35D5D]/25 dark:border-[#F87171]/30',
+    confirmed: 'bg-[#22A06B]/10 dark:bg-[#34D399]/15 text-[#22A06B] dark:text-[#34D399] border-[#22A06B]/25 dark:border-[#34D399]/30',
+    neutral: 'bg-[#F1F4F9] dark:bg-[#191F26] text-[#475569] dark:text-[#94A3B8] border-slate-200/80 dark:border-[#2B323A]',
   };
 
   return (

@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+import hashlib
 import json
 import logging
 import math
@@ -21,6 +23,19 @@ from app.schemas.api.analytics import (
 from app.schemas.api.common import PaginationMeta
 from app.schemas.api.messages import MessageDetailData, MessageSummaryResponse
 from app.schemas.api.narratives import NarrativeDetailData, NarrativeSummaryResponse
+from app.schemas.api.trends import (
+    GraphEdge,
+    GraphNode,
+    NarrativeSentimentData,
+    SentimentBucket,
+    SentimentSummary,
+    TrendChannelSummary,
+    TrendDetailData,
+    TrendGraphData,
+    TrendKeywordResponse,
+    TrendSentimentData,
+    TrendSummaryResponse,
+)
 from app.schemas.api.pipeline import (
     CachePerformance,
     CacheStatus,
@@ -61,6 +76,7 @@ class ArtifactRepository:
         self._sorted_narratives: list[NarrativeCandidate] = []
         self._message_to_topic: dict[str, str] = {}
         self._narrative_validation_by_id: dict[str, Any] = {}
+        self._sentiment_by_cache_key: dict[str, str] = {}
         
         # Metrics & Summary state
         self._metrics: PipelineStageMetrics | None = None
@@ -148,11 +164,36 @@ class ArtifactRepository:
             else:
                 self.artifacts_loaded = (len(self._messages) > 0)
 
+            # Load precomputed sentiment cache for sub-millisecond timeline aggregation
+            self._load_sentiment_cache()
+
             return self.artifacts_loaded
         except Exception as exc:
             logger.error("Failed to load artifacts: %s", exc, exc_info=True)
             self.artifacts_loaded = False
             return False
+
+    def _load_sentiment_cache(self) -> None:
+        """Index precomputed SQLite sentiment cache into memory for instant queries."""
+        self._sentiment_by_cache_key = {}
+        candidates = [
+            self.repo_root / "data" / "cache" / "ml_inference_cache.db",
+            self.repo_root / "backend" / "data" / "cache" / "ml_inference_cache.db",
+        ]
+        for db_file in candidates:
+            if db_file.is_file():
+                try:
+                    import sqlite3
+                    conn = sqlite3.connect(str(db_file))
+                    cur = conn.cursor()
+                    cur.execute("SELECT cache_key, label FROM sentiment_cache")
+                    self._sentiment_by_cache_key = dict(cur.fetchall())
+                    conn.close()
+                    logger.debug("Loaded %d sentiment predictions from %s", len(self._sentiment_by_cache_key), db_file)
+                    break
+                except Exception as err:
+                    logger.warning("Could not index sentiment cache from %s: %s", db_file, err)
+
 
     def _resolve_parquet_path(self, override: Path | str | None) -> Path | None:
         if override:
@@ -470,8 +511,540 @@ class ArtifactRepository:
         )
 
     # --------------------------------------------------------------------------
-    # Message Queries
+    # Trend Queries (Milestone Phase 1: Topics -> Trends Architecture)
     # --------------------------------------------------------------------------
+
+    def _normalize_trend_id(self, identifier: str) -> str:
+        ident = identifier.strip()
+        if ident.startswith("trend_"):
+            return ident
+        if ident.startswith("topic_"):
+            return ident.replace("topic_", "trend_")
+        return f"trend_{ident}"
+
+    def _normalize_topic_id(self, identifier: str) -> str:
+        ident = identifier.strip()
+        if ident.startswith("topic_"):
+            return ident
+        if ident.startswith("trend_"):
+            return ident.replace("trend_", "topic_")
+        return f"topic_{ident}"
+
+    def get_trends(
+        self,
+        page: int = 1,
+        page_size: int = 20,
+        min_messages: int | None = None,
+        sort_by: str = "message_count",
+        order: str = "desc",
+    ) -> tuple[list[TrendSummaryResponse], PaginationMeta]:
+        """Retrieve paginated collection of Trend clusters mapped from discovered semantic clusters."""
+        if not self.artifacts_loaded:
+            raise RuntimeError("Analytics artifact is unavailable.")
+
+        filtered = list(self._topics_by_id.values())
+
+        if min_messages is not None:
+            filtered = [t for t in filtered if t.message_count >= min_messages]
+
+        reverse = (order.lower() == "desc")
+        if sort_by == "message_count":
+            filtered.sort(key=lambda t: (t.message_count, t.topic_id), reverse=reverse)
+        elif sort_by == "percentage_of_dataset":
+            filtered.sort(key=lambda t: (t.percentage_of_dataset, t.topic_id), reverse=reverse)
+        elif sort_by in ("trend_id", "topic_id"):
+            filtered.sort(key=lambda t: t.topic_id, reverse=reverse)
+
+        total = len(filtered)
+        total_pages = math.ceil(total / page_size) if total > 0 else 0
+        start = (page - 1) * page_size
+        end = start + page_size
+        sliced = filtered[start:end]
+
+        items = []
+        for t in sliced:
+            top_kws = [k.keyword for k in t.representative_keywords[:3]]
+            label = ", ".join(top_kws) if top_kws else f"Trend Cluster {t.cluster_label}"
+            items.append(
+                TrendSummaryResponse(
+                    trend_id=self._normalize_trend_id(t.topic_id),
+                    topic_id=t.topic_id,
+                    cluster_label=t.cluster_label,
+                    label=label,
+                    message_count=t.message_count,
+                    percentage_of_dataset=t.percentage_of_dataset,
+                    representative_keywords=[
+                        TrendKeywordResponse(keyword=k.keyword, score=k.score)
+                        for k in t.representative_keywords
+                    ],
+                )
+            )
+
+        meta = PaginationMeta(
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+            has_next=page < total_pages,
+            has_prev=page > 1 and total_pages > 0,
+        )
+        return items, meta
+
+    def get_trend_by_id(self, identifier: str) -> TrendDetailData | None:
+        """Retrieve deep analytical intelligence for a single Trend cluster."""
+        if not self.artifacts_loaded:
+            raise RuntimeError("Analytics artifact is unavailable.")
+
+        topic_id = self._normalize_topic_id(identifier)
+        trend_id = self._normalize_trend_id(identifier)
+
+        topic = self._topics_by_id.get(topic_id)
+        if not topic:
+            return None
+
+        enriched = self._enriched_topics_by_id.get(topic_id)
+
+        # Collect source channels participating in this trend
+        cluster_messages = [
+            self._messages_by_id[mid]
+            for mid in topic.sample_message_ids
+            if mid in self._messages_by_id
+        ]
+        channel_stats: dict[str, dict[str, Any]] = {}
+        for m in cluster_messages:
+            aid = m.author_id
+            if aid not in channel_stats:
+                channel_stats[aid] = {
+                    "channel_title": m.channel_title,
+                    "author_username": m.author_username,
+                    "message_count": 0,
+                    "total_views": 0,
+                }
+            channel_stats[aid]["message_count"] += 1
+            channel_stats[aid]["total_views"] += (m.views_count or 0)
+
+        channels = [
+            TrendChannelSummary(
+                channel_id=aid,
+                channel_title=cinfo["channel_title"],
+                author_username=cinfo["author_username"],
+                message_count=cinfo["message_count"],
+                total_views=cinfo["total_views"],
+            )
+            for aid, cinfo in sorted(channel_stats.items(), key=lambda x: x[1]["message_count"], reverse=True)
+        ]
+
+        associated_narratives = [
+            cand.narrative_id
+            for cand in self._narratives_by_id.values()
+            if cand.promoted_from_topic_id == topic.topic_id
+        ]
+
+        top_kws = [k.keyword for k in topic.representative_keywords[:3]]
+        label = ", ".join(top_kws) if top_kws else f"Trend Cluster {topic.cluster_label}"
+
+        return TrendDetailData(
+            trend_id=trend_id,
+            topic_id=topic.topic_id,
+            cluster_label=topic.cluster_label,
+            label=label,
+            message_count=topic.message_count,
+            percentage_of_dataset=topic.percentage_of_dataset,
+            representative_keywords=[
+                TrendKeywordResponse(keyword=k.keyword, score=k.score)
+                for k in topic.representative_keywords
+            ],
+            representative_message_ids=topic.representative_message_ids,
+            sample_message_ids=topic.sample_message_ids,
+            entities=enriched.entities if enriched else [],
+            engagement=enriched.engagement if enriched else None,
+            propagation=enriched.propagation if enriched else None,
+            temporal=enriched.temporal if enriched else None,
+            channels=channels,
+            associated_narrative_ids=associated_narratives,
+        )
+
+    def get_trend_graph(self, identifier: str) -> TrendGraphData | None:
+        """Construct deterministic converging node graph translating authentic source & entity flow into the trend."""
+        if not self.artifacts_loaded:
+            raise RuntimeError("Analytics artifact is unavailable.")
+
+        topic_id = self._normalize_topic_id(identifier)
+        trend_id = self._normalize_trend_id(identifier)
+
+        topic = self._topics_by_id.get(topic_id)
+        if not topic:
+            return None
+
+        enriched = self._enriched_topics_by_id.get(topic_id)
+        top_kws = [k.keyword for k in topic.representative_keywords[:3]]
+        trend_label = f"Trend: {', '.join(top_kws)}" if top_kws else f"Trend {topic.cluster_label}"
+
+        nodes: list[GraphNode] = []
+        edges: list[GraphEdge] = []
+        seen_node_ids: set[str] = set()
+
+        # 1. Central Trend Node
+        trend_node_id = f"trend:{trend_id}"
+        nodes.append(
+            GraphNode(
+                id=trend_node_id,
+                type="trend",
+                label=trend_label,
+                metadata={
+                    "trend_id": trend_id,
+                    "topic_id": topic.topic_id,
+                    "cluster_label": topic.cluster_label,
+                    "message_count": topic.message_count,
+                    "percentage_of_dataset": topic.percentage_of_dataset,
+                    "keywords": [k.keyword for k in topic.representative_keywords],
+                },
+            )
+        )
+        seen_node_ids.add(trend_node_id)
+
+        # 2. Channel Nodes (Sources contributing messages)
+        cluster_messages = [
+            self._messages_by_id[mid]
+            for mid in topic.sample_message_ids
+            if mid in self._messages_by_id
+        ]
+
+        channel_stats: dict[str, dict[str, Any]] = {}
+        for m in cluster_messages:
+            aid = m.author_id
+            if aid not in channel_stats:
+                channel_stats[aid] = {
+                    "channel_title": m.channel_title or m.author_username or aid,
+                    "author_username": m.author_username,
+                    "message_count": 0,
+                    "views_count": 0,
+                }
+            channel_stats[aid]["message_count"] += 1
+            channel_stats[aid]["views_count"] += (m.views_count or 0)
+
+        for aid, cinfo in channel_stats.items():
+            cnode_id = f"channel:{aid}"
+            if cnode_id not in seen_node_ids:
+                nodes.append(
+                    GraphNode(
+                        id=cnode_id,
+                        type="channel",
+                        label=cinfo["channel_title"],
+                        metadata={
+                            "author_id": aid,
+                            "author_username": cinfo["author_username"],
+                            "messages_in_trend": cinfo["message_count"],
+                            "total_views": cinfo["views_count"],
+                        },
+                    )
+                )
+                seen_node_ids.add(cnode_id)
+
+            edges.append(
+                GraphEdge(
+                    id=f"edge:{cnode_id}->{trend_node_id}",
+                    source=cnode_id,
+                    target=trend_node_id,
+                    relationship_type="observed_in",
+                    label="observed in",
+                    metadata={
+                        "messages_contributed": cinfo["message_count"],
+                        "views_contributed": cinfo["views_count"],
+                    },
+                )
+            )
+
+        # 3. Entity Nodes (Domains, Hashtags, Entities cited in cluster)
+        if enriched and enriched.entities:
+            for ent in enriched.entities[:8]:
+                cat = ent.category.value if hasattr(ent.category, "value") else str(ent.category)
+                enode_id = f"entity:{cat}:{ent.text}"
+                if enode_id not in seen_node_ids:
+                    nodes.append(
+                        GraphNode(
+                            id=enode_id,
+                            type="entity",
+                            label=ent.text,
+                            metadata={
+                                "category": cat,
+                                "frequency": ent.frequency,
+                            },
+                        )
+                    )
+                    seen_node_ids.add(enode_id)
+
+                edges.append(
+                    GraphEdge(
+                        id=f"edge:{enode_id}->{trend_node_id}",
+                        source=enode_id,
+                        target=trend_node_id,
+                        relationship_type="cited_in",
+                        label="cited in",
+                        metadata={"frequency": ent.frequency},
+                    )
+                )
+
+        # 4. Narrative Nodes (Formalized Narrative Candidates promoted from this Trend)
+        for cand in self._narratives_by_id.values():
+            if cand.promoted_from_topic_id == topic.topic_id:
+                nnode_id = f"narrative:{cand.narrative_id}"
+                tier_str = cand.priority_tier.value if hasattr(cand.priority_tier, "value") else str(cand.priority_tier)
+                if nnode_id not in seen_node_ids:
+                    nodes.append(
+                        GraphNode(
+                            id=nnode_id,
+                            type="narrative",
+                            label=cand.headline_claim,
+                            metadata={
+                                "narrative_id": cand.narrative_id,
+                                "priority_signal_score": cand.priority_signal_score,
+                                "priority_tier": tier_str,
+                            },
+                        )
+                    )
+                    seen_node_ids.add(nnode_id)
+
+                edges.append(
+                    GraphEdge(
+                        id=f"edge:{trend_node_id}->{nnode_id}",
+                        source=trend_node_id,
+                        target=nnode_id,
+                        relationship_type="promoted_to",
+                        label="promoted to narrative",
+                        metadata={
+                            "priority_signal_score": cand.priority_signal_score,
+                            "priority_tier": tier_str,
+                        },
+                    )
+                )
+
+        # 5. Representative focal evidence messages (top 2 closest to centroid)
+        for mid in topic.representative_message_ids[:2]:
+            msg = self._messages_by_id.get(mid)
+            if msg:
+                mnode_id = f"message:{msg.canonical_id}"
+                if mnode_id not in seen_node_ids:
+                    preview = (msg.text_content[:45] + "...") if len(msg.text_content) > 45 else msg.text_content
+                    nodes.append(
+                        GraphNode(
+                            id=mnode_id,
+                            type="message",
+                            label=preview or msg.canonical_id,
+                            metadata={
+                                "canonical_id": msg.canonical_id,
+                                "published_at": msg.published_at.isoformat(),
+                                "views_count": msg.views_count,
+                            },
+                        )
+                    )
+                    seen_node_ids.add(mnode_id)
+
+                edges.append(
+                    GraphEdge(
+                        id=f"edge:{mnode_id}->{trend_node_id}",
+                        source=mnode_id,
+                        target=trend_node_id,
+                        relationship_type="contributes_evidence",
+                        label="contributes evidence",
+                        metadata={"published_at": msg.published_at.isoformat()},
+                    )
+                )
+
+        return TrendGraphData(
+            trend_id=trend_id,
+            nodes=nodes,
+            edges=edges,
+            node_count=len(nodes),
+            edge_count=len(edges),
+        )
+
+    def _compute_sentiment_time_series(
+        self,
+        messages: list[CanonicalMessage],
+        default_model_id: str = "cardiffnlp/twitter-roberta-base-sentiment-latest",
+    ) -> tuple[list[SentimentBucket], SentimentSummary, str]:
+        """Aggregate chronological message sentiment into continuous UTC time buckets."""
+        if not messages:
+            summary = SentimentSummary(
+                total_messages=0,
+                evaluated_messages=0,
+                unassigned_messages=0,
+                positive_ratio=None,
+                neutral_ratio=None,
+                negative_ratio=None,
+                sentiment_model_id=default_model_id,
+            )
+            return [], summary, "1h"
+
+        sorted_msgs = sorted(messages, key=lambda m: m.published_at)
+        t_min = sorted_msgs[0].published_at
+        t_max = sorted_msgs[-1].published_at
+        span_seconds = (t_max - t_min).total_seconds()
+
+        if span_seconds <= 48 * 3600:
+            bucket_sec = 3600
+            bucket_size_str = "1h"
+        elif span_seconds <= 14 * 86400:
+            bucket_sec = 4 * 3600
+            bucket_size_str = "4h"
+        else:
+            bucket_sec = 86400
+            bucket_size_str = "1d"
+
+        start_ts = int(t_min.timestamp()) // bucket_sec * bucket_sec
+        end_ts = (int(t_max.timestamp()) // bucket_sec + 1) * bucket_sec
+
+        buckets_data: dict[int, dict[str, int]] = {}
+        curr = start_ts
+        while curr < end_ts:
+            buckets_data[curr] = {"positive": 0, "neutral": 0, "negative": 0, "unassigned": 0}
+            curr += bucket_sec
+
+        total_pos = 0
+        total_neu = 0
+        total_neg = 0
+        total_unassigned = 0
+
+        from app.ml.pipeline.cache import compute_cache_key
+        for m in sorted_msgs:
+            b_key = int(m.published_at.timestamp()) // bucket_sec * bucket_sec
+            if b_key not in buckets_data:
+                buckets_data[b_key] = {"positive": 0, "neutral": 0, "negative": 0, "unassigned": 0}
+
+            label = None
+            if m.text_content and m.text_content.strip():
+                t = m.text_content
+                iid = f"text_{hashlib.sha256(t.encode('utf-8')).hexdigest()[:16]}"
+                k = compute_cache_key("sentiment", iid, t, default_model_id)
+                label = self._sentiment_by_cache_key.get(k)
+
+            if label == "positive":
+                buckets_data[b_key]["positive"] += 1
+                total_pos += 1
+            elif label == "neutral":
+                buckets_data[b_key]["neutral"] += 1
+                total_neu += 1
+            elif label == "negative":
+                buckets_data[b_key]["negative"] += 1
+                total_neg += 1
+            else:
+                buckets_data[b_key]["unassigned"] += 1
+                total_unassigned += 1
+
+        time_series: list[SentimentBucket] = []
+        for b_ts in sorted(buckets_data.keys()):
+            b_info = buckets_data[b_ts]
+            b_start = datetime.fromtimestamp(b_ts, tz=timezone.utc).isoformat()
+            b_end = datetime.fromtimestamp(b_ts + bucket_sec, tz=timezone.utc).isoformat()
+            b_total = sum(b_info.values())
+            b_eval = b_info["positive"] + b_info["neutral"] + b_info["negative"]
+            net_score = (
+                round((b_info["positive"] - b_info["negative"]) / b_eval, 4)
+                if b_eval > 0
+                else None
+            )
+            time_series.append(
+                SentimentBucket(
+                    bucket_start_utc=b_start,
+                    bucket_end_utc=b_end,
+                    positive=b_info["positive"],
+                    neutral=b_info["neutral"],
+                    negative=b_info["negative"],
+                    unassigned=b_info["unassigned"],
+                    total=b_total,
+                    net_sentiment=net_score,
+                )
+            )
+
+        total_msgs = len(sorted_msgs)
+        evaluated = total_pos + total_neu + total_neg
+        summary = SentimentSummary(
+            total_messages=total_msgs,
+            evaluated_messages=evaluated,
+            unassigned_messages=total_unassigned,
+            positive_ratio=round(total_pos / evaluated, 4) if evaluated > 0 else None,
+            neutral_ratio=round(total_neu / evaluated, 4) if evaluated > 0 else None,
+            negative_ratio=round(total_neg / evaluated, 4) if evaluated > 0 else None,
+            sentiment_model_id=default_model_id,
+        )
+
+        return time_series, summary, bucket_size_str
+
+    def get_trend_sentiment(self, identifier: str) -> TrendSentimentData | None:
+        """Compute chronological sentiment time-series for a Trend cluster."""
+        if not self.artifacts_loaded:
+            raise RuntimeError("Analytics artifact is unavailable.")
+
+        topic_id = self._normalize_topic_id(identifier)
+        trend_id = self._normalize_trend_id(identifier)
+
+        topic = self._topics_by_id.get(topic_id)
+        if not topic:
+            return None
+
+        cluster_messages = [
+            self._messages_by_id[mid]
+            for mid in topic.sample_message_ids
+            if mid in self._messages_by_id
+        ]
+
+        time_series, summary, bucket_size = self._compute_sentiment_time_series(cluster_messages)
+
+        return TrendSentimentData(
+            trend_id=trend_id,
+            topic_id=topic.topic_id,
+            bucket_size=bucket_size,
+            time_series=time_series,
+            summary=summary,
+        )
+
+    def get_narrative_sentiment(self, narrative_id: str) -> NarrativeSentimentData | None:
+        """Compute chronological sentiment time-series for a Narrative candidate."""
+        if not self.artifacts_loaded:
+            raise RuntimeError("Analytics artifact is unavailable.")
+
+        candidate = self._narratives_by_id.get(narrative_id)
+        if not candidate:
+            return None
+
+        promoted_topic_id = candidate.promoted_from_topic_id
+        topic = self._topics_by_id.get(promoted_topic_id)
+        cluster_messages: list[CanonicalMessage] = []
+        if topic:
+            cluster_messages = [
+                self._messages_by_id[mid]
+                for mid in topic.sample_message_ids
+                if mid in self._messages_by_id
+            ]
+
+        time_series, computed_summary, bucket_size = self._compute_sentiment_time_series(cluster_messages)
+
+        # Preserve narrative's precomputed frozen sentiment profile
+        sp = candidate.sentiment_profile
+        if sp and sp.is_available:
+            tot = max(candidate.data_coverage.message_count, sp.total_text_messages_evaluated)
+            ev = sp.total_text_messages_evaluated
+            summary = SentimentSummary(
+                total_messages=tot,
+                evaluated_messages=ev,
+                unassigned_messages=max(0, tot - ev),
+                positive_ratio=sp.text_positive_ratio,
+                neutral_ratio=sp.text_neutral_ratio,
+                negative_ratio=sp.text_negative_ratio,
+                sentiment_model_id=sp.sentiment_model_id,
+            )
+        else:
+            summary = computed_summary
+
+        return NarrativeSentimentData(
+            narrative_id=narrative_id,
+            promoted_from_trend_id=self._normalize_trend_id(promoted_topic_id),
+            bucket_size=bucket_size,
+            time_series=time_series,
+            summary=summary,
+        )
+
 
     def get_messages(
         self,
@@ -612,6 +1185,34 @@ class ArtifactRepository:
                 corpus_snapshot_id = manifest_data.get("corpus_snapshot_id")
             except Exception as e:
                 logger.warning("Failed reading incremental manifest for pipeline status: %s", e)
+
+        # Check for corpus expansion manifests (Milestone 6B)
+        corpus_manifests = sorted(
+            (self.repo_root / "data" / "manifests" / "telegram").glob("manifest_telegram_*.json"),
+            key=lambda p: p.name,
+            reverse=True,
+        )
+        if corpus_manifests:
+            try:
+                with open(corpus_manifests[0], "r", encoding="utf-8") as f:
+                    c_data = json.load(f)
+                c_gen = c_data.get("generated_at_utc")
+                # If corpus manifest is newer or incremental has lower count
+                if not last_collection_run or (c_gen and c_gen > last_collection_run):
+                    collection_mode = "corpus"
+                    last_collection_run = c_gen
+                    last_successful_collection = c_gen
+                    corpus_snapshot_id = c_data.get("manifest_id")
+                    source_count = c_data.get("sources_attempted")
+                    successful_source_count = c_data.get("sources_successful")
+                    failed_source_count = c_data.get("sources_failed")
+                    if c_data.get("total_final_records"):
+                        cumulative_record_count = c_data.get("total_final_records")
+            except Exception as e:
+                logger.warning("Failed reading corpus manifest for pipeline status: %s", e)
+
+        if self._messages and not cumulative_record_count:
+            cumulative_record_count = len(self._messages)
 
         # Milestone 6E: Stale Analytics Detection
         analytics_current = True

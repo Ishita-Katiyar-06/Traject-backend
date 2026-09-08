@@ -59,6 +59,35 @@ class AnalyticsService:
     def get_topic(self, topic_id: str) -> TopicDetailData | None:
         return self.repository.get_topic_by_id(topic_id)
 
+    def get_trends(
+        self,
+        page: int = 1,
+        page_size: int = 20,
+        min_messages: int | None = None,
+        sort_by: str = "message_count",
+        order: str = "desc",
+    ):
+        return self.repository.get_trends(
+            page=page,
+            page_size=page_size,
+            min_messages=min_messages,
+            sort_by=sort_by,
+            order=order,
+        )
+
+    def get_trend(self, identifier: str):
+        return self.repository.get_trend_by_id(identifier)
+
+    def get_trend_graph(self, identifier: str):
+        return self.repository.get_trend_graph(identifier)
+
+    def get_trend_sentiment(self, identifier: str):
+        return self.repository.get_trend_sentiment(identifier)
+
+    def get_narrative_sentiment(self, narrative_id: str):
+        return self.repository.get_narrative_sentiment(narrative_id)
+
+
 
 _shared_analytics_service: AnalyticsService | None = None
 

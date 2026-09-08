@@ -62,10 +62,10 @@ export const ExplorerDetailModal: React.FC<ExplorerDetailModalProps> = ({
                 rightIcon={<ArrowUpRight className="w-3 h-3" />}
                 onClick={() => {
                   onClose();
-                  navigate(`/topics/${detail.assigned_topic_id}`);
+                  navigate(`/trends/${detail.assigned_topic_id}`);
                 }}
               >
-                Go to Topic #{detail.assigned_topic_id}
+                Go to Trend #{detail.assigned_topic_id}
               </Button>
             )}
           </div>
@@ -82,18 +82,18 @@ export const ExplorerDetailModal: React.FC<ExplorerDetailModalProps> = ({
           <Badge variant={item.platform === 'telegram' ? 'data' : 'neutral'} size="sm">
             {item.platform.toUpperCase()}
           </Badge>
-          <span className="text-slate-300">•</span>
-          <span className="text-[#111727] font-semibold">{item.channel_title || item.author_id}</span>
+          <span className="text-slate-300 dark:text-slate-600">•</span>
+          <span className="text-[#111727] dark:text-[#F8FAFC] font-semibold">{item.channel_title || item.author_id}</span>
           {item.language && (
             <>
-              <span className="text-slate-300">•</span>
-              <span className="text-[#8591A5] font-medium uppercase text-[11px]">{item.language}</span>
+              <span className="text-slate-300 dark:text-slate-600">•</span>
+              <span className="text-[#8591A5] dark:text-[#94A3B8] font-medium uppercase text-[11px]">{item.language}</span>
             </>
           )}
           {item.published_at && (
             <>
-              <span className="text-slate-300">•</span>
-              <span className="text-[#8591A5] font-mono text-[11px]">
+              <span className="text-slate-300 dark:text-slate-600">•</span>
+              <span className="text-[#8591A5] dark:text-[#94A3B8] font-mono text-[11px]">
                 {new Date(item.published_at).toLocaleString()}
               </span>
             </>
@@ -106,59 +106,59 @@ export const ExplorerDetailModal: React.FC<ExplorerDetailModalProps> = ({
         </div>
 
         {/* Full Message Text Excerpt */}
-        <div className="p-5 rounded-[20px] bg-[#F8FAFD] border border-[rgba(228,233,245,0.85)] space-y-2.5">
-          <div className="flex items-center gap-1.5 text-[#8591A5] text-[10px] font-bold uppercase tracking-wider">
+        <div className="p-5 rounded-[20px] bg-[#F8FAFD] dark:bg-[#13171C] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] space-y-2.5">
+          <div className="flex items-center gap-1.5 text-[#8591A5] dark:text-[#94A3B8] text-[10px] font-bold uppercase tracking-wider">
             <Quote className="w-3.5 h-3.5 text-[#2F65F6]" />
             <span>Canonical Post Text</span>
           </div>
-          <p className="text-[14px] text-[#111727] leading-relaxed">
+          <p className="text-[14px] text-[#111727] dark:text-[#E2E8F0] leading-relaxed">
             "{item.text_content || '<media attachment / no text>'}"
           </p>
         </div>
 
         {/* Telemetry Metrics */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          <div className="p-3 rounded-[16px] bg-slate-50 border border-slate-200/60">
-            <div className="text-[10px] text-[#8591A5] font-bold uppercase flex items-center gap-1">
-              <Eye className="w-3 h-3 text-slate-400" />
+          <div className="p-3 rounded-[16px] bg-[#F8FAFD] dark:bg-[#13171C] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32]">
+            <div className="text-[10px] text-[#8591A5] dark:text-[#94A3B8] font-bold uppercase flex items-center gap-1">
+              <Eye className="w-3 h-3 text-slate-400 dark:text-slate-500" />
               <span>Views</span>
             </div>
-            <div className="font-mono text-[18px] font-bold text-[#111727] mt-0.5">
+            <div className="font-mono text-[18px] font-bold text-[#111727] dark:text-[#F8FAFC] mt-0.5">
               {item.views_count !== null && item.views_count !== undefined
                 ? item.views_count.toLocaleString()
                 : '—'}
             </div>
           </div>
 
-          <div className="p-3 rounded-[16px] bg-slate-50 border border-slate-200/60">
-            <div className="text-[10px] text-[#8591A5] font-bold uppercase flex items-center gap-1">
-              <Share2 className="w-3 h-3 text-slate-400" />
+          <div className="p-3 rounded-[16px] bg-[#F8FAFD] dark:bg-[#13171C] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32]">
+            <div className="text-[10px] text-[#8591A5] dark:text-[#94A3B8] font-bold uppercase flex items-center gap-1">
+              <Share2 className="w-3 h-3 text-slate-400 dark:text-slate-500" />
               <span>Forwards</span>
             </div>
-            <div className="font-mono text-[18px] font-bold text-[#111727] mt-0.5">
+            <div className="font-mono text-[18px] font-bold text-[#111727] dark:text-[#F8FAFC] mt-0.5">
               {item.forwards_count !== null && item.forwards_count !== undefined
                 ? item.forwards_count.toLocaleString()
                 : '—'}
             </div>
           </div>
 
-          <div className="p-3 rounded-[16px] bg-slate-50 border border-slate-200/60">
-            <div className="text-[10px] text-[#8591A5] font-bold uppercase flex items-center gap-1">
-              <MessageSquare className="w-3 h-3 text-slate-400" />
+          <div className="p-3 rounded-[16px] bg-[#F8FAFD] dark:bg-[#13171C] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32]">
+            <div className="text-[10px] text-[#8591A5] dark:text-[#94A3B8] font-bold uppercase flex items-center gap-1">
+              <MessageSquare className="w-3 h-3 text-slate-400 dark:text-slate-500" />
               <span>Replies</span>
             </div>
-            <div className="font-mono text-[18px] font-bold text-[#111727] mt-0.5">
+            <div className="font-mono text-[18px] font-bold text-[#111727] dark:text-[#F8FAFC] mt-0.5">
               {detail?.replies_count !== null && detail?.replies_count !== undefined
                 ? detail.replies_count.toLocaleString()
                 : '—'}
             </div>
           </div>
 
-          <div className="p-3 rounded-[16px] bg-slate-50 border border-slate-200/60">
-            <div className="text-[10px] text-[#8591A5] font-bold uppercase flex items-center gap-1">
+          <div className="p-3 rounded-[16px] bg-[#F8FAFD] dark:bg-[#13171C] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32]">
+            <div className="text-[10px] text-[#8591A5] dark:text-[#94A3B8] font-bold uppercase flex items-center gap-1">
               <span>Subscribers</span>
             </div>
-            <div className="font-mono text-[18px] font-bold text-[#111727] mt-0.5">
+            <div className="font-mono text-[18px] font-bold text-[#111727] dark:text-[#F8FAFC] mt-0.5">
               {detail?.subscriber_count !== null && detail?.subscriber_count !== undefined
                 ? detail.subscriber_count.toLocaleString()
                 : '—'}
@@ -169,18 +169,18 @@ export const ExplorerDetailModal: React.FC<ExplorerDetailModalProps> = ({
         {/* Extracted Hashtags & Mentions */}
         {detail && (detail.hashtags.length > 0 || detail.mentions.length > 0) && (
           <div className="space-y-1.5 pt-2">
-            <div className="text-[11px] font-bold text-[#8591A5] uppercase flex items-center gap-1">
+            <div className="text-[11px] font-bold text-[#8591A5] dark:text-[#94A3B8] uppercase flex items-center gap-1">
               <Tag className="w-3 h-3 text-[#2F65F6]" />
               <span>Tags & Mentions</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {detail.hashtags.map((h, i) => (
-                <span key={`h-${i}`} className="px-2.5 py-0.5 bg-blue-50 text-[#2F65F6] rounded-full text-[12px] font-medium border border-blue-100">
+                <span key={`h-${i}`} className="px-2.5 py-0.5 bg-blue-50 dark:bg-[#2F65F6]/10 text-[#2F65F6] rounded-full text-[12px] font-medium border border-blue-100 dark:border-[#2F65F6]/20">
                   #{h}
                 </span>
               ))}
               {detail.mentions.map((m, i) => (
-                <span key={`m-${i}`} className="px-2.5 py-0.5 bg-slate-100 text-[#334155] rounded-full text-[12px] font-medium">
+                <span key={`m-${i}`} className="px-2.5 py-0.5 bg-slate-100 dark:bg-[#1E252D] text-[#334155] dark:text-[#CBD5E1] rounded-full text-[12px] font-medium">
                   @{m}
                 </span>
               ))}
@@ -189,16 +189,16 @@ export const ExplorerDetailModal: React.FC<ExplorerDetailModalProps> = ({
         )}
 
         {/* Canonical Hash & Native IDs */}
-        <div className="p-3.5 rounded-[16px] bg-slate-50 border border-slate-200/60 font-mono text-[11px] text-[#64748B] space-y-1">
+        <div className="p-3.5 rounded-[16px] bg-[#F8FAFD] dark:bg-[#13171C] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] font-mono text-[11px] text-[#64748B] dark:text-[#94A3B8] space-y-1">
           <div>
-            Canonical ID: <span className="text-[#111727] font-semibold">{item.canonical_id}</span>
+            Canonical ID: <span className="text-[#111727] dark:text-[#F8FAFC] font-semibold">{item.canonical_id}</span>
           </div>
           <div>
-            Native ID: <span className="text-[#111727]">{item.native_id}</span>
+            Native ID: <span className="text-[#111727] dark:text-[#F8FAFC]">{item.native_id}</span>
           </div>
           {detail?.raw_reference && (
             <div>
-              Raw Reference: <span className="text-[#111727]">{detail.raw_reference}</span>
+              Raw Reference: <span className="text-[#111727] dark:text-[#F8FAFC]">{detail.raw_reference}</span>
             </div>
           )}
         </div>

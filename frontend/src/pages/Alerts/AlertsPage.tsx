@@ -12,6 +12,7 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { AlertRow } from '../../components/alerts/AlertRow';
 import { AlertFilterBar } from '../../components/alerts/AlertFilterBar';
 import { alertService, ALERTS_CHANGED_EVENT } from '../../services/alertService';
+import { telemetryApi } from '../../services/telemetryApi';
 import type { AlertItem, AlertFilterState, AlertStatus } from '../../types/alerts';
 
 export const AlertsPage: React.FC = () => {
@@ -27,10 +28,11 @@ export const AlertsPage: React.FC = () => {
     search: '',
   });
 
-  const loadAlerts = useCallback(async () => {
+  const loadAlerts = useCallback(async (isManualSync = false) => {
     setIsRefreshing(true);
     try {
-      const data = await alertService.getAlerts();
+      const minDelay = isManualSync ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve();
+      const [data] = await Promise.all([alertService.getAlerts(), minDelay]);
       setAlerts(data);
     } catch (err) {
       console.error('Failed to load alert telemetry:', err);
@@ -39,6 +41,11 @@ export const AlertsPage: React.FC = () => {
       setIsRefreshing(false);
     }
   }, []);
+
+  const handleSyncAlerts = async () => {
+    telemetryApi.clearCache();
+    await loadAlerts(true);
+  };
 
   useEffect(() => {
     loadAlerts();
@@ -138,7 +145,7 @@ export const AlertsPage: React.FC = () => {
             variant="secondary"
             size="md"
             leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />}
-            onClick={loadAlerts}
+            onClick={handleSyncAlerts}
             disabled={isRefreshing}
           >
             Sync Alerts

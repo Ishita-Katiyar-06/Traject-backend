@@ -36,12 +36,14 @@ export const InvestigationPage: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (isManualSync = false) => {
     setIsRefreshing(true);
     try {
+      const minDelay = isManualSync ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve();
       const [narrativesRes, topicsRes] = await Promise.all([
         telemetryApi.getNarratives({ page: 1, page_size: 20 }),
         telemetryApi.getTopics({ page: 1, page_size: 20 }),
+        minDelay,
       ]);
       setNarratives(narrativesRes.data);
       setTopics(topicsRes.data);
@@ -52,6 +54,11 @@ export const InvestigationPage: React.FC = () => {
       setIsRefreshing(false);
     }
   }, []);
+
+  const handleSync = async () => {
+    telemetryApi.clearCache();
+    await loadData(true);
+  };
 
   useEffect(() => {
     loadData();
@@ -210,6 +217,83 @@ export const InvestigationPage: React.FC = () => {
     });
   }, []);
 
+  // Handle smooth node selection and dimming of unrelated elements
+  useEffect(() => {
+    const selectedNodeId = selectedEntity
+      ? selectedEntity.type === 'narrative'
+        ? `narrative-${selectedEntity.id}`
+        : selectedEntity.type === 'topic'
+        ? `topic-${selectedEntity.id}`
+        : null
+      : null;
+
+    if (!selectedNodeId) {
+      setNodes((nds) =>
+        nds.map((n) => ({
+          ...n,
+          data: {
+            ...n.data,
+            isEmphasized: false,
+            isSubdued: false,
+            selected: false,
+          },
+        }))
+      );
+      setEdges((eds) =>
+        eds.map((e) => ({
+          ...e,
+          style: {
+            ...(e.style || {}),
+            opacity: 1,
+            strokeWidth: (e.data as any)?.strokeWidthDefault ?? 1.5,
+          },
+        }))
+      );
+      return;
+    }
+
+    const connectedNodeIds = new Set<string>([selectedNodeId]);
+    const connectedEdgeIds = new Set<string>();
+
+    edges.forEach((edge) => {
+      if (edge.source === selectedNodeId || edge.target === selectedNodeId) {
+        connectedEdgeIds.add(edge.id);
+        connectedNodeIds.add(edge.source);
+        connectedNodeIds.add(edge.target);
+      }
+    });
+
+    setNodes((nds) =>
+      nds.map((n) => {
+        const isSelected = n.id === selectedNodeId;
+        const isConnected = connectedNodeIds.has(n.id);
+        return {
+          ...n,
+          data: {
+            ...n.data,
+            selected: isSelected,
+            isEmphasized: isSelected || isConnected,
+            isSubdued: !isConnected,
+          },
+        };
+      })
+    );
+
+    setEdges((eds) =>
+      eds.map((e) => {
+        const isConnected = connectedEdgeIds.has(e.id);
+        return {
+          ...e,
+          style: {
+            ...(e.style || {}),
+            opacity: isConnected ? 1 : 0.22,
+            strokeWidth: isConnected ? 2.5 : 1,
+          },
+        };
+      })
+    );
+  }, [selectedEntity, edges.length, setNodes, setEdges]);
+
   return (
     <div className="space-y-6 font-sans">
       <PageHeader
@@ -220,7 +304,7 @@ export const InvestigationPage: React.FC = () => {
             variant="secondary"
             size="md"
             leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />}
-            onClick={loadData}
+            onClick={handleSync}
             disabled={isRefreshing}
           >
             Sync Evidence
@@ -229,16 +313,16 @@ export const InvestigationPage: React.FC = () => {
       />
 
       {/* Filter Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-[20px] bg-white border border-[rgba(228,233,245,0.85)] shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-[20px] bg-white dark:bg-[#171C22] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] shadow-xs">
         <div className="flex items-center gap-3">
-          <span className="text-[12px] font-bold text-[#64748B] flex items-center gap-1.5 font-mono">
+          <span className="text-[12px] font-bold text-[#64748B] dark:text-[#94A3B8] flex items-center gap-1.5 font-mono">
             <Filter className="w-3.5 h-3.5 text-[#2F65F6]" />
             Priority Tier Filter:
           </span>
           <select
             value={selectedTier}
             onChange={(e) => setSelectedTier(e.target.value)}
-            className="text-[13px] font-medium py-1.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[#111727] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2F65F6]/20"
+            className="text-[13px] font-medium py-1.5 px-3 rounded-xl border border-slate-200 dark:border-[#2B323A] bg-slate-50 dark:bg-[#13171C] text-[#111727] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2F65F6]/20"
           >
             <option value="all">All Priority Tiers ({narratives.length})</option>
             <option value="critical">Critical Only</option>
@@ -248,21 +332,21 @@ export const InvestigationPage: React.FC = () => {
           </select>
         </div>
 
-        <div className="text-[12px] text-[#8591A5] flex items-center gap-2">
-          <Info className="w-4 h-4 text-[#2F65F6]" />
+        <div className="text-[12px] text-[#8591A5] dark:text-[#94A3B8] flex items-center gap-2">
+          <Info className="w-3.5 h-3.5 text-[#2F65F6]" />
           <span>Select any narrative or topic cluster to inspect its synthesized evidence.</span>
         </div>
       </div>
 
       {/* Main Investigation Canvas */}
-      <div className="relative h-[620px] rounded-[24px] overflow-hidden flex border border-[rgba(228,233,245,0.85)] shadow-dashboard">
+      <div className="relative h-[620px] rounded-[24px] overflow-hidden border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] shadow-dashboard bg-white dark:bg-[#171C22]">
         {isLoading ? (
-          <div className="w-full h-full p-8 flex flex-col justify-center space-y-4 bg-white">
+          <div className="w-full h-full p-8 flex flex-col justify-center space-y-4 bg-white dark:bg-[#171C22]">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-full w-full rounded-[20px]" />
           </div>
         ) : (
-          <div className="flex-1 h-full relative">
+          <div className="w-full h-full relative">
             <GraphCanvas
               nodes={nodes}
               edges={edges}

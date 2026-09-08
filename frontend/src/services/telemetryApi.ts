@@ -35,6 +35,12 @@ import type {
   TopicDetailResponse,
   TopicListResponse,
   TopicQueryParams,
+  TrendDetailResponse,
+  TrendGraphResponse,
+  TrendListResponse,
+  TrendQueryParams,
+  TrendSentimentResponse,
+  NarrativeSentimentResponse,
 } from '../types/api.ts';
 
 export const telemetryApi = {
@@ -120,6 +126,86 @@ export const telemetryApi = {
       ...options,
     });
   },
+
+  /**
+   * Phase 1: GET /api/v1/trends
+   * Paginated collection of Trend clusters mapped from discovered semantic clusters.
+   */
+  async getTrends(
+    params?: TrendQueryParams,
+    options?: RequestOptions
+  ): Promise<TrendListResponse> {
+    const qs = apiClient.buildQueryString(params as Record<string, unknown>);
+    return apiClient.get<TrendListResponse>(`/trends${qs}`, {
+      cacheTtlMs: 5000,
+      ...options,
+    });
+  },
+
+  /**
+   * Phase 1: GET /api/v1/trends/{trend_id}
+   * Detailed Trend dossier with participating channels, entities, and linked narratives.
+   */
+  async getTrendById(
+    trendId: string,
+    options?: RequestOptions
+  ): Promise<TrendDetailResponse> {
+    const cleanId = encodeURIComponent(trendId.trim());
+    return apiClient.get<TrendDetailResponse>(`/trends/${cleanId}`, {
+      cacheTtlMs: 10000,
+      ...options,
+    });
+  },
+
+  /**
+   * Phase 1: GET /api/v1/trends/{trend_id}/graph
+   * Deterministic converging relationship graph for a trend cluster.
+   */
+  async getTrendGraph(
+    trendId: string,
+    options?: RequestOptions
+  ): Promise<TrendGraphResponse> {
+    const cleanId = encodeURIComponent(trendId.trim());
+    return apiClient.get<TrendGraphResponse>(`/trends/${cleanId}/graph`, {
+      cacheTtlMs: 10000,
+      ...options,
+    });
+  },
+
+  /**
+   * Phase 1: GET /api/v1/trends/{trend_id}/sentiment
+   * Discrete chronological sentiment time-series for a trend cluster.
+   */
+  async getTrendSentiment(
+    trendId: string,
+    bucketSize?: '1h' | '6h' | '1d' | string,
+    options?: RequestOptions
+  ): Promise<TrendSentimentResponse> {
+    const cleanId = encodeURIComponent(trendId.trim());
+    const qs = bucketSize ? `?bucket_size=${bucketSize}` : '';
+    return apiClient.get<TrendSentimentResponse>(`/trends/${cleanId}/sentiment${qs}`, {
+      cacheTtlMs: 10000,
+      ...options,
+    });
+  },
+
+  /**
+   * Phase 1: GET /api/v1/narratives/{narrative_id}/sentiment
+   * Discrete chronological sentiment time-series for a narrative candidate.
+   */
+  async getNarrativeSentiment(
+    narrativeId: string,
+    bucketSize?: '1h' | '6h' | '1d' | string,
+    options?: RequestOptions
+  ): Promise<NarrativeSentimentResponse> {
+    const cleanId = encodeURIComponent(narrativeId.trim());
+    const qs = bucketSize ? `?bucket_size=${bucketSize}` : '';
+    return apiClient.get<NarrativeSentimentResponse>(`/narratives/${cleanId}/sentiment${qs}`, {
+      cacheTtlMs: 10000,
+      ...options,
+    });
+  },
+
 
   /**
    * 10.7 GET /api/v1/messages
@@ -247,5 +333,12 @@ export const telemetryApi = {
         ...options,
       }
     );
+  },
+
+  /**
+   * Explicitly purge client-side in-memory telemetry cache for manual refresh & sync operations.
+   */
+  clearCache(): void {
+    apiClient.clearCache();
   },
 };

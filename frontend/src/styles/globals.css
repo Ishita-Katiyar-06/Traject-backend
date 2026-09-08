@@ -1,3 +1,4 @@
+
 @import './tokens.css';
 @import './fonts.css';
 @import './premium-theme.css';
@@ -787,5 +788,35 @@ html.dark ::-webkit-scrollbar-thumb:hover {
   background: #3A424C;
 }
 
+/* ==========================================================================
+   MOTION & ACCESSIBILITY GUARANTEES
+   ========================================================================== */
 
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin,
+[class*="animate-spin"] {
+  animation: spin 0.8s linear infinite !important;
+  transform-origin: center center !important;
+  display: inline-block !important;
+}
+
+/* Universal Reduced Motion Accessibility Support (retains essential feedback spinners) */
+@media (prefers-reduced-motion: reduce) {
+  *:not(.animate-spin):not([class*="animate-spin"]):not([class*="animate-spin"] *),
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { PageHeader } from '../../layout/PageHeader';
 import { Button } from '../../components/ui/Button';
+import { Pagination } from '../../components/ui/Pagination';
 import { NarrativeFilters, NarrativeApiFilterParams } from '../../components/narratives/NarrativeFilters';
 import { NarrativeTable } from '../../components/narratives/NarrativeTable';
 import { telemetryApi } from '../../services/telemetryApi';
@@ -15,6 +16,7 @@ export const NarrativesPage: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isError, setIsError] = useState(false);
 
   const initialTier = (searchParams.get('priority_tier') as any) || 'all';
@@ -29,8 +31,10 @@ export const NarrativesPage: React.FC = () => {
     page_size: 10,
   });
 
-  const loadNarratives = async () => {
-    setIsLoading(true);
+  const loadNarratives = async (isInitial = false) => {
+    if (isInitial) {
+      setIsLoading(true);
+    }
     setIsError(false);
     try {
       const apiParams: any = {
@@ -47,7 +51,7 @@ export const NarrativesPage: React.FC = () => {
         apiParams.has_coordination_signal = filters.has_coordination_signal;
       }
 
-      const res = await telemetryApi.getNarratives(apiParams);
+      const res = await telemetryApi.getNarratives(apiParams, { skipCache: !isInitial });
 
       let items = res.data;
       if (filters.query && filters.query.trim()) {
@@ -71,8 +75,19 @@ export const NarrativesPage: React.FC = () => {
     }
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    telemetryApi.clearCache();
+    const minDelay = new Promise((resolve) => setTimeout(resolve, 600));
+    try {
+      await Promise.all([loadNarratives(false), minDelay]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   useEffect(() => {
-    loadNarratives();
+    loadNarratives(true);
 
     const p: Record<string, string> = {};
     if (filters.priority_tier && filters.priority_tier !== 'all') {
@@ -97,7 +112,7 @@ export const NarrativesPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 font-sans">
+    <div className="space-y-6 font-sans pb-10">
       {/* 1. Page Header */}
       <PageHeader
         title="Narrative Candidates"
@@ -105,10 +120,10 @@ export const NarrativesPage: React.FC = () => {
         actions={
           <Button
             variant="secondary"
-            size="sm"
-            leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />}
-            onClick={loadNarratives}
-            disabled={isLoading}
+            size="md"
+            leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />}
+            onClick={handleRefresh}
+            disabled={isRefreshing || isLoading}
           >
             Refresh
           </Button>
@@ -135,32 +150,14 @@ export const NarrativesPage: React.FC = () => {
 
       {/* 4. Pagination Bar */}
       {!isLoading && !isError && totalPages > 1 && (
-        <div className="flex items-center justify-between p-4 rounded-[20px] bg-white border border-[rgba(228,233,245,0.85)] shadow-xs">
-          <div className="text-[13px] text-[#8591A5]">
-            Page <strong className="text-[#111727]">{filters.page}</strong> of{' '}
-            <strong className="text-[#111727]">{totalPages}</strong>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              leftIcon={<ChevronLeft className="w-3.5 h-3.5" />}
-              disabled={(filters.page || 1) <= 1}
-              onClick={() => setFilters({ ...filters, page: (filters.page || 1) - 1 })}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              rightIcon={<ChevronRight className="w-3.5 h-3.5" />}
-              disabled={(filters.page || 1) >= totalPages}
-              onClick={() => setFilters({ ...filters, page: (filters.page || 1) + 1 })}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+        <Pagination
+          page={filters.page || 1}
+          totalPages={totalPages}
+          totalItems={totalCount}
+          pageSize={filters.page_size || 10}
+          itemLabel="narratives"
+          onPageChange={(newPage) => setFilters({ ...filters, page: newPage })}
+        />
       )}
     </div>
   );

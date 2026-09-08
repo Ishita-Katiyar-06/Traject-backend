@@ -78,15 +78,15 @@ export const PlaceholderPage: React.FC<PlaceholderPageProps> = ({
 
             <button
               type="button"
-              onClick={() => navigate('/topics')}
+              onClick={() => navigate('/trends')}
               className="p-3.5 rounded-[14px] border border-[rgba(228,233,245,0.85)] dark:border-[#2B323A] hover:border-[#2563EB]/40 dark:hover:border-blue-700/50 bg-[#F8FAFD] dark:bg-[#12161C] hover:bg-[#EEF2FF] dark:hover:bg-[#1A2230] transition-all flex items-center gap-3 group"
             >
               <div className="w-8 h-8 rounded-xl bg-white dark:bg-[#171C22] flex items-center justify-center text-[#2F65F6] shadow-2xs group-hover:scale-105 transition-transform border border-slate-100 dark:border-[#2B323A]">
                 <Hash className="w-4 h-4" />
               </div>
               <div>
-                <div className="text-[13px] font-bold text-[#111727] dark:text-slate-200">Semantic Topics</div>
-                <div className="text-[11px] text-[#64748B] dark:text-slate-400">HDBSCAN cluster index</div>
+                <div className="text-[13px] font-bold text-[#111727] dark:text-slate-200">Emerging Trends</div>
+                <div className="text-[11px] text-[#64748B] dark:text-slate-400">Algorithmic cluster index</div>
               </div>
             </button>
 

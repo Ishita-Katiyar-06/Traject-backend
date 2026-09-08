@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import type { EChartsOption } from 'echarts';
 import { EChartBase } from './EChartBase';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { getChartTheme, renderSaaSTooltip } from '../../../utils/chartTokens';
 import { TopicKeywordResponse } from '../../../types/api';
 
 export interface KeywordScoresBarChartProps {
@@ -18,6 +19,7 @@ export const KeywordScoresBarChart: React.FC<KeywordScoresBarChartProps> = ({
   className = '',
 }) => {
   const { isDark } = useTheme();
+  const theme = getChartTheme(isDark);
 
   // Take top N keywords, reversed for horizontal bar chart display (highest on top)
   const sliced = useMemo(() => keywords.slice(0, maxDisplay).reverse(), [keywords, maxDisplay]);
@@ -28,27 +30,35 @@ export const KeywordScoresBarChart: React.FC<KeywordScoresBarChartProps> = ({
 
     return {
       grid: {
-        top: 10,
+        top: 8,
         bottom: 24,
         left: 110,
         right: 48,
       },
       tooltip: {
         trigger: 'axis',
-        axisPointer: { type: 'shadow' },
+        axisPointer: {
+          type: 'shadow',
+          shadowStyle: {
+            color: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(47, 101, 246, 0.04)',
+          },
+        },
         formatter: (params: any) => {
           const p = Array.isArray(params) ? params[0] : params;
           const score = Number(p.value || 0);
-          return `
-            <div style="font-weight: 600; margin-bottom: 4px; color: ${isDark ? '#F8FAFC' : '#111727'};">${p.name}</div>
-            <div style="display: flex; justify-content: space-between; gap: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 12px;">
-              <span style="color: #64748B;">c-TF-IDF Score:</span>
-              <strong>${score.toFixed(4)}</strong>
-            </div>
-            <div style="font-size: 11px; color: #8591A5; margin-top: 4px;">
-              Lexical cluster importance weighting
-            </div>
-          `;
+          return renderSaaSTooltip(
+            p.name,
+            [
+              {
+                label: 'c-TF-IDF Score',
+                value: score.toFixed(4),
+                color: theme.primary,
+                isMono: true,
+              },
+            ],
+            'Lexical cluster importance weighting',
+            isDark
+          );
         },
       },
       xAxis: {
@@ -57,12 +67,12 @@ export const KeywordScoresBarChart: React.FC<KeywordScoresBarChartProps> = ({
         min: 0,
         splitLine: {
           lineStyle: {
-            color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+            color: theme.gridLineColor,
             type: 'dashed',
           },
         },
         axisLabel: {
-          color: isDark ? '#94A3B8' : '#8591A5',
+          color: theme.neutral,
           fontFamily: '"IBM Plex Mono", monospace',
           fontSize: 10,
         },
@@ -73,7 +83,7 @@ export const KeywordScoresBarChart: React.FC<KeywordScoresBarChartProps> = ({
         axisLine: { show: false },
         axisTick: { show: false },
         axisLabel: {
-          color: isDark ? '#CBD5E1' : '#475569',
+          color: theme.textSecondary,
           fontFamily: '"IBM Plex Mono", monospace',
           fontWeight: 500,
           fontSize: 11,
@@ -86,23 +96,31 @@ export const KeywordScoresBarChart: React.FC<KeywordScoresBarChartProps> = ({
           data: scores.map((val) => ({
             value: val,
             itemStyle: {
-              color: '#2F65F6',
-              borderRadius: [0, 4, 4, 0],
+              color: theme.primary,
+              borderRadius: [0, 6, 6, 0],
             },
           })),
           barWidth: 12,
+          animationDuration: 600,
+          animationEasing: 'cubicOut',
+          animationDelay: (idx: number) => idx * 40,
+          emphasis: {
+            itemStyle: {
+              color: isDark ? '#6E8ED4' : '#2152DE',
+            },
+          },
           label: {
             show: true,
             position: 'right',
             fontFamily: '"IBM Plex Mono", monospace',
             fontSize: 11,
-            color: isDark ? '#94A3B8' : '#64748B',
+            color: theme.textMuted,
             formatter: (params: any) => Number(params.value).toFixed(2),
           },
         },
       ],
     };
-  }, [sliced, isDark]);
+  }, [sliced, isDark, theme]);
 
   return (
     <EChartBase
