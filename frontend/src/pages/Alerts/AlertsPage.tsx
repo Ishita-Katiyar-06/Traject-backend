@@ -208,7 +208,7 @@ export const AlertsPage: React.FC = () => {
           <div className="text-[28px] font-bold text-rose-600 dark:text-rose-400 font-mono mt-3">
             {isLoading ? '...' : stats.critical}
           </div>
-          <span className="text-[11px] text-[#64748B] dark:text-[#94A3B8] font-medium">Priority Score &ge; 0.700</span>
+          <span className="text-[11px] text-[#64748B] dark:text-[#94A3B8] font-medium">Priority Score &ge; 0.750</span>
         </div>
 
         {/* Metric 4: Acknowledged */}

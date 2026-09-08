@@ -78,45 +78,54 @@ function evaluateNarrativeAlert(
   const isCrossDomain = narrative.is_cross_domain || (narrative.distinct_domains_count && narrative.distinct_domains_count >= 2);
   const hasHighVelocity = sub && sub.spread_score >= 0.65;
 
-  // If score is below 0.45 and no anomalous signals are present, skip
-  if (score < 0.45 && !hasCoordination && !isCrossDomain && !hasHighVelocity) {
+  // If score is below 0.35 and no anomalous signals are present, skip
+  if (score < 0.35 && !hasCoordination && !isCrossDomain && !hasHighVelocity) {
     return null;
   }
 
-  // Determine Severity and Category
-  let severity: AlertSeverity = 'medium';
+  // Determine Severity strictly from authoritative narrative priority_tier or canonical score thresholds
+  let severity: AlertSeverity;
+  if (narrative.priority_tier) {
+    severity = narrative.priority_tier.toLowerCase() as AlertSeverity;
+  } else if (score >= 0.75) {
+    severity = 'critical';
+  } else if (score >= 0.55) {
+    severity = 'high';
+  } else if (score >= 0.35) {
+    severity = 'elevated';
+  } else {
+    severity = 'routine';
+  }
+
+  // Determine Category, Title and Indicators
   let category: AlertCategory = 'priority_breach';
   let title = `Priority Alert: ${narrative.narrative_id}`;
   const indicators: string[] = [];
 
-  if (score >= 0.70) {
-    severity = 'critical';
-    category = 'priority_breach';
+  if (severity === 'critical') {
     title = `Critical Priority Breach: ${narrative.narrative_id}`;
     indicators.push(`Critical Priority Signal Score: ${score.toFixed(3)}`);
-  } else if (score >= 0.55) {
-    severity = 'high';
-    category = 'priority_breach';
+  } else if (severity === 'high') {
     title = `High Priority Signal Threshold: ${narrative.narrative_id}`;
     indicators.push(`High Priority Signal Score: ${score.toFixed(3)}`);
+  } else if (severity === 'elevated') {
+    title = `Elevated Priority Signal: ${narrative.narrative_id}`;
+    indicators.push(`Elevated Priority Signal Score: ${score.toFixed(3)}`);
+  } else {
+    title = `Routine Priority Signal: ${narrative.narrative_id}`;
+    indicators.push(`Routine Priority Signal Score: ${score.toFixed(3)}`);
   }
 
   if (hasCoordination) {
-    if (severity !== 'critical') severity = 'high';
     category = 'coordination_anomaly';
     title = `Coordination Anomaly: ${narrative.narrative_id}`;
     indicators.push(`Potential syndication or temporal burst pattern (Coordination: ${(sub?.coordination_score ?? 0).toFixed(2)})`);
-  }
-
-  if (isCrossDomain) {
-    if (severity !== 'critical') severity = 'high';
+  } else if (isCrossDomain) {
     category = 'cross_domain_spillover';
     title = `Cross-Domain Spillover: ${narrative.narrative_id}`;
     const domains = narrative.domains_represented || [];
     indicators.push(`Observed across ${domains.length || narrative.distinct_domains_count || 2} distinct domains${domains.length > 0 ? ` (${domains.join(', ')})` : ''}`);
-  }
-
-  if (hasHighVelocity && indicators.length === 0) {
+  } else if (hasHighVelocity && indicators.length === 0) {
     category = 'high_velocity';
     title = `Elevated Diffusion Velocity: ${narrative.narrative_id}`;
     indicators.push(`Observed high spread velocity: ${(sub?.spread_score ?? 0).toFixed(2)}`);
@@ -188,13 +197,21 @@ export const alertService = {
       }
     }
 
-    // Sort: open first, then critical -> high -> medium, then score descending
+    // Sort: open first, then critical -> high -> elevated -> routine, then score descending
     return alerts.sort((a, b) => {
       if (a.status === 'open' && b.status !== 'open') return -1;
       if (a.status !== 'open' && b.status === 'open') return 1;
 
-      const severityRank: Record<AlertSeverity, number> = { critical: 3, high: 2, medium: 1 };
-      const rankDiff = severityRank[b.severity] - severityRank[a.severity];
+      const severityRank: Record<AlertSeverity, number> = {
+        critical: 4,
+        high: 3,
+        elevated: 2,
+        medium: 2,
+        routine: 1,
+      };
+      const rankA = severityRank[a.severity] ?? 0;
+      const rankB = severityRank[b.severity] ?? 0;
+      const rankDiff = rankB - rankA;
       if (rankDiff !== 0) return rankDiff;
 
       return b.priority_score - a.priority_score;
@@ -228,6 +245,7 @@ export const alertService = {
       open: 0,
       critical: 0,
       high: 0,
+      elevated: 0,
       acknowledged: 0,
       dismissed: 0,
     };
@@ -238,6 +256,7 @@ export const alertService = {
       if (alt.status === 'dismissed') stats.dismissed += 1;
       if (alt.severity === 'critical') stats.critical += 1;
       if (alt.severity === 'high') stats.high += 1;
+      if (alt.severity === 'elevated' || alt.severity === 'medium') stats.elevated += 1;
     });
 
     return stats;

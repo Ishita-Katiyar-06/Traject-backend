@@ -6,7 +6,7 @@
  * and high velocity/diffusion anomalies.
  */
 
-export type AlertSeverity = 'critical' | 'high' | 'medium';
+export type AlertSeverity = 'critical' | 'high' | 'elevated' | 'routine' | 'medium';
 
 export type AlertCategory =
   | 'priority_breach'
@@ -40,6 +40,7 @@ export interface AlertStats {
   open: number;
   critical: number;
   high: number;
+  elevated: number;
   acknowledged: number;
   dismissed: number;
 }

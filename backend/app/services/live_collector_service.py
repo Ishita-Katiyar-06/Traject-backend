@@ -428,7 +428,7 @@ class LiveCollectorService:
                         "topic_id": narrative.promoted_from_topic_id,
                         "title": f"Live Narrative Signal Match: {narrative.narrative_id}",
                         "claim": text_body[:140],
-                        "severity": "critical" if narrative.priority_signal_score >= 0.70 else "high",
+                        "severity": narrative.priority_tier.value if hasattr(narrative.priority_tier, "value") else str(narrative.priority_tier).lower(),
                         "category": "priority_breach",
                         "status": "open",
                         "priority_score": narrative.priority_signal_score,
