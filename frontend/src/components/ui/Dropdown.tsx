@@ -10,6 +10,7 @@ export interface DropdownItem {
   disabled?: boolean;
   danger?: boolean;
   active?: boolean;
+  closeOnClick?: boolean;
   onClick?: () => void;
 }
 
@@ -30,27 +31,26 @@ export const Dropdown: React.FC<DropdownProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [menuCoords, setMenuCoords] = useState<{
     top: number;
-    left: number;
+    left?: number;
+    right?: number;
     transformOrigin: string;
-    translateX: string;
   }>({
     top: 0,
-    left: 0,
+    right: 0,
     transformOrigin: 'top right',
-    translateX: '0',
   });
 
   const updatePosition = useCallback(() => {
     if (!dropdownRef.current) return;
     const rect = dropdownRef.current.getBoundingClientRect();
-    const menuHeight = items.length * 38 + 24;
-    const menuWidth = 200;
-    const padding = 10;
+    const menuHeight = items.length * 40 + 20;
+    const menuWidth = 220;
+    const padding = 12;
 
     const spaceBelow = window.innerHeight - rect.bottom;
     const openUpwards = spaceBelow < menuHeight && rect.top > menuHeight;
 
-    const top = openUpwards ? rect.top - 6 : rect.bottom + 6;
+    const top = openUpwards ? Math.max(padding, rect.top - 6) : rect.bottom + 6;
 
     let effAlign = align;
     if (effAlign === 'right' && rect.right - menuWidth < padding) {
@@ -59,22 +59,23 @@ export const Dropdown: React.FC<DropdownProps> = ({
       effAlign = 'right';
     }
 
-    let left = effAlign === 'right' ? rect.right : rect.left;
-    const translateX = effAlign === 'right' ? '-100%' : '0%';
-
-    // Clamp horizontal placement within viewport
     if (effAlign === 'right') {
-      left = Math.min(window.innerWidth - padding, left);
+      const right = Math.max(padding, window.innerWidth - rect.right);
+      setMenuCoords({
+        top,
+        right,
+        left: undefined,
+        transformOrigin: `${openUpwards ? 'bottom' : 'top'} right`,
+      });
     } else {
-      left = Math.max(padding, left);
+      const left = Math.max(padding, rect.left);
+      setMenuCoords({
+        top,
+        left,
+        right: undefined,
+        transformOrigin: `${openUpwards ? 'bottom' : 'top'} left`,
+      });
     }
-
-    setMenuCoords({
-      top,
-      left,
-      transformOrigin: `${openUpwards ? 'bottom' : 'top'} ${effAlign === 'right' ? 'right' : 'left'}`,
-      translateX,
-    });
   }, [items.length, align]);
 
   useEffect(() => {
@@ -138,11 +139,12 @@ export const Dropdown: React.FC<DropdownProps> = ({
               style={{
                 position: 'fixed',
                 top: `${menuCoords.top}px`,
-                left: `${menuCoords.left}px`,
-                transform: `translateX(${menuCoords.translateX})`,
+                ...(menuCoords.right !== undefined
+                  ? { right: `${menuCoords.right}px` }
+                  : { left: `${menuCoords.left}px` }),
                 transformOrigin: menuCoords.transformOrigin,
               }}
-              className="z-[10001] min-w-[190px] max-w-[calc(100vw-20px)] rounded-[20px] bg-white dark:bg-[#181C22] border border-slate-200/90 dark:border-[#2B323D] p-1.5 shadow-2xl font-sans"
+              className="z-[10001] min-w-[200px] max-w-[calc(100vw-24px)] rounded-[20px] bg-white dark:bg-[#181C22] border border-slate-200/90 dark:border-[#2B323D] p-1.5 shadow-2xl font-sans"
             >
               {items.map((item) => (
                 <button
@@ -152,7 +154,9 @@ export const Dropdown: React.FC<DropdownProps> = ({
                   disabled={item.disabled}
                   onClick={() => {
                     item.onClick?.();
-                    setIsOpen(false);
+                    if (item.closeOnClick !== false) {
+                      setIsOpen(false);
+                    }
                   }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium rounded-full text-left transition-colors duration-150 cursor-pointer ${
                     item.disabled
@@ -164,7 +168,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
                       : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60'
                   }`}
                 >
-                  {item.icon && <span className="w-4 h-4 shrink-0 text-[#8591A5] dark:text-[#94A3B8]">{item.icon}</span>}
+                  {item.icon && <span className="w-4 h-4 shrink-0 flex items-center justify-center text-[#8591A5] dark:text-[#94A3B8]">{item.icon}</span>}
                   <span className="truncate">{item.label}</span>
                 </button>
               ))}

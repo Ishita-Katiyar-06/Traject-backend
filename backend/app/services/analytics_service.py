@@ -83,8 +83,8 @@ class AnalyticsService:
     def get_trend_graph(self, identifier: str):
         return self.repository.get_trend_graph(identifier)
 
-    def get_trend_sentiment(self, identifier: str):
-        return self.repository.get_trend_sentiment(identifier)
+    def get_trend_sentiment(self, identifier: str, bucket_size: str | None = None):
+        return self.repository.get_trend_sentiment(identifier, bucket_size=bucket_size)
 
     def get_narrative_sentiment(self, narrative_id: str, bucket_size: str | None = None):
         return self.repository.get_narrative_sentiment(narrative_id, bucket_size=bucket_size)

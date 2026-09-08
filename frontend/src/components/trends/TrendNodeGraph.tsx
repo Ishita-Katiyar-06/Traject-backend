@@ -279,16 +279,16 @@ export const TrendNodeGraph: React.FC<TrendNodeGraphProps> = ({
 
   if (isLoading) {
     return (
-      <div className={`p-6 md:p-8 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-4 ${className}`}>
+      <div className={`p-6 sm:p-8 rounded-[30px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs space-y-4 ${className}`}>
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#252B32] pb-4">
           <div className="flex items-center gap-2.5">
             <div className="w-5 h-5 rounded bg-blue-100 dark:bg-blue-900/40 animate-pulse" />
             <div className="h-5 w-44 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
           </div>
         </div>
-        <div className="h-[460px] rounded-[20px] bg-slate-50 dark:bg-[#12161C] border border-slate-100 dark:border-[#20262E] flex flex-col items-center justify-center space-y-3">
-          <div className="w-7 h-7 border-3 border-[#2F65F6] border-t-transparent rounded-full animate-spin" />
-          <span className="text-[12px] font-mono text-[#8591A5] dark:text-slate-400">
+        <div className="h-[460px] rounded-[24px] bg-slate-50 dark:bg-[#12161C] border border-slate-100 dark:border-[#20262E] flex flex-col items-center justify-center space-y-3">
+          <div className="w-7 h-7 border-3 border-amber-500 border-t-transparent rounded-full animate-spin" />
+          <span className="text-[12px] font-mono text-slate-500 dark:text-slate-400">
             Synthesizing converging trend relationship topology...
           </span>
         </div>
@@ -298,7 +298,7 @@ export const TrendNodeGraph: React.FC<TrendNodeGraphProps> = ({
 
   if (isError) {
     return (
-      <div className={`p-6 md:p-8 rounded-[24px] border border-rose-200 dark:border-rose-900/40 bg-rose-50/40 dark:bg-rose-950/20 shadow-dashboard space-y-4 ${className}`}>
+      <div className={`p-6 sm:p-8 rounded-[30px] border border-rose-200 dark:border-rose-900/40 bg-rose-50/40 dark:bg-rose-950/20 shadow-xs space-y-4 ${className}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
@@ -319,21 +319,24 @@ export const TrendNodeGraph: React.FC<TrendNodeGraphProps> = ({
 
   if (!graphData || graphData.nodes.length <= 1) {
     return (
-      <div className={`p-6 md:p-8 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-4 ${className}`}>
+      <div className={`p-6 sm:p-8 rounded-[30px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs space-y-4 ${className}`}>
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#252B32] pb-4">
-          <div className="flex items-center gap-2.5">
-            <Network className="w-5 h-5 text-[#2F65F6]" />
-            <h3 className="text-[17px] font-bold text-[#111727] dark:text-slate-100">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10.5px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-400/40">
+              <Network className="w-3 h-3 text-amber-500" />
+              <span>TOPOLOGY GRAPH</span>
+            </span>
+            <h3 className="text-[17px] font-bold text-slate-900 dark:text-white tracking-tight">
               Trend Relationship Topology
             </h3>
           </div>
         </div>
-        <div className="h-[280px] rounded-[20px] bg-[#FAFBFD] dark:bg-[#12161C] border border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center p-6 text-center space-y-2">
-          <Info className="w-8 h-8 text-[#8591A5]" />
-          <h4 className="text-[15px] font-bold text-[#111727] dark:text-slate-200">
+        <div className="h-[280px] rounded-[24px] bg-[#FAFBFD] dark:bg-[#12161C] border border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center p-6 text-center space-y-2">
+          <Info className="w-8 h-8 text-slate-400" />
+          <h4 className="text-[15px] font-bold text-slate-800 dark:text-slate-200">
             No Relationship Data Available
           </h4>
-          <p className="text-[13px] text-[#8591A5] dark:text-slate-400 max-w-md">
+          <p className="text-[13px] text-slate-500 dark:text-slate-400 max-w-md">
             This Trend does not have sufficient cross-channel broadcasts or linked narrative candidates to form a relationship topology.
           </p>
         </div>
@@ -342,84 +345,89 @@ export const TrendNodeGraph: React.FC<TrendNodeGraphProps> = ({
   }
 
   return (
-    <section className={`p-6 md:p-8 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-5 transition-all ${className}`}>
+    <section className={`p-6 sm:p-8 rounded-[30px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs space-y-6 transition-all font-sans ${className}`}>
       {/* 1. Header & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-[#252B32] pb-4">
         <div>
-          <div className="flex items-center gap-2.5">
-            <Network className="w-5 h-5 text-[#2F65F6]" />
-            <h3 className="text-[17px] font-bold text-[#111727] dark:text-slate-100 tracking-tight">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10.5px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-400/40">
+              <Network className="w-3 h-3 text-amber-500" />
+              <span>TOPOLOGY GRAPH</span>
+            </span>
+            <h3 className="text-[17px] font-bold text-slate-900 dark:text-white tracking-tight">
               Trend Relationship Topology
             </h3>
-            <span className="text-[11px] font-mono font-bold text-[#2F65F6] dark:text-[#93C5FD] bg-blue-50 dark:bg-blue-950/40 px-2.5 py-0.5 rounded-full border border-blue-100 dark:border-blue-900/40">
+            <span className="text-[11px] font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-0.5 rounded-full border border-blue-100 dark:border-blue-900/40">
               {graphData.node_count} nodes • {graphData.edge_count} edges
             </span>
           </div>
-          <p className="text-[12px] text-[#8591A5] dark:text-slate-400 font-medium mt-0.5">
-            Converging flow topology: Broadcast Channels + Cited Entities ➔ Central Trend ➔ Formalized Narrative Candidates
+          <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium mt-1">
+            Converging flow topology: Broadcast Channels ➔ Cited Entities ➔ Central Trend ➔ Formalized Narrative Candidates
           </p>
         </div>
 
-        {/* Filter Buttons */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[11px] font-mono text-[#8591A5] dark:text-slate-400 flex items-center gap-1 mr-1">
-            <Filter className="w-3 h-3" /> Filter:
+        {/* Filter Buttons in Crextio Rounded-Full Pill */}
+        <div className="flex items-center gap-2 self-start sm:self-center flex-wrap">
+          <span className="text-[11px] font-mono text-slate-400 flex items-center gap-1 mr-0.5">
+            <Filter className="w-3 h-3 text-amber-500" /> Filter:
           </span>
-          <button
-            type="button"
-            onClick={() => setFilterType('all')}
-            className={`px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold transition-colors ${
-              filterType === 'all'
-                ? 'bg-[#2F65F6] text-white shadow-xs'
-                : 'bg-slate-100 dark:bg-[#1D232A] text-[#64748B] dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-[#252C36]'
-            }`}
-          >
-            All ({graphData.node_count})
-          </button>
-          {filterCounts.channel > 0 && (
+          <div className="flex items-center gap-1 bg-[#F5F1E5] dark:bg-[#1E2229] p-1 rounded-full border border-[#E5DFD3] dark:border-[#2D333F] shadow-2xs">
             <button
               type="button"
-              onClick={() => setFilterType('channel')}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold transition-colors ${
-                filterType === 'channel'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/40'
+              onClick={() => setFilterType('all')}
+              className={`px-3 py-1 rounded-full text-[11px] font-mono font-bold transition-all cursor-pointer ${
+                filterType === 'all'
+                  ? 'bg-[#181D24] text-white dark:bg-white dark:text-[#181D24] shadow-xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              Channels ({filterCounts.channel})
+              All ({graphData.node_count})
             </button>
-          )}
-          {filterCounts.entity > 0 && (
-            <button
-              type="button"
-              onClick={() => setFilterType('entity')}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold transition-colors ${
-                filterType === 'entity'
-                  ? 'bg-purple-600 text-white shadow-xs'
-                  : 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-400 border border-purple-200/60 dark:border-purple-900/40'
-              }`}
-            >
-              Entities ({filterCounts.entity})
-            </button>
-          )}
-          {filterCounts.narrative > 0 && (
-            <button
-              type="button"
-              onClick={() => setFilterType('narrative')}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold transition-colors ${
-                filterType === 'narrative'
-                  ? 'bg-rose-600 text-white shadow-xs'
-                  : 'bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/40'
-              }`}
-            >
-              Narratives ({filterCounts.narrative})
-            </button>
-          )}
+            {filterCounts.channel > 0 && (
+              <button
+                type="button"
+                onClick={() => setFilterType('channel')}
+                className={`px-3 py-1 rounded-full text-[11px] font-mono font-bold transition-all cursor-pointer ${
+                  filterType === 'channel'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-emerald-700 dark:text-emerald-400 hover:text-emerald-800'
+                }`}
+              >
+                Channels ({filterCounts.channel})
+              </button>
+            )}
+            {filterCounts.entity > 0 && (
+              <button
+                type="button"
+                onClick={() => setFilterType('entity')}
+                className={`px-3 py-1 rounded-full text-[11px] font-mono font-bold transition-all cursor-pointer ${
+                  filterType === 'entity'
+                    ? 'bg-purple-600 text-white shadow-xs'
+                    : 'text-purple-700 dark:text-purple-400 hover:text-purple-800'
+                }`}
+              >
+                Entities ({filterCounts.entity})
+              </button>
+            )}
+            {filterCounts.narrative > 0 && (
+              <button
+                type="button"
+                onClick={() => setFilterType('narrative')}
+                className={`px-3 py-1 rounded-full text-[11px] font-mono font-bold transition-all cursor-pointer ${
+                  filterType === 'narrative'
+                    ? 'bg-rose-600 text-white shadow-xs'
+                    : 'text-rose-700 dark:text-rose-400 hover:text-rose-800'
+                }`}
+              >
+                Narratives ({filterCounts.narrative})
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* 2. Interactive React Flow Canvas */}
-      <div className="relative w-full h-[500px] rounded-[20px] overflow-hidden border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-[#FAFBFD] dark:bg-[#12161B]">
+      {/* 2. Interactive React Flow Canvas (Graph Part Completely Untouched) */}
+      <div className="relative w-full h-[500px] rounded-[24px] overflow-hidden border border-slate-200/80 dark:border-[#2B323D] bg-[#FAFBFD] dark:bg-[#12161B] shadow-inner">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -523,28 +531,28 @@ export const TrendNodeGraph: React.FC<TrendNodeGraphProps> = ({
       </div>
 
       {/* 3. Topology Legend */}
-      <div className="flex flex-wrap items-center justify-between gap-3 text-[12px] font-sans text-[#64748B] dark:text-slate-400 pt-1">
-        <div className="flex items-center gap-4 flex-wrap">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-[12px] font-sans text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-[#252B32]">
+        <div className="flex items-center gap-5 flex-wrap text-[11.5px]">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-            <span>Channel (<strong className="font-mono text-[11px]">observed_in</strong>)</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-2xs" />
+            <span>Channel (<strong className="font-mono text-[11px] text-emerald-700 dark:text-emerald-400">observed_in</strong>)</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
-            <span>Entity (<strong className="font-mono text-[11px]">cited_in</strong>)</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-2xs" />
+            <span>Entity (<strong className="font-mono text-[11px] text-purple-700 dark:text-purple-400">cited_in</strong>)</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#2F65F6]" />
-            <span>Central Trend Anchor</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-[#2F65F6] shadow-2xs" />
+            <span className="font-bold text-slate-900 dark:text-white">Central Trend Anchor</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-            <span>Narrative Candidate (<strong className="font-mono text-[11px]">promoted_to</strong>)</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-2xs" />
+            <span>Narrative Candidate (<strong className="font-mono text-[11px] text-rose-700 dark:text-rose-400">promoted_to</strong>)</span>
           </div>
         </div>
 
-        <div className="text-[11px] font-mono text-[#8591A5]">
-          Entities observed: {filterCounts.entity + filterCounts.channel}
+        <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#13171C] px-3 py-1 rounded-full border border-slate-200/60 dark:border-[#2B323D]">
+          Entities observed: <span className="font-bold text-slate-900 dark:text-white">{filterCounts.entity + filterCounts.channel}</span>
         </div>
       </div>
     </section>

@@ -58,6 +58,10 @@ export const PriorityTierChart: React.FC<PriorityTierChartProps> = ({
   const routinePeakY = 64;
   const elevatedPeakX = getX(0.44); // ~269.3
   const elevatedPeakY = elevated > 0 ? 112 : yBase;
+  const highPeakX = getX(0.65);     // ~376.8
+  const highPeakY = high > 0 ? 104 : yBase;
+  const criticalPeakX = getX(0.85); // ~479.2
+  const criticalPeakY = critical > 0 ? 96 : yBase;
 
   // Smooth cubic Bézier spline for the continuous density wave
   const curvePath = useMemo(() => {
@@ -65,26 +69,50 @@ export const PriorityTierChart: React.FC<PriorityTierChartProps> = ({
       return `M ${xMin} ${yBase} L ${xMax} ${yBase}`;
     }
 
-    return [
-      `M ${xMin} ${yBase}`,
-      // Swoop into Routine peak
-      `C ${xMin + 30} ${yBase}, ${routinePeakX - 35} ${routinePeakY}, ${routinePeakX} ${routinePeakY}`,
-      // Swoop down towards Elevated boundary
-      `C ${routinePeakX + 35} ${routinePeakY}, ${xGateElevated - 20} ${elevated > 0 ? 158 : yBase}, ${xGateElevated} ${elevated > 0 ? 152 : yBase}`,
-      // Swoop into Elevated peak
-      elevated > 0
-        ? `C ${xGateElevated + 18} 146, ${elevatedPeakX - 18} ${elevatedPeakY}, ${elevatedPeakX} ${elevatedPeakY}`
-        : `L ${xGateHigh} ${yBase}`,
-      // Swoop down to baseline
-      elevated > 0
-        ? `C ${elevatedPeakX + 18} ${elevatedPeakY}, ${xGateHigh - 15} ${yBase}, ${xGateHigh} ${yBase}`
-        : ``,
-      // Flat resting baseline across High and Critical
-      `L ${xMax} ${yBase}`,
-    ]
-      .filter(Boolean)
-      .join(' ');
-  }, [routine, elevated, high, critical, xMin, xMax, yBase, routinePeakX, routinePeakY, elevatedPeakX, elevatedPeakY, xGateElevated, xGateHigh]);
+    const segments: string[] = [`M ${xMin} ${yBase}`];
+
+    // Routine segment
+    if (routine > 0) {
+      segments.push(
+        `C ${xMin + 30} ${yBase}, ${routinePeakX - 35} ${routinePeakY}, ${routinePeakX} ${routinePeakY}`,
+        `C ${routinePeakX + 35} ${routinePeakY}, ${xGateElevated - 20} ${elevated > 0 ? 158 : yBase}, ${xGateElevated} ${elevated > 0 ? 152 : yBase}`
+      );
+    } else {
+      segments.push(`L ${xGateElevated} ${yBase}`);
+    }
+
+    // Elevated segment
+    if (elevated > 0) {
+      segments.push(
+        `C ${xGateElevated + 18} 146, ${elevatedPeakX - 18} ${elevatedPeakY}, ${elevatedPeakX} ${elevatedPeakY}`,
+        `C ${elevatedPeakX + 18} ${elevatedPeakY}, ${xGateHigh - 15} ${high > 0 ? 154 : yBase}, ${xGateHigh} ${high > 0 ? 148 : yBase}`
+      );
+    } else {
+      segments.push(`L ${xGateHigh} ${yBase}`);
+    }
+
+    // High segment
+    if (high > 0) {
+      segments.push(
+        `C ${xGateHigh + 18} 142, ${highPeakX - 18} ${highPeakY}, ${highPeakX} ${highPeakY}`,
+        `C ${highPeakX + 18} ${highPeakY}, ${xGateCritical - 15} ${critical > 0 ? 150 : yBase}, ${xGateCritical} ${critical > 0 ? 144 : yBase}`
+      );
+    } else {
+      segments.push(`L ${xGateCritical} ${yBase}`);
+    }
+
+    // Critical segment
+    if (critical > 0) {
+      segments.push(
+        `C ${xGateCritical + 18} 138, ${criticalPeakX - 18} ${criticalPeakY}, ${criticalPeakX} ${criticalPeakY}`,
+        `C ${criticalPeakX + 18} ${criticalPeakY}, ${xMax - 20} ${yBase}, ${xMax} ${yBase}`
+      );
+    } else {
+      segments.push(`L ${xMax} ${yBase}`);
+    }
+
+    return segments.join(' ');
+  }, [routine, elevated, high, critical, xMin, xMax, yBase, routinePeakX, routinePeakY, elevatedPeakX, elevatedPeakY, highPeakX, highPeakY, criticalPeakX, criticalPeakY, xGateElevated, xGateHigh, xGateCritical]);
 
   const areaPath = useMemo(() => {
     return `${curvePath} L ${xMax} ${yBase} L ${xMin} ${yBase} Z`;
@@ -433,10 +461,9 @@ export const PriorityTierChart: React.FC<PriorityTierChartProps> = ({
                   />
                 ))}
 
-              {/* 5. Active Elevated Radar Beacon (Score 0.44) */}
+              {/* 5. Active Dynamic Radar Beacons */}
               {elevated > 0 && (
                 <g className="transition-all">
-                  {/* Vertical hairline leader */}
                   <line
                     x1={elevatedPeakX}
                     y1={elevatedPeakY}
@@ -447,8 +474,6 @@ export const PriorityTierChart: React.FC<PriorityTierChartProps> = ({
                     strokeDasharray="2 2"
                     opacity="0.6"
                   />
-
-                  {/* Concentric Radar Pulse Rings */}
                   <circle
                     cx={elevatedPeakX}
                     cy={elevatedPeakY}
@@ -476,8 +501,6 @@ export const PriorityTierChart: React.FC<PriorityTierChartProps> = ({
                     stroke="#FFFFFF"
                     strokeWidth="1.5"
                   />
-
-                  {/* Floating Glassmorphic Beacon Badge Tag */}
                   <g
                     transform={`translate(${elevatedPeakX - 56}, ${elevatedPeakY - 44})`}
                     className="filter drop-shadow-md"
@@ -490,7 +513,6 @@ export const PriorityTierChart: React.FC<PriorityTierChartProps> = ({
                       stroke={isDark ? '#38BDF8' : '#2F65F6'}
                       strokeWidth="1.2"
                     />
-                    {/* Glowing beacon status dot */}
                     <circle cx="12" cy="13" r="3" fill="#38BDF8" className="animate-pulse" />
                     <text
                       x="20"
@@ -500,7 +522,139 @@ export const PriorityTierChart: React.FC<PriorityTierChartProps> = ({
                       fontWeight="700"
                       fill={isDark ? '#F1F5F9' : '#0F172A'}
                     >
-                      1 Signal · 0.44 Elev
+                      {`${elevated} ${elevated === 1 ? 'Signal' : 'Signals'} · Elevated`}
+                    </text>
+                  </g>
+                </g>
+              )}
+
+              {high > 0 && (
+                <g className="transition-all">
+                  <line
+                    x1={highPeakX}
+                    y1={highPeakY}
+                    x2={highPeakX}
+                    y2={yBase}
+                    stroke="#F59E0B"
+                    strokeWidth="1"
+                    strokeDasharray="2 2"
+                    opacity="0.6"
+                  />
+                  <circle
+                    cx={highPeakX}
+                    cy={highPeakY}
+                    r="12"
+                    fill="none"
+                    stroke="#F59E0B"
+                    strokeWidth="1.5"
+                    opacity="0.4"
+                    className="animate-ping"
+                    style={{ transformOrigin: `${highPeakX}px ${highPeakY}px`, animationDuration: '2.5s' }}
+                  />
+                  <circle
+                    cx={highPeakX}
+                    cy={highPeakY}
+                    r="6"
+                    fill="#D97706"
+                    filter="url(#beaconGlow)"
+                    opacity="0.8"
+                  />
+                  <circle
+                    cx={highPeakX}
+                    cy={highPeakY}
+                    r="4"
+                    fill="#F59E0B"
+                    stroke="#FFFFFF"
+                    strokeWidth="1.5"
+                  />
+                  <g
+                    transform={`translate(${highPeakX - 56}, ${highPeakY - 44})`}
+                    className="filter drop-shadow-md"
+                  >
+                    <rect
+                      width="112"
+                      height="26"
+                      rx="7"
+                      fill={isDark ? 'rgba(24, 30, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)'}
+                      stroke="#F59E0B"
+                      strokeWidth="1.2"
+                    />
+                    <circle cx="12" cy="13" r="3" fill="#F59E0B" className="animate-pulse" />
+                    <text
+                      x="20"
+                      y="16.5"
+                      fontFamily="system-ui, -apple-system, sans-serif"
+                      fontSize="9.5"
+                      fontWeight="700"
+                      fill={isDark ? '#F1F5F9' : '#0F172A'}
+                    >
+                      {`${high} ${high === 1 ? 'Signal' : 'Signals'} · High`}
+                    </text>
+                  </g>
+                </g>
+              )}
+
+              {critical > 0 && (
+                <g className="transition-all">
+                  <line
+                    x1={criticalPeakX}
+                    y1={criticalPeakY}
+                    x2={criticalPeakX}
+                    y2={yBase}
+                    stroke="#EF4444"
+                    strokeWidth="1"
+                    strokeDasharray="2 2"
+                    opacity="0.6"
+                  />
+                  <circle
+                    cx={criticalPeakX}
+                    cy={criticalPeakY}
+                    r="12"
+                    fill="none"
+                    stroke="#EF4444"
+                    strokeWidth="1.5"
+                    opacity="0.4"
+                    className="animate-ping"
+                    style={{ transformOrigin: `${criticalPeakX}px ${criticalPeakY}px`, animationDuration: '2.5s' }}
+                  />
+                  <circle
+                    cx={criticalPeakX}
+                    cy={criticalPeakY}
+                    r="6"
+                    fill="#DC2626"
+                    filter="url(#beaconGlow)"
+                    opacity="0.8"
+                  />
+                  <circle
+                    cx={criticalPeakX}
+                    cy={criticalPeakY}
+                    r="4"
+                    fill="#EF4444"
+                    stroke="#FFFFFF"
+                    strokeWidth="1.5"
+                  />
+                  <g
+                    transform={`translate(${criticalPeakX - 56}, ${criticalPeakY - 44})`}
+                    className="filter drop-shadow-md"
+                  >
+                    <rect
+                      width="112"
+                      height="26"
+                      rx="7"
+                      fill={isDark ? 'rgba(24, 30, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)'}
+                      stroke="#EF4444"
+                      strokeWidth="1.2"
+                    />
+                    <circle cx="12" cy="13" r="3" fill="#EF4444" className="animate-pulse" />
+                    <text
+                      x="20"
+                      y="16.5"
+                      fontFamily="system-ui, -apple-system, sans-serif"
+                      fontSize="9.5"
+                      fontWeight="700"
+                      fill={isDark ? '#F1F5F9' : '#0F172A'}
+                    >
+                      {`${critical} ${critical === 1 ? 'Signal' : 'Signals'} · Critical`}
                     </text>
                   </g>
                 </g>
@@ -523,23 +677,18 @@ export const PriorityTierChart: React.FC<PriorityTierChartProps> = ({
                 fontWeight="600"
                 fill={isDark ? '#94A3B8' : '#64748B'}
               >
-                {/* 0.00 Base */}
                 <text x={xMin} y={yBase + 16} textAnchor="start">
                   0.00 Base
                 </text>
-                {/* 0.35 Gate */}
                 <text x={xGateElevated} y={yBase + 16} textAnchor="middle">
                   0.35
                 </text>
-                {/* 0.55 Gate */}
                 <text x={xGateHigh} y={yBase + 16} textAnchor="middle">
                   0.55
                 </text>
-                {/* 0.75 Gate */}
                 <text x={xGateCritical} y={yBase + 16} textAnchor="middle">
                   0.75
                 </text>
-                {/* 1.00 Max */}
                 <text x={xMax} y={yBase + 16} textAnchor="end">
                   1.00 Max
                 </text>
@@ -592,24 +741,29 @@ export const PriorityTierChart: React.FC<PriorityTierChartProps> = ({
             <div className="relative w-44 h-44 flex items-center justify-center shrink-0">
               <svg viewBox="0 0 160 160" className="w-full h-full -rotate-90">
                 {/* Track Rails (Background) */}
-                <circle cx="80" cy="80" r="66" fill="none" stroke={isDark ? '#232936' : '#F1F5F9'} strokeWidth="9" />
-                <circle cx="80" cy="80" r="52" fill="none" stroke={isDark ? '#232936' : '#F1F5F9'} strokeWidth="9" />
-                <circle cx="80" cy="80" r="38" fill="none" stroke={isDark ? '#232936' : '#F1F5F9'} strokeWidth="9" />
+                <circle cx="80" cy="80" r="66" fill="none" stroke={isDark ? '#232936' : '#F1F5F9'} strokeWidth="8" />
+                <circle cx="80" cy="80" r="52" fill="none" stroke={isDark ? '#232936' : '#F1F5F9'} strokeWidth="8" />
+                <circle cx="80" cy="80" r="38" fill="none" stroke={isDark ? '#232936' : '#F1F5F9'} strokeWidth="8" />
+                {critical > 0 && (
+                  <circle cx="80" cy="80" r="24" fill="none" stroke={isDark ? '#232936' : '#F1F5F9'} strokeWidth="8" />
+                )}
 
-                {/* Routine Track (344 msgs - 99.7%) */}
-                <circle
-                  cx="80"
-                  cy="80"
-                  r="66"
-                  fill="none"
-                  stroke={isDark ? '#64748B' : '#78889E'}
-                  strokeWidth="9"
-                  strokeDasharray={`${(routinePct / 100) * 414.69} 414.69`}
-                  strokeLinecap="round"
-                  className="transition-all duration-700"
-                />
+                {/* Routine Track (r=66, circumference ~414.69) */}
+                {routine > 0 && (
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="66"
+                    fill="none"
+                    stroke={isDark ? '#64748B' : '#78889E'}
+                    strokeWidth="8"
+                    strokeDasharray={`${(routinePct / 100) * 414.69} 414.69`}
+                    strokeLinecap="round"
+                    className="transition-all duration-700"
+                  />
+                )}
 
-                {/* Elevated Track (1 msg - 0.3% - normalized visibility) */}
+                {/* Elevated Track (r=52, circumference ~326.73) */}
                 {elevated > 0 && (
                   <circle
                     cx="80"
@@ -617,8 +771,38 @@ export const PriorityTierChart: React.FC<PriorityTierChartProps> = ({
                     r="52"
                     fill="none"
                     stroke="#2F65F6"
-                    strokeWidth="9"
-                    strokeDasharray="24 326.7"
+                    strokeWidth="8"
+                    strokeDasharray={`${Math.max(14, (elevatedPct / 100) * 326.73)} 326.73`}
+                    strokeLinecap="round"
+                    className="transition-all duration-700"
+                  />
+                )}
+
+                {/* High Track (r=38, circumference ~238.76) */}
+                {high > 0 && (
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="38"
+                    fill="none"
+                    stroke="#F59E0B"
+                    strokeWidth="8"
+                    strokeDasharray={`${Math.max(14, (highPct / 100) * 238.76)} 238.76`}
+                    strokeLinecap="round"
+                    className="transition-all duration-700"
+                  />
+                )}
+
+                {/* Critical Track (r=24, circumference ~150.8) */}
+                {critical > 0 && (
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="24"
+                    fill="none"
+                    stroke="#EF4444"
+                    strokeWidth="8"
+                    strokeDasharray={`${Math.max(14, (criticalPct / 100) * 150.8)} 150.8`}
                     strokeLinecap="round"
                     className="transition-all duration-700"
                   />
@@ -651,31 +835,41 @@ export const PriorityTierChart: React.FC<PriorityTierChartProps> = ({
 
               <div className="flex items-center justify-between text-[11.5px] p-1.5 rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-900/40">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#2F65F6] animate-pulse" />
+                  <span className={`w-2.5 h-2.5 rounded-full bg-[#2F65F6] ${elevated > 0 ? 'animate-pulse' : ''}`} />
                   <span className="font-semibold text-blue-950 dark:text-blue-200">Elevated (0.35–0.54)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-mono font-bold text-blue-900 dark:text-blue-200">{elevated}</span>
                   <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold bg-blue-100 dark:bg-blue-900/40 px-1.5 py-0.2 rounded-full">
-                    Active
+                    {elevated > 0 ? `${elevatedPct.toFixed(1)}%` : '0%'}
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-[11.5px] p-1.5 rounded-xl bg-slate-50/70 dark:bg-[#1E2530]/50 border border-slate-200/50 dark:border-slate-700/40 opacity-70">
+              <div className={`flex items-center justify-between text-[11.5px] p-1.5 rounded-xl border ${high > 0 ? 'bg-amber-50/60 dark:bg-amber-950/20 border-amber-200/50 dark:border-amber-900/40' : 'bg-slate-50/70 dark:bg-[#1E2530]/50 border-slate-200/50 dark:border-slate-700/40 opacity-70'}`}>
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-                  <span className="font-semibold text-slate-600 dark:text-slate-300">High (0.55–0.74)</span>
+                  <span className={`w-2.5 h-2.5 rounded-full bg-amber-500 ${high > 0 ? 'animate-pulse' : ''}`} />
+                  <span className={`font-semibold ${high > 0 ? 'text-amber-950 dark:text-amber-200' : 'text-slate-600 dark:text-slate-300'}`}>High (0.55–0.74)</span>
                 </div>
-                <span className="font-mono font-bold text-slate-500 dark:text-slate-400">{high}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{high}</span>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${high > 0 ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400' : 'text-slate-400'}`}>
+                    {high > 0 ? `${highPct.toFixed(1)}%` : '0%'}
+                  </span>
+                </div>
               </div>
 
-              <div className="flex items-center justify-between text-[11.5px] p-1.5 rounded-xl bg-slate-50/70 dark:bg-[#1E2530]/50 border border-slate-200/50 dark:border-slate-700/40 opacity-70">
+              <div className={`flex items-center justify-between text-[11.5px] p-1.5 rounded-xl border ${critical > 0 ? 'bg-rose-50/60 dark:bg-rose-950/20 border-rose-200/50 dark:border-rose-900/40' : 'bg-slate-50/70 dark:bg-[#1E2530]/50 border-slate-200/50 dark:border-slate-700/40 opacity-70'}`}>
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                  <span className="font-semibold text-slate-600 dark:text-slate-300">Critical (≥0.75)</span>
+                  <span className={`w-2.5 h-2.5 rounded-full bg-rose-500 ${critical > 0 ? 'animate-pulse' : ''}`} />
+                  <span className={`font-semibold ${critical > 0 ? 'text-rose-950 dark:text-rose-200' : 'text-slate-600 dark:text-slate-300'}`}>Critical (≥0.75)</span>
                 </div>
-                <span className="font-mono font-bold text-slate-500 dark:text-slate-400">{critical}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{critical}</span>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${critical > 0 ? 'bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400' : 'text-slate-400'}`}>
+                    {critical > 0 ? `${criticalPct.toFixed(1)}%` : '0%'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -685,9 +879,9 @@ export const PriorityTierChart: React.FC<PriorityTierChartProps> = ({
         {viewMode === 'pipeline' && (
           <div className="w-full py-2 space-y-2 font-sans">
             {/* Critical Row */}
-            <div className="flex items-center justify-between gap-3 p-2 rounded-xl bg-slate-50/70 dark:bg-[#1E2530]/50 border border-slate-200/50 dark:border-slate-700/40">
+            <div className={`flex items-center justify-between gap-3 p-2 rounded-xl border ${critical > 0 ? 'bg-rose-50/60 dark:bg-rose-950/30 border-rose-200/60 dark:border-rose-900/40' : 'bg-slate-50/70 dark:bg-[#1E2530]/50 border-slate-200/50 dark:border-slate-700/40'}`}>
               <div className="flex items-center gap-2 min-w-[130px]">
-                <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                <span className={`w-2 h-2 rounded-full bg-rose-500 shrink-0 ${critical > 0 ? 'animate-pulse' : ''}`} />
                 <span className="text-[11.5px] font-bold text-slate-800 dark:text-slate-200">Critical (≥0.75)</span>
               </div>
               <div className="flex-1 h-2 rounded-full bg-slate-200/70 dark:bg-slate-700 overflow-hidden">
@@ -695,16 +889,22 @@ export const PriorityTierChart: React.FC<PriorityTierChartProps> = ({
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <span className="text-[11px] font-mono font-bold text-slate-700 dark:text-slate-300">{critical}</span>
-                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-100/70 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-                  <CheckCircle2 className="w-2.5 h-2.5" /> Clear
-                </span>
+                {critical > 0 ? (
+                  <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200 animate-pulse">
+                    <ShieldAlert className="w-2.5 h-2.5" /> Action Required
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-100/70 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                    <CheckCircle2 className="w-2.5 h-2.5" /> Clear
+                  </span>
+                )}
               </div>
             </div>
 
             {/* High Row */}
-            <div className="flex items-center justify-between gap-3 p-2 rounded-xl bg-slate-50/70 dark:bg-[#1E2530]/50 border border-slate-200/50 dark:border-slate-700/40">
+            <div className={`flex items-center justify-between gap-3 p-2 rounded-xl border ${high > 0 ? 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-200/60 dark:border-amber-900/40' : 'bg-slate-50/70 dark:bg-[#1E2530]/50 border-slate-200/50 dark:border-slate-700/40'}`}>
               <div className="flex items-center gap-2 min-w-[130px]">
-                <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                <span className={`w-2 h-2 rounded-full bg-amber-500 shrink-0 ${high > 0 ? 'animate-pulse' : ''}`} />
                 <span className="text-[11.5px] font-bold text-slate-800 dark:text-slate-200">High (0.55–0.74)</span>
               </div>
               <div className="flex-1 h-2 rounded-full bg-slate-200/70 dark:bg-slate-700 overflow-hidden">
@@ -712,26 +912,38 @@ export const PriorityTierChart: React.FC<PriorityTierChartProps> = ({
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <span className="text-[11px] font-mono font-bold text-slate-700 dark:text-slate-300">{high}</span>
-                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-100/70 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-                  <CheckCircle2 className="w-2.5 h-2.5" /> Clear
-                </span>
+                {high > 0 ? (
+                  <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200 animate-pulse">
+                    <ShieldAlert className="w-2.5 h-2.5" /> Escalated
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-100/70 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                    <CheckCircle2 className="w-2.5 h-2.5" /> Clear
+                  </span>
+                )}
               </div>
             </div>
 
             {/* Elevated Row */}
-            <div className="flex items-center justify-between gap-3 p-2 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40">
+            <div className={`flex items-center justify-between gap-3 p-2 rounded-xl border ${elevated > 0 ? 'bg-blue-50/60 dark:bg-blue-950/30 border-blue-200/60 dark:border-blue-900/40' : 'bg-slate-50/70 dark:bg-[#1E2530]/50 border-slate-200/50 dark:border-slate-700/40'}`}>
               <div className="flex items-center gap-2 min-w-[130px]">
-                <span className="w-2 h-2 rounded-full bg-[#2F65F6] animate-pulse shrink-0" />
+                <span className={`w-2 h-2 rounded-full bg-[#2F65F6] shrink-0 ${elevated > 0 ? 'animate-pulse' : ''}`} />
                 <span className="text-[11.5px] font-bold text-blue-950 dark:text-blue-200">Elevated (0.35–0.54)</span>
               </div>
               <div className="flex-1 h-2 rounded-full bg-slate-200/70 dark:bg-slate-700 overflow-hidden">
-                <div style={{ width: `${Math.max(elevatedPct, 12)}%` }} className="h-full bg-[#2F65F6] shadow-sm" />
+                <div style={{ width: `${Math.max(elevatedPct, elevated > 0 ? 8 : 0)}%` }} className="h-full bg-[#2F65F6] shadow-sm" />
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <span className="text-[11px] font-mono font-bold text-blue-950 dark:text-blue-200">{elevated}</span>
-                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200 animate-pulse">
-                  <ShieldAlert className="w-2.5 h-2.5" /> Triage Queue
-                </span>
+                {elevated > 0 ? (
+                  <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200 animate-pulse">
+                    <ShieldAlert className="w-2.5 h-2.5" /> Triage Queue
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-100/70 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                    <CheckCircle2 className="w-2.5 h-2.5" /> Clear
+                  </span>
+                )}
               </div>
             </div>
 

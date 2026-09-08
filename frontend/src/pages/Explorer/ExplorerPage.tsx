@@ -19,9 +19,9 @@ export const ExplorerPage: React.FC = () => {
   const [autoStream, setAutoStream] = useState(true);
 
   // Parse filters from URL
-  const initialQuery = searchParams.get('keyword') || searchParams.get('q') || '';
+  const initialQuery = searchParams.get('keyword') || searchParams.get('q') || searchParams.get('search') || '';
   const initialPlatform = (searchParams.get('platform') as any) || 'All';
-  const initialLanguage = searchParams.get('lang') || undefined;
+  const initialLanguage = searchParams.get('lang') || searchParams.get('language') || undefined;
   const initialTopic = searchParams.get('topicId') || searchParams.get('topic_id') || undefined;
   const initialPage = parseInt(searchParams.get('page') || '1', 10);
 
@@ -76,8 +76,13 @@ export const ExplorerPage: React.FC = () => {
       }
 
       setObservations(items);
-      setTotalItems(res.meta.total);
-      setTotalPages(res.meta.total_pages);
+      const isKeywordActive = Boolean(filters.keyword && filters.keyword.trim());
+      setTotalItems(isKeywordActive ? items.length : res.meta.total);
+      setTotalPages(
+        isKeywordActive
+          ? Math.max(1, Math.ceil(items.length / (filters.page_size || 10)))
+          : res.meta.total_pages
+      );
     } catch (e) {
       console.error('Failed to load canonical messages:', e);
       setIsError(true);
@@ -138,7 +143,7 @@ export const ExplorerPage: React.FC = () => {
             channel_title: lm.channel_title,
             published_at: lm.timestamp,
             text_content: lm.text,
-            language: 'en',
+            language: null,
             views_count: lm.views,
             forwards_count: lm.forwards,
             has_media: lm.has_media,
@@ -197,7 +202,10 @@ export const ExplorerPage: React.FC = () => {
     { id: 'json', label: 'Export Query as JSON', onClick: handleExportJson },
   ];
 
-  const displayTotalCount = totalCorpusCount !== null && totalCorpusCount > totalItems
+  const isKeywordActive = Boolean(filters.keyword && filters.keyword.trim());
+  const displayTotalCount = isKeywordActive
+    ? totalItems
+    : totalCorpusCount !== null && totalCorpusCount > totalItems
     ? totalCorpusCount
     : totalItems;
 
@@ -212,6 +220,7 @@ export const ExplorerPage: React.FC = () => {
             <Button
               variant={autoStream ? 'primary' : 'secondary'}
               size="sm"
+              className="rounded-full px-4"
               leftIcon={
                 <span className="relative flex h-2 w-2 mr-0.5">
                   {autoStream && (
@@ -230,6 +239,7 @@ export const ExplorerPage: React.FC = () => {
                 <Button
                   variant="secondary"
                   size="sm"
+                  className="rounded-full px-4 hover:border-amber-400/80 dark:hover:border-amber-500/50"
                   leftIcon={<Download className="w-3.5 h-3.5" />}
                 >
                   Export
@@ -242,6 +252,7 @@ export const ExplorerPage: React.FC = () => {
             <Button
               variant="secondary"
               size="sm"
+              className="rounded-full px-4 hover:border-amber-400/80 dark:hover:border-amber-500/50"
               leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />}
               onClick={handleRefresh}
               disabled={isRefreshing || isLoading}
@@ -254,16 +265,16 @@ export const ExplorerPage: React.FC = () => {
 
       {/* Live Stream Telemetry Banner */}
       {connectionStatus === 'connected' && liveMessages.length > 0 && (
-        <div className="flex items-center justify-between px-4 py-2.5 rounded-[14px] bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/50 text-[13px] text-emerald-900 dark:text-emerald-200 flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
+        <div className="flex items-center justify-between p-4 rounded-[20px] bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/50 backdrop-blur-md text-[13px] text-emerald-950 dark:text-emerald-200 flex-wrap gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
             </span>
-            <span className="font-semibold">
+            <span className="font-bold tracking-tight">
               Live MTProto Stream Active:
             </span>
-            <span className="text-emerald-700 dark:text-emerald-300">
+            <span className="text-emerald-700 dark:text-emerald-300 font-medium">
               {liveMessages.length} real-time messages captured in current session ({displayTotalCount.toLocaleString()} total corpus)
             </span>
           </div>
@@ -271,6 +282,7 @@ export const ExplorerPage: React.FC = () => {
             <Button
               variant="secondary"
               size="sm"
+              className="rounded-full px-3.5 hover:border-emerald-400/80 dark:hover:border-emerald-500/50"
               onClick={() => loadData()}
               leftIcon={<RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />}
             >

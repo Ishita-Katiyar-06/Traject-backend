@@ -118,13 +118,14 @@ async def get_trend_graph(
 )
 async def get_trend_sentiment(
     trend_id: str,
+    bucket_size: str | None = Query(None, description="Time bucket size ('1h', '6h', '1d')"),
     service: AnalyticsService = Depends(get_analytics_service),
 ) -> TrendSentimentResponse:
     """Retrieve chronological sentiment time-series based on authentic message timestamps and RoBERTa classifications.
     Messages without text or unassigned sentiment are transparently tracked as unassigned without synthetic neutrality.
     """
     try:
-        sentiment = service.get_trend_sentiment(trend_id)
+        sentiment = service.get_trend_sentiment(trend_id, bucket_size=bucket_size)
         if not sentiment:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

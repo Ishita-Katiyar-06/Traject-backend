@@ -13,6 +13,7 @@
 
 import { useState, useEffect } from 'react';
 import { telemetryApi } from './telemetryApi';
+import { trendService } from './trendService';
 import type { AlertItem, AlertStats, AlertStatus, AlertSeverity, AlertCategory } from '../types/alerts';
 import type { NarrativeSummaryResponse } from '../types/api';
 
@@ -124,7 +125,8 @@ function evaluateNarrativeAlert(
     category = 'cross_domain_spillover';
     title = `Cross-Domain Spillover: ${narrative.narrative_id}`;
     const domains = narrative.domains_represented || [];
-    indicators.push(`Observed across ${domains.length || narrative.distinct_domains_count || 2} distinct domains${domains.length > 0 ? ` (${domains.join(', ')})` : ''}`);
+    const count = domains.length || narrative.distinct_domains_count || 1;
+    indicators.push(`Observed across ${count} distinct domain${count > 1 ? 's' : ''}${domains.length > 0 ? ` (${domains.join(', ')})` : ''}`);
   } else if (hasHighVelocity && indicators.length === 0) {
     category = 'high_velocity';
     title = `Elevated Diffusion Velocity: ${narrative.narrative_id}`;
@@ -142,7 +144,7 @@ function evaluateNarrativeAlert(
     narrative_name: narrative.narrative_name,
     topic_id: narrative.promoted_from_topic_id,
     title,
-    claim: narrative.narrative_name || narrative.headline_claim,
+    claim: narrative.narrative_summary || narrative.headline_claim || narrative.narrative_name || '',
     severity,
     category,
     status: persisted ? persisted.status : 'open',
@@ -169,13 +171,20 @@ export const alertService = {
   /**
    * Fetches live telemetry and returns prioritized alerts.
    */
-  async getAlerts(): Promise<AlertItem[]> {
-    const res = await telemetryApi.getNarratives({
-      page: 1,
-      page_size: 50,
-      sort_by: 'priority_signal_score',
-      order: 'desc',
-    });
+  async getAlerts(options?: { skipCache?: boolean }): Promise<AlertItem[]> {
+    let narratives: NarrativeSummaryResponse[] = [];
+    try {
+      narratives = await trendService.getAllNarratives(options);
+    } catch (e) {
+      console.warn('Failed to load all narratives for alerts, falling back:', e);
+      const res = await telemetryApi.getNarratives({
+        page: 1,
+        page_size: 100,
+        sort_by: 'priority_signal_score',
+        order: 'desc',
+      }, options);
+      narratives = res.data || [];
+    }
 
     const persistedMap = getPersistedStatuses();
     const alerts: AlertItem[] = [];
@@ -189,8 +198,8 @@ export const alertService = {
       });
     });
 
-    // 2. Evaluate narrative alerts
-    for (const narrative of res.data) {
+    // 2. Evaluate narrative alerts across full real dataset
+    for (const narrative of narratives) {
       const alert = evaluateNarrativeAlert(narrative, persistedMap);
       if (alert && !alerts.some((a) => a.id === alert.id)) {
         alerts.push(alert);

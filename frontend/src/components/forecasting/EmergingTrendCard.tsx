@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ExternalLink, Layers, Activity, Zap } from 'lucide-react';
+import { Activity, Zap, ArrowRight, Layers } from 'lucide-react';
 import type { EmergingTrendForecast } from '../../types/forecasting';
 import {
   formatForecastScore,
@@ -24,35 +24,39 @@ export const EmergingTrendCard: React.FC<EmergingTrendCardProps> = ({ forecast }
     forecast.topic_keywords
   );
 
+  // Clean identifier for trend dossier navigation
+  const cleanId = forecast.topic_id.replace(/^topic_|^trend_/, '');
+  const targetRoute = `/trends/${cleanId}`;
+
   return (
     <div
       id={`forecast-card-${forecast.topic_id}`}
-      className="bg-[#12161f]/90 border border-slate-800/80 hover:border-slate-700/90 rounded-xl p-5 backdrop-blur-sm shadow-lg transition-all duration-200 flex flex-col justify-between group hover:shadow-slate-900/50"
+      className="group rounded-[26px] sm:rounded-[30px] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md border border-slate-200/80 dark:border-[#2B323D] p-6 sm:p-7 shadow-xs hover:border-amber-400/80 dark:hover:border-amber-500/50 hover:shadow-md transition-all duration-300 flex flex-col justify-between font-sans"
     >
       <div>
-        {/* Top Header: Rank & Tier Badges */}
-        <div className="flex items-center justify-between gap-2 mb-3">
+        {/* Top Header Row: Rank, Emergence Tier, and Trajectory/Confidence */}
+        <div className="flex items-center justify-between gap-2 mb-3.5 flex-wrap">
           <div className="flex items-center gap-2">
-            <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-slate-800 text-xs font-bold text-slate-200 border border-slate-700">
+            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/80 dark:border-[#2B323D] text-[11px] font-mono font-bold text-[#111727] dark:text-slate-100 shadow-2xs">
               #{forecast.forecast_rank}
             </span>
             <span
-              className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-semibold border ${tierInfo.badgeClass}`}
+              className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-mono font-bold border shadow-2xs ${tierInfo.badgeClass}`}
             >
               {tierInfo.label}
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <span
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium border ${trajectoryInfo.badgeClass}`}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-medium border shadow-2xs ${trajectoryInfo.badgeClass}`}
               title={`Trajectory: ${trajectoryInfo.label}`}
             >
               <span className="font-bold">{trajectoryInfo.symbol}</span>
               <span>{trajectoryInfo.label}</span>
             </span>
             <span
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium border ${confidenceInfo.badgeClass}`}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-medium border shadow-2xs ${confidenceInfo.badgeClass}`}
               title={`Confidence: ${confidenceInfo.label}`}
             >
               <span>{confidenceInfo.label}</span>
@@ -60,34 +64,35 @@ export const EmergingTrendCard: React.FC<EmergingTrendCardProps> = ({ forecast }
           </div>
         </div>
 
-        {/* Topic Title & ID */}
+        {/* Topic Title & Meta Capsules */}
         <div className="mb-4">
-          <h3 className="text-base font-semibold text-slate-100 group-hover:text-emerald-400 transition-colors line-clamp-1">
+          <h3 className="text-[17px] font-bold text-[#111727] dark:text-slate-100 group-hover:text-[#2F65F6] dark:group-hover:text-[#93C5FD] transition-colors line-clamp-1 tracking-tight">
             {topicTitle}
           </h3>
-          <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400">
-            <span className="font-mono bg-slate-900/80 px-1.5 py-0.5 rounded border border-slate-800">
+          <div className="flex items-center gap-2 mt-2 text-[11px] flex-wrap">
+            <span className="font-mono px-2.5 py-0.5 rounded-full bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A] text-[#8591A5] dark:text-slate-400">
               ID: {forecast.topic_id}
             </span>
-            <span>•</span>
-            <span>{forecast.horizon_hours}h Horizon</span>
+            <span className="font-mono px-2.5 py-0.5 rounded-full bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A] text-[#8591A5] dark:text-slate-400">
+              {forecast.horizon_hours}h Horizon
+            </span>
           </div>
         </div>
 
-        {/* Emerging Trend Score Metric Display */}
-        <div className="bg-slate-900/90 border border-slate-800/80 rounded-lg p-3.5 mb-4">
-          <div className="flex items-baseline justify-between mb-1.5">
-            <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
+        {/* Emerging Trend Score Metric & Progress Bar */}
+        <div className="p-4 rounded-[20px] bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A] mb-4 space-y-2">
+          <div className="flex items-baseline justify-between">
+            <span className="text-[10px] font-mono font-bold text-[#8591A5] dark:text-slate-400 uppercase tracking-wider">
               Emerging Trend Score
             </span>
-            <span className="text-xl font-bold font-mono text-emerald-400">
+            <span className="text-[20px] font-bold font-mono text-[#2F65F6] dark:text-[#93C5FD]">
               {formatForecastScore(forecast.forecast_score)}
             </span>
           </div>
-          {/* Progress Bar (Visual representation of 0.00 to 1.00) */}
-          <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+          {/* Progress Bar (Visual pill representation of 0.00 to 1.00) */}
+          <div className="w-full bg-slate-100 dark:bg-[#252B32] rounded-full h-2.5 overflow-hidden p-0.5 border border-slate-200/60 dark:border-[#282F3A]">
             <div
-              className="bg-emerald-500 h-full rounded-full transition-all duration-300"
+              className="h-full rounded-full transition-all duration-500 bg-linear-to-r from-[#2F65F6] via-blue-500 to-emerald-500"
               style={{ width: `${Math.min(Math.max(forecast.forecast_score * 100, 0), 100)}%` }}
             />
           </div>
@@ -95,47 +100,44 @@ export const EmergingTrendCard: React.FC<EmergingTrendCardProps> = ({ forecast }
 
         {/* Component Signals: 24h Volume & 6h Velocity */}
         <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
-          <div className="bg-slate-900/50 rounded-lg p-2.5 border border-slate-800/60">
-            <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-1">
-              <Activity className="w-3 h-3 text-slate-400" />
+          <div className="p-3.5 rounded-[18px] bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A]">
+            <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-[#8591A5] dark:text-slate-400 font-bold mb-1">
+              <Activity className="w-3.5 h-3.5 text-[#2F65F6] dark:text-[#93C5FD]" />
               <span>24h Volume</span>
             </div>
-            <div className="font-mono text-slate-200 font-semibold text-sm">
-              {forecast.messages_24h.toLocaleString()} msgs
+            <div className="font-mono text-[#111727] dark:text-slate-100 font-bold text-[14px]">
+              {forecast.messages_24h.toLocaleString()} <span className="text-[10px] font-normal text-[#8591A5]">msgs</span>
             </div>
-            <div className="text-[10px] text-slate-400 mt-0.5">
+            <div className="text-[10px] font-mono text-[#8591A5] dark:text-slate-400 mt-0.5">
               Historical: {forecast.historical_message_count.toLocaleString()}
             </div>
           </div>
 
-          <div className="bg-slate-900/50 rounded-lg p-2.5 border border-slate-800/60">
-            <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-1">
-              <Zap className="w-3 h-3 text-slate-400" />
+          <div className="p-3.5 rounded-[18px] bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A]">
+            <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-[#8591A5] dark:text-slate-400 font-bold mb-1">
+              <Zap className="w-3.5 h-3.5 text-amber-500" />
               <span>6h Velocity</span>
             </div>
-            <div className="font-mono text-slate-200 font-semibold text-sm">
-              {forecast.velocity_6h.toFixed(1)}/hr
+            <div className="font-mono text-[#111727] dark:text-slate-100 font-bold text-[14px]">
+              {forecast.velocity_6h.toFixed(1)} <span className="text-[10px] font-normal text-[#8591A5]">/hr</span>
             </div>
-            <div className="text-[10px] text-slate-400 mt-0.5">
+            <div className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
               Growth: {forecast.growth_velocity.toFixed(2)}x
             </div>
           </div>
         </div>
       </div>
 
-      {/* Footer / Navigation Action */}
-      <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-        <span className="text-[11px] text-slate-400 flex items-center gap-1">
-          <Layers className="w-3.5 h-3.5 text-slate-400" />
-          <span>Topic Intelligence</span>
-        </span>
+      {/* Footer Navigation Button */}
+      <div className="pt-3.5 border-t border-slate-100 dark:border-[#252B32]">
         <Link
-          to={`/topics/${forecast.topic_id}`}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition-colors py-1 px-2.5 rounded-md hover:bg-emerald-950/30"
+          to={targetRoute}
+          className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-full border border-slate-200/80 dark:border-[#2B323D] bg-[#FAFBFD] dark:bg-[#151921] text-[12px] font-semibold text-[#111727] dark:text-slate-200 hover:border-amber-400/80 dark:hover:border-amber-500/50 hover:bg-white dark:hover:bg-[#181C22] transition-all group/btn shadow-xs"
           id={`explore-topic-${forecast.topic_id}`}
         >
-          <span>Explore Topic</span>
-          <ExternalLink className="w-3.5 h-3.5" />
+          <Layers className="w-3.5 h-3.5 text-[#8591A5] dark:text-slate-400" />
+          <span>Explore Trend Dossier</span>
+          <ArrowRight className="w-3.5 h-3.5 text-[#8591A5] group-hover/btn:translate-x-1 group-hover/btn:text-amber-500 transition-all" />
         </Link>
       </div>
     </div>

@@ -29,8 +29,15 @@ export const TrendsPage: React.FC = () => {
     page_size: 10,
   });
 
-  const loadTrends = async (isInitial = false) => {
-    if (isInitial) {
+  // Pre-warm the trend catalog in the background so searching is instant
+  useEffect(() => {
+    trendService.getAllTrendsWithNarratives().catch((err) => {
+      console.debug('Background cache pre-warming completed with notice:', err);
+    });
+  }, []);
+
+  const loadTrends = async (showSkeleton = false) => {
+    if (showSkeleton) {
       setIsLoading(true);
     }
     setIsError(false);
@@ -38,8 +45,8 @@ export const TrendsPage: React.FC = () => {
       const isSearchActive = Boolean(filters.keyword && filters.keyword.trim());
 
       if (isSearchActive) {
-        // Global search: search across all 345 trends in the dataset
-        const allTrends = await trendService.getAllTrendsWithNarratives({ skipCache: !isInitial });
+        // High-speed client-side search across all authentic trends
+        const allTrends = await trendService.getAllTrendsWithNarratives({ skipCache: false });
         const filtered = allTrends.filter((t) => matchesTrendSearch(t, filters.keyword || ''));
 
         // Client-side sort respecting current sort_by and order
@@ -49,8 +56,8 @@ export const TrendsPage: React.FC = () => {
           let valA: any = (a as any)[sortBy] ?? 0;
           let valB: any = (b as any)[sortBy] ?? 0;
           if (sortBy === 'trend_id' || sortBy === 'topic_id') {
-            valA = parseInt(a.cleanId, 10) || 0;
-            valB = parseInt(b.cleanId, 10) || 0;
+            valA = a._numericId ?? parseInt(a.cleanId, 10) ?? 0;
+            valB = b._numericId ?? parseInt(b.cleanId, 10) ?? 0;
           }
           if (order === 'asc') return valA > valB ? 1 : valA < valB ? -1 : 0;
           return valA < valB ? 1 : valA > valB ? -1 : 0;
@@ -74,7 +81,7 @@ export const TrendsPage: React.FC = () => {
           order: filters.order,
         };
 
-        const res = await trendService.getTrendsWithNarratives(apiParams, { skipCache: !isInitial });
+        const res = await trendService.getTrendsWithNarratives(apiParams, { skipCache: false });
         setTrends(res.trends);
         setTotalCount(res.meta.total);
         setTotalPages(res.meta.total_pages);
@@ -100,7 +107,8 @@ export const TrendsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    loadTrends(true);
+    const isFirstLoad = trends.length === 0;
+    loadTrends(isFirstLoad);
 
     const p: Record<string, string> = {};
     if (filters.keyword) p.keyword = filters.keyword;

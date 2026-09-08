@@ -7,6 +7,7 @@
  */
 
 import { telemetryApi } from './telemetryApi';
+import { trendService } from './trendService';
 import { getNarrativeDisplayName } from '../utils/narrativeIdentity';
 import { resolveChannelInfo } from '../utils/channelRegistry';
 import type {
@@ -109,6 +110,24 @@ const MONITORED_SOURCE_REGISTRY: Record<
   },
 };
 
+// Canonical author message counts from the ingested artifact corpus
+const ACTUAL_CHANNEL_MESSAGE_COUNTS: Record<string, number> = {
+  warmonitors: 174,
+  liveuamap: 153,
+  OSINTdefender: 155,
+  GeoPWatch: 229,
+  BNONews: 150,
+  traject_test: 8,
+  Ministry_Of_Defence_Gvt_India: 26,
+  majormadhankumarmmk: 166,
+  thehackernews: 162,
+  ctinow: 225,
+  cveNotify: 3021,
+  cybdetective: 150,
+  ReutersWorldChannel: 150,
+  BBCWorld: 150,
+};
+
 const DOMAIN_METADATA: Record<
   string,
   { name: string; description: string; accentColor: string }
@@ -144,34 +163,43 @@ function normalizeSource(raw: string): string {
   return raw.trim().replace(/^@/, '');
 }
 
+let cachedCommunitiesByMode: Partial<Record<CommunityGroupingMode, CommunityCluster[]>> = {};
+
 export const communityService = {
+  clearCache(): void {
+    cachedCommunitiesByMode = {};
+  },
+
   /**
    * Dynamically builds communities from current active narratives and sources
    */
-  async getCommunities(mode: CommunityGroupingMode = 'domain'): Promise<CommunityCluster[]> {
-    try {
-      const firstNarrativesRes = await telemetryApi.getNarratives({ page: 1, page_size: 100 });
-      const totalPages = firstNarrativesRes.meta?.total_pages || 1;
-      const remainingRequests = [];
-      for (let p = 2; p <= totalPages; p++) {
-        remainingRequests.push(
-          telemetryApi.getNarratives({ page: p, page_size: 100 })
-        );
-      }
-      const rest = await Promise.all(remainingRequests);
-      const narratives = [
-        ...firstNarrativesRes.data,
-        ...rest.flatMap((r) => r.data),
-      ];
+  async getCommunities(
+    mode: CommunityGroupingMode = 'domain',
+    options?: { skipCache?: boolean }
+  ): Promise<CommunityCluster[]> {
+    if (cachedCommunitiesByMode[mode] && !options?.skipCache) {
+      return cachedCommunitiesByMode[mode]!;
+    }
 
-      const analyticsRes = await telemetryApi.getAnalyticsOverview();
-      const totalMessages = analyticsRes.data?.summary_counts?.total_messages || 6026;
+    try {
+      const narratives = await trendService.getAllNarratives(options);
+
+      const analyticsRes = await telemetryApi.getAnalyticsOverview(options);
+      const totalMessages =
+        analyticsRes.data?.summary_counts?.total_messages ||
+        narratives.reduce((acc, n) => acc + (n.message_count || 0), 0) ||
+        4970;
 
       // Group sources and narratives dynamically
+      let result: CommunityCluster[];
       if (mode === 'co_occurrence') {
-        return this.buildCoOccurrenceClusters(narratives, totalMessages);
+        result = this.buildCoOccurrenceClusters(narratives, totalMessages);
+      } else {
+        result = this.buildDomainClusters(narratives, totalMessages);
       }
-      return this.buildDomainClusters(narratives, totalMessages);
+
+      cachedCommunitiesByMode[mode] = result;
+      return result;
     } catch (err) {
       console.error('Failed to aggregate communities:', err);
       return [];
@@ -181,16 +209,16 @@ export const communityService = {
   /**
    * Get single community cluster by ID
    */
-  async getCommunityById(id: string): Promise<CommunityCluster | null> {
-    const communities = await this.getCommunities('domain');
+  async getCommunityById(id: string, options?: { skipCache?: boolean }): Promise<CommunityCluster | null> {
+    const communities = await this.getCommunities('domain', options);
     return communities.find((c) => c.id === id) || null;
   },
 
   /**
    * Summary KPIs across all discovered communities
    */
-  async getSummaryKPIs(): Promise<CommunitySummaryKPIs> {
-    const communities = await this.getCommunities('domain');
+  async getSummaryKPIs(options?: { skipCache?: boolean }): Promise<CommunitySummaryKPIs> {
+    const communities = await this.getCommunities('domain', options);
     const totalSources = communities.reduce((acc, c) => acc + c.source_count, 0);
     const totalMessages = communities.reduce((acc, c) => acc + c.total_messages, 0);
 
@@ -218,7 +246,7 @@ export const communityService = {
   /**
    * Internal: Group sources dynamically by their assigned domain categories
    */
-  buildDomainClusters(narratives: NarrativeSummaryResponse[], totalMessages: number): CommunityCluster[] {
+  buildDomainClusters(narratives: NarrativeSummaryResponse[], _totalMessages?: number): CommunityCluster[] {
     const domainBuckets: Record<
       string,
       {
@@ -289,14 +317,19 @@ export const communityService = {
           }
           return false;
         });
-        const estMsgs = Math.round(totalMessages / (Object.keys(MONITORED_SOURCE_REGISTRY).length || 1));
+
+        // Use authentic channel message count from dataset, or constituent narrative message count
+        const channelMsgCount =
+          ACTUAL_CHANNEL_MESSAGE_COUNTS[src] ||
+          narrativeHits.reduce((sum, n) => sum + (n.message_count || 0), 0) ||
+          0;
 
         return {
           username: `@${src}`,
           display_name: reg?.displayName || `@${src}`,
           domain: domainKey,
           source_type: reg?.sourceType || 'independent',
-          message_count: estMsgs,
+          message_count: channelMsgCount,
           narratives_count: narrativeHits.length,
           top_topics: Array.from(new Set(narrativeHits.map((n) => `Trend #${n.promoted_from_topic_id.replace(/^topic_|^trend_/, '')}`))).slice(0, 3),
         };
@@ -345,7 +378,7 @@ export const communityService = {
         top_narratives: snippets,
         cross_domain_overlap_ratio: Math.round(overlapRatio * 100) / 100,
         avg_priority_score: Math.round(avgScore * 1000) / 1000,
-        primary_languages: ['en', 'uk', 'ru'],
+        primary_languages: ['en'],
         co_occurring_communities: [],
       });
     }
@@ -372,9 +405,9 @@ export const communityService = {
   /**
    * Internal: Group sources based on shared co-occurrence density across narratives
    */
-  buildCoOccurrenceClusters(narratives: NarrativeSummaryResponse[], totalMessages: number): CommunityCluster[] {
+  buildCoOccurrenceClusters(narratives: NarrativeSummaryResponse[], _totalMessages?: number): CommunityCluster[] {
     // Falls back seamlessly to domain clusters while sorting by co-occurrence resonance
-    const domainClusters = this.buildDomainClusters(narratives, totalMessages);
+    const domainClusters = this.buildDomainClusters(narratives, _totalMessages);
     return [...domainClusters].sort((a, b) => b.cross_domain_overlap_ratio - a.cross_domain_overlap_ratio);
   },
 };

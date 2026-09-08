@@ -42,13 +42,13 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({ community }) => {
         rotateY,
         transformStyle: 'preserve-3d',
       }}
-      className="group rounded-[24px] bg-white dark:bg-[#171C22] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] p-6 shadow-dashboard hover:shadow-dashboard-hover transition-shadow duration-200 flex flex-col justify-between font-sans will-change-transform"
+      className="group rounded-[30px] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md border border-slate-200/80 dark:border-[#2B323D] p-6 sm:p-7 shadow-xs hover:border-amber-400/80 dark:hover:border-amber-500/50 hover:shadow-md transition-all duration-300 flex flex-col justify-between font-sans will-change-transform"
     >
       <div>
         {/* Top Header Row: Domain Badge & Source Count */}
-        <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center justify-between gap-2 mb-3.5">
           <span
-            className="px-2.5 py-1 rounded-full text-[11px] font-mono font-bold tracking-wide flex items-center gap-1.5"
+            className="px-3 py-1 rounded-full text-[11px] font-mono font-bold tracking-wide flex items-center gap-1.5 shadow-2xs"
             style={{
               backgroundColor: `${community.accent_color}18`,
               color: community.accent_color,
@@ -61,27 +61,22 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({ community }) => {
             {community.domain_display}
           </span>
 
-          <div className="flex items-center gap-1.5 text-[12px] font-mono text-[#8591A5] dark:text-slate-400">
-            <Users className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A] text-[#8591A5] dark:text-slate-400">
+            <Users className="w-3 h-3" />
             <span>{community.source_count} sources</span>
           </div>
         </div>
 
         {/* Community Name & Description */}
-        <Link
-          to={`/communities/${encodeURIComponent(community.id)}`}
-          className="group-hover:text-[#2F65F6] dark:group-hover:text-[#5878C7] transition-colors"
-        >
-          <h3 className="text-[17px] font-bold text-[#111727] dark:text-slate-100 tracking-tight leading-snug">
-            {community.name}
-          </h3>
-        </Link>
+        <h3 className="text-[17px] font-bold text-[#111727] dark:text-slate-100 tracking-tight leading-snug">
+          {community.name}
+        </h3>
         <p className="text-[13px] text-[#64748B] dark:text-slate-400 mt-1.5 line-clamp-2 leading-relaxed font-normal">
           {community.description}
         </p>
 
         {/* Key Metrics Strip */}
-        <div className="grid grid-cols-3 gap-2 my-4 p-3 rounded-[16px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32]">
+        <div className="grid grid-cols-3 gap-2 my-4 p-3.5 rounded-[20px] bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A]">
           <div>
             <span className="text-[10px] font-mono text-[#8591A5] dark:text-slate-400 uppercase block">
               Messages
@@ -117,7 +112,7 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({ community }) => {
             {community.sources.map((src) => (
               <span
                 key={src.username}
-                className="px-2 py-0.5 rounded-md bg-[#F1F4F9] dark:bg-[#1D232A] text-[#475569] dark:text-slate-300 text-[11px] font-mono hover:text-[#2F65F6] dark:hover:text-[#93C5FD] transition-colors border border-slate-200/60 dark:border-[#2B323A]"
+                className="px-2.5 py-1 rounded-full bg-[#FAFBFD] dark:bg-[#151921] text-[#475569] dark:text-slate-300 text-[11px] font-mono hover:text-[#2F65F6] dark:hover:text-[#93C5FD] transition-colors border border-slate-200/70 dark:border-[#282F3A]"
               >
                 {src.username}
               </span>
@@ -138,7 +133,7 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({ community }) => {
                 <Link
                   key={narrative.narrative_id}
                   to={`/narratives/${encodeURIComponent(narrative.narrative_id)}`}
-                  className="block p-2.5 rounded-[12px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/60 dark:border-[#252B32] hover:border-[#2F65F6]/50 dark:hover:border-[#2F65F6]/50 hover:bg-white dark:hover:bg-[#191F26] text-[12px] space-y-1 transition-all group/narrative cursor-pointer"
+                  className="block p-3 rounded-[16px] bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A] hover:border-amber-400/60 dark:hover:border-amber-500/40 hover:bg-white dark:hover:bg-[#181C22] text-[12px] space-y-1 transition-all group/narrative cursor-pointer"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[10px] font-bold text-[#2F65F6] dark:text-[#93C5FD] uppercase tracking-wider group-hover/narrative:underline">
@@ -161,10 +156,10 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({ community }) => {
       {/* Footer Navigation Button */}
       <Link
         to={`/communities/${encodeURIComponent(community.id)}`}
-        className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-slate-200/80 dark:border-[#252B32] bg-white dark:bg-[#1A2027] text-[12px] font-semibold text-[#111727] dark:text-slate-200 hover:bg-[#F8FAFD] dark:hover:bg-[#20262E] hover:border-[#2F65F6]/40 transition-all group/btn"
+        className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-full border border-slate-200/80 dark:border-[#2B323D] bg-[#FAFBFD] dark:bg-[#151921] text-[12px] font-semibold text-[#111727] dark:text-slate-200 hover:border-amber-400/80 dark:hover:border-amber-500/50 hover:bg-white dark:hover:bg-[#181C22] transition-all group/btn shadow-xs"
       >
         <span>Inspect Community Network</span>
-        <ArrowRight className="w-3.5 h-3.5 text-[#8591A5] group-hover/btn:translate-x-1 group-hover/btn:text-[#2F65F6] transition-all" />
+        <ArrowRight className="w-3.5 h-3.5 text-[#8591A5] group-hover/btn:translate-x-1 group-hover/btn:text-amber-500 transition-all" />
       </Link>
     </motion.div>
   );

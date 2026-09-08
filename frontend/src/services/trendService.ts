@@ -17,6 +17,8 @@ import type {
 export interface TrendWithNarratives extends TrendSummaryResponse {
   cleanId: string;
   narratives: NarrativeSummaryResponse[];
+  _searchCorpus?: string;
+  _numericId?: number;
 }
 
 /**
@@ -40,9 +42,10 @@ export function getCleanNarrativeId(identifier: string): string {
 }
 
 /**
- * Robust matching helper for Trend search queries.
+ * Ultra-fast, multi-term matching helper for Trend search queries.
  * Supports:
  * - Trend IDs: "#89", "89", "089", "#089", "trend 89", "trend #89", "trend_089", "topic 89", "topic_089"
+ * - Multi-word searches: "biden democratic", "trump election", "energy oil"
  * - Narrative IDs: "#001", "001", "narrative 1", "narrative_001"
  * - Keywords: "biden", "election", "rocket", "energy", etc.
  * - Trend name & summary text matches
@@ -52,71 +55,32 @@ export function matchesTrendSearch(trend: TrendWithNarratives, rawQuery: string)
   if (!rawQuery || !rawQuery.trim()) return true;
   const q = rawQuery.trim().toLowerCase();
 
-  // 1. Check direct trend name & summary
-  if (trend.trend_name && trend.trend_name.toLowerCase().includes(q)) return true;
-  if (trend.trend_summary && trend.trend_summary.toLowerCase().includes(q)) return true;
-
-  // 2. Check representative keywords
-  if (
-    trend.representative_keywords &&
-    trend.representative_keywords.some((k) => k.keyword && k.keyword.toLowerCase().includes(q))
-  ) {
-    return true;
-  }
-
-  // 3. Direct identifier string contains
-  if (trend.cleanId && trend.cleanId.toLowerCase().includes(q)) return true;
-  if (trend.trend_id && trend.trend_id.toLowerCase().includes(q)) return true;
-  if (trend.topic_id && trend.topic_id.toLowerCase().includes(q)) return true;
-
-  // 4. Normalized Trend ID / Numeric Matching
-  // Strips leading hashes, words like "trend", "topic", spaces, dashes, underscores
-  const strippedTrendQuery = q
+  // 1. Instant integer numeric match (e.g. searching "89", "#89", "trend 89", "topic #089")
+  const strippedNumeric = q
     .replace(/^#+/, '')
     .replace(/^(trend|topic)[_\s#-]?/i, '')
     .trim();
-
-  if (strippedTrendQuery) {
-    const cleanLower = trend.cleanId.toLowerCase();
-    // Substring or exact match on stripped query
-    if (cleanLower === strippedTrendQuery || cleanLower.endsWith(strippedTrendQuery)) {
-      return true;
-    }
-    // Integer numeric match (e.g. searching "89" matches cleanId "089")
-    const qInt = parseInt(strippedTrendQuery, 10);
-    const trendInt = parseInt(trend.cleanId, 10);
-    if (!isNaN(qInt) && !isNaN(trendInt) && qInt === trendInt) {
+  const qInt = parseInt(strippedNumeric, 10);
+  if (!isNaN(qInt)) {
+    const trendNum = trend._numericId ?? parseInt(trend.cleanId, 10);
+    if (!isNaN(trendNum) && trendNum === qInt) {
       return true;
     }
   }
 
-  // 5. Check associated narratives
-  if (trend.narratives && trend.narratives.length > 0) {
-    for (const n of trend.narratives) {
-      if (n.headline_claim && n.headline_claim.toLowerCase().includes(q)) return true;
-      if (n.narrative_name && n.narrative_name.toLowerCase().includes(q)) return true;
-      if (n.narrative_summary && n.narrative_summary.toLowerCase().includes(q)) return true;
-      if (n.narrative_id && n.narrative_id.toLowerCase().includes(q)) return true;
+  // 2. High-performance multi-term search against precomputed search corpus
+  const corpus =
+    trend._searchCorpus ||
+    `${trend.cleanId} ${trend.trend_name || ''} ${trend.trend_summary || ''}`.toLowerCase();
 
-      const cleanNid = getCleanNarrativeId(n.narrative_id);
-      if (cleanNid && cleanNid.toLowerCase().includes(q)) return true;
-
-      const strippedNarrativeQuery = q
-        .replace(/^#+/, '')
-        .replace(/^narrative[_\s#-]?/i, '')
-        .trim();
-
-      if (strippedNarrativeQuery) {
-        const nInt = parseInt(cleanNid, 10);
-        const qnInt = parseInt(strippedNarrativeQuery, 10);
-        if (!isNaN(nInt) && !isNaN(qnInt) && nInt === qnInt) {
-          return true;
-        }
-      }
-    }
-  }
-
-  return false;
+  const terms = q.split(/\s+/).filter(Boolean);
+  return terms.every((term) => {
+    const cleanTerm = term.replace(/^#+/, '').replace(/^(trend|topic)[_\s#-]?/i, '').trim();
+    return (
+      corpus.includes(term) ||
+      (cleanTerm !== '' && corpus.includes(cleanTerm))
+    );
+  });
 }
 
 /**
@@ -181,10 +145,24 @@ function joinTrendsWithNarratives(
     // Sort deterministically by priority_signal_score descending
     matchedNarratives.sort((a, b) => b.priority_signal_score - a.priority_signal_score);
 
+    // Pre-calculate search corpus for instant sub-millisecond filtering
+    const keywordsStr = (trend.representative_keywords || []).map((k) => k.keyword).join(' ');
+    const narrativeTexts = matchedNarratives
+      .map(
+        (n) =>
+          `${n.narrative_id} ${n.narrative_name || ''} ${n.headline_claim || ''} ${n.narrative_summary || ''}`
+      )
+      .join(' ');
+    const searchCorpus =
+      `${cleanId} ${trend.trend_id || ''} ${trend.topic_id || ''} ${trend.trend_name || ''} ${trend.trend_summary || ''} ${keywordsStr} ${narrativeTexts}`.toLowerCase();
+    const numericId = parseInt(cleanId, 10);
+
     return {
       ...trend,
       cleanId,
       narratives: matchedNarratives,
+      _searchCorpus: searchCorpus,
+      _numericId: isNaN(numericId) ? undefined : numericId,
     };
   });
 }

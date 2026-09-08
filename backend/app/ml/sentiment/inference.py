@@ -2,6 +2,7 @@ import logging
 from typing import Any, Sequence
 
 import torch
+# pyrefly: ignore [missing-import]
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 from app.ml.sentiment.models import SentimentLabel, SentimentPrediction

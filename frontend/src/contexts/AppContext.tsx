@@ -15,7 +15,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [systemStatus, setSystemStatus] = useState<SystemStatusType>('operational');
   const [activeTimeframe, setActiveTimeframe] = useState<string>('24h');
-  const environment = 'production-sim';
+  const environment = 'production';
 
   return (
     <AppContext.Provider

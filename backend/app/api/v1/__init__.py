@@ -26,3 +26,4 @@ v1_router.include_router(stream_router)
 v1_router.include_router(forecasting_router)
 
 __all__ = ["v1_router"]
+

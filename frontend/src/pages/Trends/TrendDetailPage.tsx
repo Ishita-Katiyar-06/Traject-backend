@@ -239,7 +239,7 @@ export const TrendDetailPage: React.FC = () => {
 
             {/* Description Subtitle */}
             <p className="text-[14px] sm:text-[15px] text-slate-500 dark:text-slate-400 font-normal leading-relaxed">
-              Algorithmic trend cluster #{cleanTrendId} discovered via multilingual sentence embeddings and HDBSCAN density clustering.
+              Algorithmic trend cluster #{cleanTrendId} discovered across {trend.message_count.toLocaleString()} messages via multilingual sentence embeddings and HDBSCAN density clustering.
             </p>
           </div>
 
@@ -364,7 +364,8 @@ export const TrendDetailPage: React.FC = () => {
         </div>
 
         <p className="relative z-10 text-[15.5px] sm:text-[17px] text-slate-700 dark:text-slate-200 leading-relaxed font-sans font-normal">
-          {trend.trend_summary || 'Semantic trend cluster synthesized from dense embedding spaces and representative class-based term frequencies.'}
+          {trend.trend_summary ||
+            `Semantic trend cluster #${cleanTrendId} (${trend.trend_name || 'Unlabeled'}) synthesized from ${trend.message_count.toLocaleString()} observed messages across representative c-TF-IDF term frequencies.`}
         </p>
 
         <div className="relative z-10 pt-2 border-t border-slate-200/50 dark:border-[#252B35] flex items-center justify-between text-[11.5px] text-slate-500 dark:text-slate-400">

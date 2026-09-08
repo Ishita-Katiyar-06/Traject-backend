@@ -16,38 +16,13 @@ export interface NavigationContextType {
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
 
-const SIDEBAR_STORAGE_KEY = 'tessera_sidebar_collapsed';
-
 export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Responsive sidebar initialization:
-  // >= 1200px: expanded by default (unless user stored preference)
-  // 768px - 1199px: collapsed by default
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY);
-      if (stored !== null) {
-        return JSON.parse(stored);
-      }
-      return window.innerWidth < 1200;
-    }
-    return false;
-  });
-
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const [isMobileMoreOpen, setIsMobileMoreOpen] = useState<boolean>(false);
 
-  const toggleSidebar = () => {
-    setIsSidebarCollapsed((prev) => {
-      const next = !prev;
-      localStorage.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify(next));
-      return next;
-    });
-  };
-
-  const setSidebarCollapsed = (collapsed: boolean) => {
-    setIsSidebarCollapsed(collapsed);
-    localStorage.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify(collapsed));
-  };
+  const toggleSidebar = () => setIsSidebarCollapsed((prev) => !prev);
+  const setSidebarCollapsed = (collapsed: boolean) => setIsSidebarCollapsed(collapsed);
 
   const openSearch = () => {
     setIsSearchOpen(true);
@@ -66,8 +41,7 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   // Keyboard shortcut listener:
-  // '/' -> Open search
-  // 'b' or 'B' -> Toggle sidebar collapse (when not typing in an input)
+  // '/' or 'Cmd/Ctrl + K' -> Open search
   // 'Escape' -> Close search and mobile drawer
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -83,9 +57,6 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           e.preventDefault();
           setIsSearchOpen(true);
           setIsMobileMoreOpen(false);
-        } else if (e.key === 'b' || e.key === 'B') {
-          e.preventDefault();
-          toggleSidebar();
         }
       }
 
@@ -102,13 +73,6 @@ export const NavigationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   // Handle window resizing breakpoint adaptation
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768 && window.innerWidth < 1200) {
-        // Automatically collapse on tablet width if no user override
-        const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY);
-        if (stored === null) {
-          setIsSidebarCollapsed(true);
-        }
-      }
       if (window.innerWidth >= 768 && isMobileMoreOpen) {
         setIsMobileMoreOpen(false);
       }

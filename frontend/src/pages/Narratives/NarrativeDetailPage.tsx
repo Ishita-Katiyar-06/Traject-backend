@@ -193,18 +193,18 @@ export const NarrativeDetailPage: React.FC = () => {
       />
 
       {/* Narrative Identity & Evidence-Grounded Explanation */}
-      <div className="p-6 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-4">
+      <div className="p-6 sm:p-8 rounded-[30px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs space-y-5">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-mono text-[11px] font-bold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 px-2.5 py-0.5 rounded-full border border-rose-200/70 dark:border-rose-900/50 uppercase">
+            <span className="font-mono text-[11px] font-bold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 px-3 py-1 rounded-full border border-rose-200/70 dark:border-rose-900/50 uppercase">
               {narrative.narrative_id.toUpperCase()}
             </span>
             {narrative.is_dominant ? (
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full border bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-900/40 uppercase font-mono">
+              <span className="text-[11px] font-bold px-3 py-1 rounded-full border bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-900/40 uppercase font-mono">
                 Dominant Viewpoint
               </span>
             ) : narrative.is_dominant === false ? (
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full border bg-slate-100 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-slate-200/60 dark:border-slate-700/40 uppercase font-mono">
+              <span className="text-[11px] font-bold px-3 py-1 rounded-full border bg-slate-100 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-slate-200/60 dark:border-slate-700/40 uppercase font-mono">
                 Alternative Perspective
               </span>
             ) : null}
@@ -212,7 +212,7 @@ export const NarrativeDetailPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => navigate(`/trends/${parentTrendTarget}`)}
-                className="inline-flex items-center gap-1.5 font-mono text-[11px] font-bold text-[#2F65F6] dark:text-[#93C5FD] bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 px-2.5 py-0.5 rounded-full border border-blue-200/70 dark:border-blue-900/40 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 font-mono text-[11px] font-bold text-[#2F65F6] dark:text-[#93C5FD] bg-blue-50/80 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 px-3 py-1 rounded-full border border-blue-200/70 dark:border-blue-900/40 transition-colors cursor-pointer"
                 title={`Inspect Parent Trend #${cleanParentTrendId}`}
               >
                 <Radio className="w-3 h-3 text-[#2F65F6] dark:text-[#93C5FD]" />
@@ -226,15 +226,15 @@ export const NarrativeDetailPage: React.FC = () => {
         </div>
 
         <div>
-          <h2 className="text-[22px] sm:text-[24px] font-bold text-[#111727] dark:text-slate-100 tracking-tight leading-snug">
+          <h2 className="text-[22px] sm:text-[26px] font-bold text-[#111727] dark:text-slate-100 tracking-tight leading-snug">
             {displayName}
           </h2>
-          <div className="text-[11px] font-mono text-[#8591A5] dark:text-slate-400 mt-1">
-            Claim Framing: {narrative.headline_claim}
+          <div className="text-[12px] font-mono text-[#8591A5] dark:text-slate-400 mt-1">
+            Claim Framing: <span className="text-slate-700 dark:text-slate-300">{narrative.headline_claim}</span>
           </div>
         </div>
 
-        <div className="p-4 rounded-[18px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32] space-y-1.5">
+        <div className="p-5 sm:p-6 rounded-[22px] bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A] space-y-2">
           <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#2F65F6] dark:text-[#5878C7] flex items-center gap-1.5">
             <Info className="w-3.5 h-3.5" />
             <span>What this narrative represents</span>
@@ -252,10 +252,10 @@ export const NarrativeDetailPage: React.FC = () => {
                 key={sibId}
                 type="button"
                 onClick={() => navigate(`/narratives/${sibId}?trend=${encodeURIComponent(parentTrendTarget)}`)}
-                className="inline-flex items-center gap-1 font-mono text-[11px] font-bold text-[#2F65F6] dark:text-[#93C5FD] bg-slate-50 dark:bg-slate-800/40 hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2 py-0.5 rounded-lg border border-slate-200/70 dark:border-slate-700/50 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 font-mono text-[11px] font-bold text-[#111727] dark:text-white bg-[#F5F1E5] dark:bg-[#1E2229] hover:border-amber-400 dark:hover:border-amber-500/50 px-3 py-1 rounded-full border border-[#E5DFD3] dark:border-[#2D333F] transition-all cursor-pointer shadow-xs"
               >
                 <span>{sibId.toUpperCase()}</span>
-                <ArrowUpRight className="w-3 h-3" />
+                <ArrowUpRight className="w-3 h-3 text-amber-600 dark:text-amber-400" />
               </button>
             ))}
           </div>
@@ -263,20 +263,20 @@ export const NarrativeDetailPage: React.FC = () => {
       </div>
 
       {/* Metadata Pill Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 rounded-[20px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] text-[13px] font-sans text-[#64748B] dark:text-slate-400 shadow-dashboard">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-3.5 rounded-full border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md text-[13px] font-sans text-[#64748B] dark:text-slate-400 shadow-xs">
         <div className="flex items-center gap-2.5 flex-wrap">
-          <span className="text-[#111727] dark:text-slate-200 uppercase font-bold text-[11px] font-mono bg-[#EEF1F8] dark:bg-[#12161C] px-2.5 py-0.5 rounded-full border border-slate-200/60 dark:border-[#2B323A]">
+          <span className="text-[#111727] dark:text-slate-200 uppercase font-bold text-[11px] font-mono bg-[#EEF1F8] dark:bg-[#12161C] px-3 py-1 rounded-full border border-slate-200/60 dark:border-[#2B323A]">
             {narrative.narrative_id}
           </span>
           <span className="text-slate-300 dark:text-slate-700">•</span>
           <span
-            className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${tierBadge.bg} ${tierBadge.text} ${tierBadge.border}`}
+            className={`text-[11px] font-bold px-3 py-1 rounded-full border ${tierBadge.bg} ${tierBadge.text} ${tierBadge.border}`}
           >
             {tierBadge.label} Priority
           </span>
           <span className="text-slate-300 dark:text-slate-700">•</span>
           <span
-            className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full ${densityBadge.bg} ${densityBadge.text}`}
+            className={`text-[11px] font-semibold px-3 py-1 rounded-full ${densityBadge.bg} ${densityBadge.text}`}
             title={EVIDENCE_DENSITY_WORDING.tooltip}
           >
             {densityBadge.label} Coverage
@@ -284,7 +284,7 @@ export const NarrativeDetailPage: React.FC = () => {
           {narrative.is_cross_source && (
             <>
               <span className="text-slate-300 dark:text-slate-700">•</span>
-              <span className="text-[11px] font-semibold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900/50 px-2.5 py-0.5 rounded-full">
+              <span className="text-[11px] font-semibold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900/50 px-3 py-1 rounded-full">
                 Cross-Source ({narrative.distinct_sources_count || 2} channels)
               </span>
             </>
@@ -292,7 +292,7 @@ export const NarrativeDetailPage: React.FC = () => {
           {narrative.is_cross_domain && (
             <>
               <span className="text-slate-300 dark:text-slate-700">•</span>
-              <span className="text-[11px] font-semibold text-purple-800 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900/50 px-2.5 py-0.5 rounded-full">
+              <span className="text-[11px] font-semibold text-purple-800 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900/50 px-3 py-1 rounded-full">
                 Cross-Domain ({narrative.distinct_domains_count || 2} domains)
               </span>
             </>
@@ -300,7 +300,7 @@ export const NarrativeDetailPage: React.FC = () => {
           {narrative.quality_classification && (
             <>
               <span className="text-slate-300 dark:text-slate-700">•</span>
-              <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#1D232A] border border-slate-200 dark:border-[#2B323A] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+              <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-[#1D232A] border border-slate-200 dark:border-[#2B323A] px-3 py-1 rounded-full uppercase tracking-wider">
                 {narrative.quality_classification.replace(/_/g, ' ')}
               </span>
             </>
@@ -338,7 +338,7 @@ export const NarrativeDetailPage: React.FC = () => {
       </div>
 
       {/* 2. Primary 4G Composite Scoring Breakdown */}
-      <section className="p-6 md:p-8 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-6 transition-all">
+      <section className="p-6 md:p-8 rounded-[30px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs space-y-6 transition-all">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-[#252B32] pb-5">
           <div>
             <div className="text-[11px] font-bold text-[#8591A5] dark:text-slate-400 uppercase tracking-wider">
@@ -352,7 +352,7 @@ export const NarrativeDetailPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="p-4 rounded-[20px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/80 dark:border-[#252B32] text-right shrink-0">
+          <div className="p-5 rounded-[24px] bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/80 dark:border-[#282F3A] text-right shrink-0 shadow-xs">
             <div className="text-[10px] font-bold text-[#8591A5] dark:text-slate-400 uppercase tracking-wider">
               Composite Value
             </div>
@@ -366,10 +366,10 @@ export const NarrativeDetailPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
           <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Spread Dimension */}
-            <div className="p-5 rounded-[20px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32] space-y-2">
+            <div className="p-5 sm:p-6 rounded-[22px] bg-blue-50/40 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40 space-y-2 transition-all hover:scale-[1.01]">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Spread Score</span>
-                <span className="text-[10px] font-mono text-slate-400">Weight: 30%</span>
+                <span className="text-[11px] font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider">Spread Score</span>
+                <span className="text-[10px] font-mono text-blue-600/80 dark:text-blue-400">Weight: 30%</span>
               </div>
               <div className="font-mono text-[26px] font-extrabold text-[#111727] dark:text-slate-100 leading-tight">
                 <AnimatedNumber value={narrative.sub_scores.spread_score} decimals={3} />
@@ -380,10 +380,10 @@ export const NarrativeDetailPage: React.FC = () => {
             </div>
 
             {/* Coordination Dimension */}
-            <div className="p-5 rounded-[20px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32] space-y-2">
+            <div className="p-5 sm:p-6 rounded-[22px] bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 space-y-2 transition-all hover:scale-[1.01]">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Coordination Score</span>
-                <span className="text-[10px] font-mono text-slate-400">Weight: 30%</span>
+                <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider">Coordination Score</span>
+                <span className="text-[10px] font-mono text-amber-600/80 dark:text-amber-400">Weight: 30%</span>
               </div>
               <div className="font-mono text-[26px] font-extrabold text-[#111727] dark:text-slate-100 leading-tight">
                 <AnimatedNumber value={narrative.sub_scores.coordination_score} decimals={3} />
@@ -394,12 +394,12 @@ export const NarrativeDetailPage: React.FC = () => {
             </div>
 
             {/* Observed Reach Dimension */}
-            <div className="p-5 rounded-[20px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32] space-y-2">
+            <div className="p-5 sm:p-6 rounded-[22px] bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 space-y-2 transition-all hover:scale-[1.01]">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
                   {REACH_WORDING.primary}
                 </span>
-                <span className="text-[10px] font-mono text-slate-400">Weight: 20%</span>
+                <span className="text-[10px] font-mono text-emerald-600/80 dark:text-emerald-400">Weight: 20%</span>
               </div>
               <div className="font-mono text-[26px] font-extrabold text-[#111727] dark:text-slate-100 leading-tight">
                 <AnimatedNumber value={narrative.sub_scores.reach_score} decimals={3} />
@@ -410,10 +410,10 @@ export const NarrativeDetailPage: React.FC = () => {
             </div>
 
             {/* Friction Dimension */}
-            <div className="p-5 rounded-[20px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32] space-y-2">
+            <div className="p-5 sm:p-6 rounded-[22px] bg-purple-50/40 dark:bg-purple-950/20 border border-purple-200/60 dark:border-purple-900/40 space-y-2 transition-all hover:scale-[1.01]">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Friction Score</span>
-                <span className="text-[10px] font-mono text-slate-400">Weight: 20%</span>
+                <span className="text-[11px] font-bold text-purple-800 dark:text-purple-300 uppercase tracking-wider">Friction Score</span>
+                <span className="text-[10px] font-mono text-purple-600/80 dark:text-purple-400">Weight: 20%</span>
               </div>
               <div className="font-mono text-[26px] font-extrabold text-[#111727] dark:text-slate-100 leading-tight">
                 <AnimatedNumber value={narrative.sub_scores.friction_score} decimals={3} />
@@ -425,7 +425,7 @@ export const NarrativeDetailPage: React.FC = () => {
           </div>
 
           {/* Analytical Radar Chart Profile */}
-          <div className="p-4 rounded-[22px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32] flex flex-col items-center justify-center">
+          <div className="p-5 rounded-[24px] bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/80 dark:border-[#282F3A] flex flex-col items-center justify-center">
             <div className="text-[12px] font-bold text-[#111727] dark:text-slate-100 mb-1 font-sans">
               4G Formula Signal Geometry
             </div>
@@ -437,7 +437,7 @@ export const NarrativeDetailPage: React.FC = () => {
         </div>
 
         {/* Semantic Guardrail Disclaimer Note */}
-        <div className="p-4 rounded-[18px] bg-blue-50/60 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 flex items-start gap-3 text-[12px] text-blue-900 dark:text-blue-200">
+        <div className="p-4.5 rounded-[20px] bg-blue-50/50 dark:bg-blue-950/25 border border-blue-200/60 dark:border-blue-900/40 flex items-start gap-3 text-[12px] text-blue-900 dark:text-blue-200">
           <Info className="w-4 h-4 text-[#2F65F6] dark:text-[#5878C7] shrink-0 mt-0.5" />
           <div className="leading-relaxed">
             <strong>Operational Semantic Protocol:</strong> Priority Signal Score reflects statistical surveillance prioritization. It is not an assessment of malicious intent, threat level, or misinformation ground truth.
@@ -448,7 +448,7 @@ export const NarrativeDetailPage: React.FC = () => {
       {/* 3. Potential Coordination Signals & Observational Data Coverage */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Coordination Indicators (Signal wording only) */}
-        <div className="p-6 md:p-7 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-4 transition-all">
+        <div className="p-6 md:p-8 rounded-[30px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs space-y-4 transition-all">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#252B32] pb-4">
             <div className="flex items-center gap-2">
               <Activity className="w-5 h-5 text-amber-600 dark:text-amber-400" />
@@ -456,7 +456,7 @@ export const NarrativeDetailPage: React.FC = () => {
                 {COORDINATION_WORDING.plural}
               </h4>
             </div>
-            <span className="text-[11px] font-mono text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 px-2.5 py-0.5 rounded-full font-semibold">
+            <span className="text-[11px] font-mono text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 px-3 py-1 rounded-full font-semibold">
               Anomaly Indicators
             </span>
           </div>
@@ -467,53 +467,53 @@ export const NarrativeDetailPage: React.FC = () => {
 
           <div className="space-y-2.5 pt-1">
             <div
-              className={`p-3.5 rounded-[16px] border flex items-center justify-between text-[13px] ${
+              className={`p-3.5 rounded-[18px] border flex items-center justify-between text-[13px] transition-all ${
                 narrative.coordination_signals.potential_syndication_spike
-                  ? 'bg-amber-50/60 dark:bg-amber-950/25 border-amber-200/80 dark:border-amber-900/40 text-amber-900 dark:text-amber-200 font-medium'
-                  : 'bg-[#F8FAFD] dark:bg-[#13171C] border-slate-200/60 dark:border-[#252B32] text-[#64748B] dark:text-slate-400'
+                  ? 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-200/90 dark:border-amber-900/50 text-amber-900 dark:text-amber-200 font-medium'
+                  : 'bg-[#FAFBFD] dark:bg-[#12161C] border-slate-200/70 dark:border-[#282F3A] text-[#64748B] dark:text-slate-400'
               }`}
             >
               <span>Potential Syndication Spike (&gt;25% uncredited duplicate content)</span>
-              <span className={`font-semibold text-[11px] px-2.5 py-0.5 rounded-full ${narrative.coordination_signals.potential_syndication_spike ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>
+              <span className={`font-semibold text-[11px] px-3 py-1 rounded-full ${narrative.coordination_signals.potential_syndication_spike ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>
                 {narrative.coordination_signals.potential_syndication_spike ? 'Signal Flagged' : 'Baseline'}
               </span>
             </div>
 
             <div
-              className={`p-3.5 rounded-[16px] border flex items-center justify-between text-[13px] ${
+              className={`p-3.5 rounded-[18px] border flex items-center justify-between text-[13px] transition-all ${
                 narrative.coordination_signals.potential_temporal_burst
-                  ? 'bg-amber-50/60 dark:bg-amber-950/25 border-amber-200/80 dark:border-amber-900/40 text-amber-900 dark:text-amber-200 font-medium'
-                  : 'bg-[#F8FAFD] dark:bg-[#13171C] border-slate-200/60 dark:border-[#252B32] text-[#64748B] dark:text-slate-400'
+                  ? 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-200/90 dark:border-amber-900/50 text-amber-900 dark:text-amber-200 font-medium'
+                  : 'bg-[#FAFBFD] dark:bg-[#12161C] border-slate-200/70 dark:border-[#282F3A] text-[#64748B] dark:text-slate-400'
               }`}
             >
               <span>Potential Temporal Burst (burstiness index &gt; +0.20)</span>
-              <span className={`font-semibold text-[11px] px-2.5 py-0.5 rounded-full ${narrative.coordination_signals.potential_temporal_burst ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>
+              <span className={`font-semibold text-[11px] px-3 py-1 rounded-full ${narrative.coordination_signals.potential_temporal_burst ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>
                 {narrative.coordination_signals.potential_temporal_burst ? 'Signal Flagged' : 'Baseline'}
               </span>
             </div>
 
             <div
-              className={`p-3.5 rounded-[16px] border flex items-center justify-between text-[13px] ${
+              className={`p-3.5 rounded-[18px] border flex items-center justify-between text-[13px] transition-all ${
                 narrative.coordination_signals.potential_rapid_channel_entry
-                  ? 'bg-amber-50/60 dark:bg-amber-950/25 border-amber-200/80 dark:border-amber-900/40 text-amber-900 dark:text-amber-200 font-medium'
-                  : 'bg-[#F8FAFD] dark:bg-[#13171C] border-slate-200/60 dark:border-[#252B32] text-[#64748B] dark:text-slate-400'
+                  ? 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-200/90 dark:border-amber-900/50 text-amber-900 dark:text-amber-200 font-medium'
+                  : 'bg-[#FAFBFD] dark:bg-[#12161C] border-slate-200/70 dark:border-[#282F3A] text-[#64748B] dark:text-slate-400'
               }`}
             >
               <span>Potential Rapid Channel Entry (&gt;10 channels/hr velocity)</span>
-              <span className={`font-semibold text-[11px] px-2.5 py-0.5 rounded-full ${narrative.coordination_signals.potential_rapid_channel_entry ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>
+              <span className={`font-semibold text-[11px] px-3 py-1 rounded-full ${narrative.coordination_signals.potential_rapid_channel_entry ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>
                 {narrative.coordination_signals.potential_rapid_channel_entry ? 'Signal Flagged' : 'Baseline'}
               </span>
             </div>
 
             <div
-              className={`p-3.5 rounded-[16px] border flex items-center justify-between text-[13px] ${
+              className={`p-3.5 rounded-[18px] border flex items-center justify-between text-[13px] transition-all ${
                 narrative.coordination_signals.potential_cross_channel_cascade
-                  ? 'bg-amber-50/60 dark:bg-amber-950/25 border-amber-200/80 dark:border-amber-900/40 text-amber-900 dark:text-amber-200 font-medium'
-                  : 'bg-[#F8FAFD] dark:bg-[#13171C] border-slate-200/60 dark:border-[#252B32] text-[#64748B] dark:text-slate-400'
+                  ? 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-200/90 dark:border-amber-900/50 text-amber-900 dark:text-amber-200 font-medium'
+                  : 'bg-[#FAFBFD] dark:bg-[#12161C] border-slate-200/70 dark:border-[#282F3A] text-[#64748B] dark:text-slate-400'
               }`}
             >
               <span>Potential Cross-Channel Cascade (≥2 distinct broadcasting feeds)</span>
-              <span className={`font-semibold text-[11px] px-2.5 py-0.5 rounded-full ${narrative.coordination_signals.potential_cross_channel_cascade ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>
+              <span className={`font-semibold text-[11px] px-3 py-1 rounded-full ${narrative.coordination_signals.potential_cross_channel_cascade ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>
                 {narrative.coordination_signals.potential_cross_channel_cascade ? 'Signal Flagged' : 'Baseline'}
               </span>
             </div>
@@ -521,7 +521,7 @@ export const NarrativeDetailPage: React.FC = () => {
         </div>
 
         {/* Evidence Density & Sentiment Profiling */}
-        <div className="p-6 md:p-7 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-4 transition-all">
+        <div className="p-6 md:p-8 rounded-[30px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs space-y-4 transition-all">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#252B32] pb-4">
             <div className="flex items-center gap-2">
               <Shield className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
@@ -530,13 +530,13 @@ export const NarrativeDetailPage: React.FC = () => {
               </h4>
             </div>
             <span
-              className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${densityBadge.bg} ${densityBadge.text}`}
+              className={`text-[11px] font-bold px-3 py-1 rounded-full ${densityBadge.bg} ${densityBadge.text}`}
             >
               {densityBadge.label} Density
             </span>
           </div>
 
-          <div className="p-4 rounded-[18px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/60 dark:border-[#252B32] space-y-2">
+          <div className="p-4.5 rounded-[20px] bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A] space-y-2">
             <div className="text-[11px] font-bold text-[#8591A5] dark:text-slate-400 uppercase tracking-wider">
               Data Coverage Summary
             </div>
@@ -555,35 +555,35 @@ export const NarrativeDetailPage: React.FC = () => {
             <div className="text-[12px] font-bold text-[#111727] dark:text-slate-100 mb-2 flex items-center justify-between">
               <span>Sentiment Profile</span>
               {narrative.sentiment_profile.is_available ? (
-                <span className="font-mono text-[11px] text-blue-700 dark:text-[#93C5FD] bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-full border border-blue-100 dark:border-blue-900/40 font-semibold">
+                <span className="font-mono text-[11px] text-blue-700 dark:text-[#93C5FD] bg-blue-50 dark:bg-blue-950/40 px-3 py-1 rounded-full border border-blue-100 dark:border-blue-900/40 font-semibold">
                   Evaluated ({narrative.sentiment_profile.total_text_messages_evaluated.toLocaleString()} msgs)
                 </span>
               ) : (
-                <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#1D232A] px-2 py-0.5 rounded-full font-semibold border border-slate-200/60 dark:border-[#2B323A]">
+                <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#1D232A] px-3 py-1 rounded-full font-semibold border border-slate-200/60 dark:border-[#2B323A]">
                   Unavailable / Uncomputed
                 </span>
               )}
             </div>
 
             {narrative.sentiment_profile.is_available ? (
-              <div className="p-4 rounded-[18px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/80 dark:border-[#252B32] space-y-2">
+              <div className="p-4.5 rounded-[20px] bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/80 dark:border-[#282F3A] space-y-2">
                 <div className="grid grid-cols-3 gap-2 text-center text-[12px]">
-                  <div className="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-[12px] border border-emerald-100 dark:border-emerald-900/40">
+                  <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-[14px] border border-emerald-100 dark:border-emerald-900/40">
                     <div className="text-emerald-800 dark:text-emerald-300 text-[10px] font-bold uppercase tracking-wider">Pos</div>
                     <div className="font-bold text-emerald-900 dark:text-emerald-200 font-mono mt-0.5">{formatPercent(narrative.sentiment_profile.text_positive_ratio)}</div>
                   </div>
-                  <div className="bg-slate-50 dark:bg-[#1D232A] p-2.5 rounded-[12px] border border-slate-200 dark:border-[#2B323A]">
+                  <div className="bg-slate-50 dark:bg-[#1D232A] p-3 rounded-[14px] border border-slate-200 dark:border-[#2B323A]">
                     <div className="text-slate-700 dark:text-slate-300 text-[10px] font-bold uppercase tracking-wider">Neu</div>
                     <div className="font-bold text-slate-800 dark:text-slate-200 font-mono mt-0.5">{formatPercent(narrative.sentiment_profile.text_neutral_ratio)}</div>
                   </div>
-                  <div className="bg-rose-50 dark:bg-rose-950/30 p-2.5 rounded-[12px] border border-rose-100 dark:border-rose-900/40">
+                  <div className="bg-rose-50 dark:bg-rose-950/30 p-3 rounded-[14px] border border-rose-100 dark:border-rose-900/40">
                     <div className="text-rose-800 dark:text-rose-300 text-[10px] font-bold uppercase tracking-wider">Neg</div>
                     <div className="font-bold text-rose-900 dark:text-rose-200 font-mono mt-0.5">{formatPercent(narrative.sentiment_profile.text_negative_ratio)}</div>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="p-4 rounded-[18px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/60 dark:border-[#252B32] text-center space-y-1">
+              <div className="p-4.5 rounded-[20px] bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A] text-center space-y-1">
                 <p className="text-[12px] text-[#64748B] dark:text-slate-400 leading-relaxed">
                   Sentiment inference is unavailable for this narrative candidate. Values are preserved as uncomputed rather than fabricated neutral.
                 </p>
@@ -596,17 +596,17 @@ export const NarrativeDetailPage: React.FC = () => {
       {/* 4. Key Entities & Monitored Channels */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Key Entities */}
-        <div className="p-6 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-3 transition-all">
+        <div className="p-6 md:p-8 rounded-[30px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs space-y-4 transition-all">
           <div className="flex items-center gap-2">
             <Tag className="w-4 h-4 text-[#2F65F6] dark:text-[#5878C7]" />
             <h4 className="text-[15px] font-bold text-[#111727] dark:text-slate-100">Extracted Entities & Framing</h4>
           </div>
           {narrative.key_entities && narrative.key_entities.length > 0 ? (
-            <div className="flex flex-wrap gap-2 pt-2">
+            <div className="flex flex-wrap gap-2 pt-1">
               {narrative.key_entities.map((entity, i) => (
                 <span
                   key={i}
-                  className="px-3 py-1 rounded-full bg-slate-100 dark:bg-[#1D232A] text-[#111727] dark:text-slate-200 text-[12px] font-medium border border-slate-200 dark:border-[#2B323A]"
+                  className="px-3.5 py-1.5 rounded-full bg-[#FAFBFD] dark:bg-[#151921] text-[#111727] dark:text-slate-200 text-[12px] font-mono font-medium border border-slate-200/80 dark:border-[#282F3A] shadow-2xs hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
                 >
                   {entity}
                 </span>
@@ -618,17 +618,17 @@ export const NarrativeDetailPage: React.FC = () => {
         </div>
 
         {/* Monitored Channels */}
-        <div className="p-6 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-3 transition-all">
+        <div className="p-6 md:p-8 rounded-[30px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs space-y-4 transition-all">
           <div className="flex items-center gap-2">
             <Share2 className="w-4 h-4 text-[#2F65F6] dark:text-[#5878C7]" />
             <h4 className="text-[15px] font-bold text-[#111727] dark:text-slate-100">Broadcasting Channels & Feeds</h4>
           </div>
           {narrative.broadcasting_channels && narrative.broadcasting_channels.length > 0 ? (
-            <div className="flex flex-wrap gap-2 pt-2">
+            <div className="flex flex-wrap gap-2 pt-1">
               {narrative.broadcasting_channels.map((ch, i) => (
                 <span
                   key={i}
-                  className="px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/40 text-[#2F65F6] dark:text-[#93C5FD] text-[12px] font-mono font-medium border border-blue-100 dark:border-blue-900/40"
+                  className="px-3.5 py-1.5 rounded-full bg-blue-50/60 dark:bg-blue-950/30 text-[#2F65F6] dark:text-[#93C5FD] text-[12px] font-mono font-semibold border border-blue-200/60 dark:border-blue-900/40 shadow-2xs"
                 >
                   {ch}
                 </span>
@@ -639,7 +639,7 @@ export const NarrativeDetailPage: React.FC = () => {
           )}
 
           {narrative.domains_represented && narrative.domains_represented.length > 0 && (
-            <div className="pt-3 border-t border-slate-100 dark:border-[#252B32] space-y-1.5">
+            <div className="pt-3 border-t border-slate-100 dark:border-[#252B32] space-y-2">
               <div className="text-[11px] font-bold text-[#8591A5] dark:text-slate-400 uppercase tracking-wider">
                 Strategic Domains Represented
               </div>
@@ -647,7 +647,7 @@ export const NarrativeDetailPage: React.FC = () => {
                 {narrative.domains_represented.map((dom, i) => (
                   <span
                     key={i}
-                    className="px-2.5 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-900/50 text-[11px] font-mono font-semibold"
+                    className="px-3 py-1 rounded-full bg-purple-50/60 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-900/40 text-[11px] font-mono font-semibold"
                   >
                     {dom}
                   </span>
@@ -657,7 +657,7 @@ export const NarrativeDetailPage: React.FC = () => {
           )}
 
           {narrative.validation_notes && narrative.validation_notes.length > 0 && (
-            <div className="pt-3 border-t border-slate-100 dark:border-[#252B32] space-y-1">
+            <div className="pt-3 border-t border-slate-100 dark:border-[#252B32] space-y-1.5">
               <div className="text-[11px] font-bold text-[#8591A5] dark:text-slate-400 uppercase tracking-wider">
                 Observational Evidence Notes
               </div>
@@ -675,7 +675,7 @@ export const NarrativeDetailPage: React.FC = () => {
       <NarrativeSentimentChart narrativeId={narrative.narrative_id} />
 
       {/* 4.5 Diffusion Footprint & Source Network Dossier */}
-      <section className="p-6 md:p-8 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-6 transition-all">
+      <section className="p-6 md:p-8 rounded-[30px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs space-y-6 transition-all">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-[#252B32] pb-4">
           <div className="flex items-center gap-2.5">
             <Share2 className="w-5 h-5 text-[#2F65F6] dark:text-[#5878C7]" />
@@ -701,13 +701,13 @@ export const NarrativeDetailPage: React.FC = () => {
         {/* 3-Pillar Transmission Breakdown */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* 1. Origin Discovery Feeds */}
-          <div className="p-5 rounded-[20px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32] space-y-3">
+          <div className="p-5 rounded-[24px] bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A] space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
                 <Send className="w-3.5 h-3.5" />
                 Origin Broadcasts
               </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/50">
+              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/50">
                 {(narrative.origin_channels || []).length || (narrative.domains_represented || []).length} sources
               </span>
             </div>
@@ -719,7 +719,7 @@ export const NarrativeDetailPage: React.FC = () => {
                   return (
                     <div
                       key={chan}
-                      className="p-2.5 rounded-xl bg-white dark:bg-[#1A2027] border border-slate-200/80 dark:border-[#252B32] shadow-xs"
+                      className="p-3 rounded-[16px] bg-white dark:bg-[#181C22] border border-slate-200/80 dark:border-[#2B323D] shadow-xs"
                     >
                       <div className="text-[13px] font-bold text-[#111727] dark:text-slate-100 truncate">
                         {info.title}
@@ -732,7 +732,7 @@ export const NarrativeDetailPage: React.FC = () => {
                   );
                 })
               ) : (
-                <div className="p-3 rounded-xl bg-white dark:bg-[#1A2027] border border-slate-200/80 dark:border-[#252B32] text-[12px] text-[#64748B] dark:text-slate-400">
+                <div className="p-3 rounded-[16px] bg-white dark:bg-[#181C22] border border-slate-200/80 dark:border-[#2B323D] text-[12px] text-[#64748B] dark:text-slate-400">
                   {narrative.domains_represented && narrative.domains_represented.length > 0
                     ? narrative.domains_represented.map((d) => `Domain: ${d}`).join(', ')
                     : 'Discovered in cross-platform stream'}
@@ -742,18 +742,18 @@ export const NarrativeDetailPage: React.FC = () => {
           </div>
 
           {/* 2. Semantic Cluster Genesis */}
-          <div className="p-5 rounded-[20px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32] space-y-3">
+          <div className="p-5 rounded-[24px] bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A] space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#2F65F6] dark:text-[#5878C7] flex items-center gap-1.5">
                 <Tag className="w-3.5 h-3.5" />
                 Parent Trend
               </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-[#2F65F6] dark:text-[#93C5FD] border border-blue-200 dark:border-blue-900/50">
+              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-[#2F65F6] dark:text-[#93C5FD] border border-blue-200 dark:border-blue-900/50">
                 TREND #{cleanParentTrendId || narrative.promoted_from_topic_id.replace(/^topic_|^trend_/, '')}
               </span>
             </div>
 
-            <div className="p-2.5 rounded-xl bg-white dark:bg-[#1A2027] border border-slate-200/80 dark:border-[#252B32] shadow-xs space-y-1.5">
+            <div className="p-3 rounded-[16px] bg-white dark:bg-[#181C22] border border-slate-200/80 dark:border-[#2B323D] shadow-xs space-y-1.5">
               <div className="text-[13px] font-bold text-[#111727] dark:text-slate-100">
                 {parentTrend?.trend_name || `Synthesized Trend #${cleanParentTrendId || narrative.promoted_from_topic_id.replace(/^topic_|^trend_/, '')}`}
               </div>
@@ -764,7 +764,7 @@ export const NarrativeDetailPage: React.FC = () => {
                 {(narrative.key_entities || []).slice(0, 3).map((e) => (
                   <span
                     key={e}
-                    className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/40"
+                    className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/40"
                   >
                     {e.replace(/^(domain:|hashtag:|gazetteer_geo:)/, '')}
                   </span>
@@ -774,13 +774,13 @@ export const NarrativeDetailPage: React.FC = () => {
           </div>
 
           {/* 3. Amplification & Broadcaster Network */}
-          <div className="p-5 rounded-[20px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32] space-y-3">
+          <div className="p-5 rounded-[24px] bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A] space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-purple-700 dark:text-purple-400 flex items-center gap-1.5">
                 <Radio className="w-3.5 h-3.5" />
                 Broadcasters
               </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-900/50">
+              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-900/50">
                 {(narrative.broadcasting_channels || []).length} broadcasters
               </span>
             </div>
@@ -792,7 +792,7 @@ export const NarrativeDetailPage: React.FC = () => {
                   return (
                     <div
                       key={chan}
-                      className="p-2.5 rounded-xl bg-white dark:bg-[#1A2027] border border-slate-200/80 dark:border-[#252B32] shadow-xs"
+                      className="p-3 rounded-[16px] bg-white dark:bg-[#181C22] border border-slate-200/80 dark:border-[#2B323D] shadow-xs"
                     >
                       <div className="text-[13px] font-bold text-[#111727] dark:text-slate-100 truncate">
                         {info.title}
@@ -805,7 +805,7 @@ export const NarrativeDetailPage: React.FC = () => {
                   );
                 })
               ) : (
-                <div className="p-3 rounded-xl bg-white dark:bg-[#1A2027] border border-slate-200/80 dark:border-[#252B32] text-[12px] text-[#64748B] dark:text-slate-400">
+                <div className="p-3 rounded-[16px] bg-white dark:bg-[#181C22] border border-slate-200/80 dark:border-[#2B323D] text-[12px] text-[#64748B] dark:text-slate-400">
                   Broadcast primarily within primary discovery channel
                 </div>
               )}
@@ -815,7 +815,7 @@ export const NarrativeDetailPage: React.FC = () => {
       </section>
 
       {/* 5. Representative Centroid Messages / Evidence Excerpts */}
-      <section className="p-6 md:p-8 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-4 transition-all">
+      <section className="p-6 md:p-8 rounded-[30px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs space-y-5 transition-all">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#252B32] pb-4">
           <div className="flex items-center gap-2.5">
             <MessageSquare className="w-5 h-5 text-[#2F65F6] dark:text-[#5878C7]" />
@@ -842,25 +842,25 @@ export const NarrativeDetailPage: React.FC = () => {
             variants={staggerContainer}
             initial="initial"
             animate="animate"
-            className="space-y-3 pt-2"
+            className="space-y-3 pt-1"
           >
             {narrative.representative_message_excerpts.map((excerpt: string, i: number) => (
               <motion.div
                 key={i}
                 variants={listItemEnter}
-                className="p-5 rounded-[20px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/80 dark:border-[#252B32] space-y-2 hover:bg-white dark:hover:bg-[#171C22] hover:shadow-xs transition-all"
+                className="p-5 sm:p-6 rounded-[22px] bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A] space-y-2 hover:bg-white dark:hover:bg-[#181C22] hover:border-amber-400/60 dark:hover:border-amber-500/40 hover:shadow-xs transition-all"
               >
-                <div className="text-[11px] font-mono text-[#8591A5] dark:text-slate-400">
+                <div className="text-[11px] font-mono text-amber-700 dark:text-amber-400 font-bold">
                   CENTROID EXCERPT #{i + 1}
                 </div>
-                <p className="text-[14px] text-[#334155] dark:text-slate-200 leading-relaxed font-sans pt-1">
+                <p className="text-[14px] text-[#334155] dark:text-slate-200 leading-relaxed font-sans pt-0.5">
                   "{excerpt}"
                 </p>
               </motion.div>
             ))}
           </motion.div>
         ) : (
-          <div className="p-8 rounded-[18px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/60 dark:border-[#252B32] text-center text-[13px] text-[#64748B] dark:text-slate-400">
+          <div className="p-8 rounded-[20px] bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/60 dark:border-[#252B32] text-center text-[13px] text-[#64748B] dark:text-slate-400">
             No centroid message excerpts recorded for this candidate.
           </div>
         )}

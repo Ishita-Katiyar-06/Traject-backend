@@ -72,19 +72,19 @@ export const AlertRow: React.FC<AlertRowProps> = ({ alert, onStatusChange }) => 
     switch (alert.status) {
       case 'open':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/80">
             OPEN
           </span>
         );
       case 'acknowledged':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800/80">
             ACKNOWLEDGED
           </span>
         );
       case 'dismissed':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
             DISMISSED
           </span>
         );
@@ -92,39 +92,39 @@ export const AlertRow: React.FC<AlertRowProps> = ({ alert, onStatusChange }) => 
   };
 
   return (
-    <div className="p-5 rounded-[20px] bg-white dark:bg-[#13171C] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] shadow-xs transition-all hover:border-[#2F65F6]/40 space-y-4">
+    <div className="p-5 sm:p-6 rounded-[24px] sm:rounded-[26px] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md border border-slate-200/80 dark:border-[#2B323D] shadow-xs hover:border-amber-400/80 dark:hover:border-amber-500/50 hover:shadow-xs transition-all duration-200 space-y-4 font-sans">
       {/* Top Header Row */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
           {getSeverityBadge()}
-          <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+          <span className="text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-[#FAFBFD] dark:bg-[#12161C] text-slate-700 dark:text-slate-300 border border-slate-200/70 dark:border-[#282F3A]">
             {getCategoryLabel()}
           </span>
           {getStatusBadge()}
           <span className="text-slate-300 dark:text-slate-700">•</span>
-          <span className="font-mono text-[11px] font-bold text-[#2F65F6]">
+          <span className="font-mono text-[11px] font-bold text-[#2F65F6] dark:text-[#93C5FD]">
             {alert.narrative_id}
           </span>
           {alert.topic_id && (
-            <span className="font-mono text-[11px] text-[#64748B] dark:text-[#94A3B8]">
+            <span className="font-mono text-[11px] text-[#64748B] dark:text-slate-400">
               (Trend #{alert.topic_id.replace(/^topic_|^trend_/, '')})
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2 text-[11px] font-mono text-[#8591A5] dark:text-[#94A3B8]">
-          <Clock className="w-3.5 h-3.5" />
+        <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#8591A5] dark:text-slate-400">
+          <Clock className="w-3.5 h-3.5 text-[#8591A5]" />
           <span>{new Date(alert.detected_at).toLocaleString()}</span>
         </div>
       </div>
 
       {/* Narrative Headline Claim */}
       <div>
-        <h3 className="text-[15px] font-bold text-[#111727] dark:text-[#F8FAFC] leading-snug">
+        <h3 className="text-[16px] font-bold text-[#111727] dark:text-slate-100 tracking-tight leading-snug">
           {alert.narrative_name || alert.claim}
         </h3>
         {alert.narrative_name && alert.claim && alert.claim !== alert.narrative_name && (
-          <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5 line-clamp-1">
+          <p className="text-[13px] text-[#64748B] dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
             {alert.claim}
           </p>
         )}
@@ -132,19 +132,19 @@ export const AlertRow: React.FC<AlertRowProps> = ({ alert, onStatusChange }) => 
 
       {/* Telemetry Indicator Tags */}
       <div className="flex flex-wrap gap-2">
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F8FAFD] dark:bg-[#1A2027] border border-slate-200/70 dark:border-slate-800 text-[11px] font-mono text-[#111727] dark:text-[#F8FAFC]">
-          <span className="text-[#8591A5]">Signal Score:</span>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A] text-[11px] font-mono text-[#111727] dark:text-slate-200 shadow-2xs">
+          <span className="text-[#8591A5] dark:text-slate-400">Signal:</span>
           <strong>{alert.priority_score.toFixed(3)}</strong>
         </div>
 
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F8FAFD] dark:bg-[#1A2027] border border-slate-200/70 dark:border-slate-800 text-[11px] font-mono text-[#111727] dark:text-[#F8FAFC]">
-          <MessageSquare className="w-3 h-3 text-[#2F65F6]" />
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A] text-[11px] font-mono text-[#111727] dark:text-slate-200 shadow-2xs">
+          <MessageSquare className="w-3 h-3 text-[#2F65F6] dark:text-[#93C5FD]" />
           <span>{alert.message_count} messages</span>
         </div>
 
         {alert.domains.length > 0 && (
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F8FAFD] dark:bg-[#1A2027] border border-slate-200/70 dark:border-slate-800 text-[11px] font-mono text-[#111727] dark:text-[#F8FAFC]">
-            <Globe className="w-3 h-3 text-emerald-600" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A] text-[11px] font-mono text-[#111727] dark:text-slate-200 shadow-2xs">
+            <Globe className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
             <span>{alert.domains.join(', ')}</span>
           </div>
         )}
@@ -152,7 +152,7 @@ export const AlertRow: React.FC<AlertRowProps> = ({ alert, onStatusChange }) => 
         {alert.indicators.map((ind, idx) => (
           <span
             key={idx}
-            className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700 text-[11px] text-[#64748B] dark:text-[#94A3B8]"
+            className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A] text-[11px] font-mono text-[#64748B] dark:text-slate-400 shadow-2xs"
           >
             {ind}
           </span>
@@ -160,7 +160,7 @@ export const AlertRow: React.FC<AlertRowProps> = ({ alert, onStatusChange }) => 
       </div>
 
       {/* Bottom Action Footer */}
-      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+      <div className="pt-3 border-t border-slate-100 dark:border-[#252B32] flex flex-wrap items-center justify-between gap-3">
         {/* Analyst Triage State Buttons */}
         <div className="flex items-center gap-2">
           {alert.status === 'open' && (
@@ -168,7 +168,8 @@ export const AlertRow: React.FC<AlertRowProps> = ({ alert, onStatusChange }) => 
               <Button
                 variant="secondary"
                 size="sm"
-                leftIcon={<CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                className="rounded-full px-4 hover:border-emerald-400/80 dark:hover:border-emerald-500/50"
+                leftIcon={<CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
                 onClick={() => onStatusChange(alert.id, 'acknowledged')}
               >
                 Acknowledge
@@ -176,6 +177,7 @@ export const AlertRow: React.FC<AlertRowProps> = ({ alert, onStatusChange }) => 
               <Button
                 variant="subtle"
                 size="sm"
+                className="rounded-full px-4"
                 leftIcon={<XCircle className="w-3.5 h-3.5 text-slate-500" />}
                 onClick={() => onStatusChange(alert.id, 'dismissed')}
               >
@@ -189,7 +191,8 @@ export const AlertRow: React.FC<AlertRowProps> = ({ alert, onStatusChange }) => 
               <Button
                 variant="subtle"
                 size="sm"
-                leftIcon={<RotateCcw className="w-3.5 h-3.5 text-blue-600" />}
+                className="rounded-full px-4"
+                leftIcon={<RotateCcw className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />}
                 onClick={() => onStatusChange(alert.id, 'open')}
               >
                 Reopen
@@ -197,6 +200,7 @@ export const AlertRow: React.FC<AlertRowProps> = ({ alert, onStatusChange }) => 
               <Button
                 variant="subtle"
                 size="sm"
+                className="rounded-full px-4"
                 leftIcon={<XCircle className="w-3.5 h-3.5 text-slate-500" />}
                 onClick={() => onStatusChange(alert.id, 'dismissed')}
               >
@@ -209,7 +213,8 @@ export const AlertRow: React.FC<AlertRowProps> = ({ alert, onStatusChange }) => 
             <Button
               variant="subtle"
               size="sm"
-              leftIcon={<RotateCcw className="w-3.5 h-3.5 text-blue-600" />}
+              className="rounded-full px-4"
+              leftIcon={<RotateCcw className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />}
               onClick={() => onStatusChange(alert.id, 'open')}
             >
               Reopen
@@ -219,11 +224,12 @@ export const AlertRow: React.FC<AlertRowProps> = ({ alert, onStatusChange }) => 
 
         {/* Deep Dive Exploration Links */}
         <div className="flex items-center gap-2">
-          <Link to={`/narratives/${alert.narrative_id}`}>
+          <Link to={`/narratives/${encodeURIComponent(alert.narrative_id)}`}>
             <Button
               variant="secondary"
               size="sm"
-              rightIcon={<ExternalLink className="w-3.5 h-3.5" />}
+              className="rounded-full px-4 hover:border-amber-400/80 dark:hover:border-amber-500/50 group/dossier"
+              rightIcon={<ExternalLink className="w-3.5 h-3.5 text-[#8591A5] group-hover/dossier:text-amber-500 transition-colors" />}
             >
               View Dossier
             </Button>

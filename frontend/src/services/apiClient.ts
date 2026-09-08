@@ -247,10 +247,3 @@ export const apiClient = {
     cache.clear();
   },
 };
-
-/**
- * Isolated offline fallback fetcher strictly for isolated development / fallback testing.
- */
-export async function simulateFetch<T>(data: T, delayMs = 60): Promise<T> {
-  return new Promise((resolve) => setTimeout(() => resolve(data), delayMs));
-}

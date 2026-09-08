@@ -127,6 +127,11 @@ def test_get_trend_sentiment_time_series(client):
             assert "bucket_end_utc" in b
             assert b["total"] == b["positive"] + b["neutral"] + b["negative"] + b["unassigned"]
 
+    # Test with custom bucket_size parameter
+    resp_hourly = client.get("/api/v1/trends/trend_000/sentiment?bucket_size=1h")
+    assert resp_hourly.status_code == 200
+    assert resp_hourly.json()["data"]["bucket_size"] == "1h"
+
 
 def test_get_topic_sentiment_alias(client):
     """Verify GET /api/v1/topics/{id}/sentiment alias functions identically."""

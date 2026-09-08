@@ -19,38 +19,18 @@ export interface WatchItem {
 
 const WATCHLIST_STORAGE_KEY = 'tessera_watchlist_items';
 
-const DEFAULT_WATCHLIST: WatchItem[] = [
-  {
-    id: 'trend_001',
-    type: 'Trend',
-    title: 'Treaty & Regional Security Discourse',
-    currentStatus: 'Elevated',
-    lastChange: '+24%',
-    route: '/trends/trend_001',
-    addedAt: '2026-09-02T19:00:00Z',
-  },
-  {
-    id: 'narrative_000',
-    type: 'Narrative',
-    title: 'Democratic Campaign Strategy & Foreign Policy Framing',
-    currentStatus: 'Elevated',
-    lastChange: '+18%',
-    route: '/narratives/narrative_000',
-    addedAt: '2026-09-02T19:15:00Z',
-  },
-];
-
 export const watchlistService = {
   getWatchlist(): WatchItem[] {
     try {
       const stored = localStorage.getItem(WATCHLIST_STORAGE_KEY);
       if (!stored) {
-        localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(DEFAULT_WATCHLIST));
-        return DEFAULT_WATCHLIST;
+        return [];
       }
-      return JSON.parse(stored);
+      const parsed: WatchItem[] = JSON.parse(stored);
+      // Strip any legacy synthetic items if present in browser localStorage
+      return parsed.filter((item) => item.id !== 'trend_001' && item.id !== 'narrative_000');
     } catch {
-      return DEFAULT_WATCHLIST;
+      return [];
     }
   },
 

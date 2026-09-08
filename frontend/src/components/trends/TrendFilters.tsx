@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, X, RotateCcw } from 'lucide-react';
 import { Select } from '../ui/Select';
 
@@ -25,17 +25,46 @@ export const TrendFilters: React.FC<TrendFiltersProps> = ({
   totalCount,
   filteredCount,
 }) => {
+  const [localQuery, setLocalQuery] = useState(filters.keyword || '');
+  const onChangeRef = useRef(onChange);
+  const filtersRef = useRef(filters);
+
+  onChangeRef.current = onChange;
+  filtersRef.current = filters;
+
+  // Keep local query in sync if parent keyword changes from outside (e.g. reset or URL parameter)
+  useEffect(() => {
+    setLocalQuery(filters.keyword || '');
+  }, [filters.keyword]);
+
+  // Debounced propagation to parent (200ms) for snappy, non-blocking search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if ((filtersRef.current.keyword || '') !== localQuery) {
+        onChangeRef.current({ ...filtersRef.current, keyword: localQuery, page: 1 });
+      }
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [localQuery]);
+
   const isFiltered =
-    (filters.keyword && filters.keyword.trim() !== '') ||
+    (localQuery && localQuery.trim() !== '') ||
     (filters.sort_by && filters.sort_by !== 'message_count') ||
     (filters.order && filters.order !== 'desc');
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...filters, keyword: e.target.value, page: 1 });
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalQuery(e.target.value);
   };
 
   const handleClearQuery = () => {
+    setLocalQuery('');
     onChange({ ...filters, keyword: '', page: 1 });
+  };
+
+  const handleReset = () => {
+    setLocalQuery('');
+    onReset();
   };
 
   return (
@@ -48,12 +77,12 @@ export const TrendFilters: React.FC<TrendFiltersProps> = ({
           </div>
           <input
             type="text"
-            value={filters.keyword || ''}
-            onChange={handleSearch}
+            value={localQuery}
+            onChange={handleSearchChange}
             placeholder="Search trends by keyword or trend ID..."
             className="w-full h-10 pl-10 pr-9 bg-slate-50/60 dark:bg-[#11151A] border border-slate-200/90 dark:border-[#2B323D] rounded-full text-[13px] font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all"
           />
-          {filters.keyword && (
+          {localQuery && (
             <button
               type="button"
               onClick={handleClearQuery}
@@ -73,7 +102,7 @@ export const TrendFilters: React.FC<TrendFiltersProps> = ({
           {isFiltered && (
             <button
               type="button"
-              onClick={onReset}
+              onClick={handleReset}
               className="inline-flex items-center gap-1 ml-2 text-[11px] font-sans font-semibold text-amber-500 dark:text-amber-400 hover:underline cursor-pointer"
             >
               <RotateCcw className="w-3 h-3" />

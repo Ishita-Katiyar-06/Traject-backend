@@ -33,6 +33,7 @@ import {
 import { PipelineMetricsModal } from '../../components/pipeline/PipelineMetricsModal';
 import { PriorityTierChart, SentimentDonutChart } from '../../components/ui/charts';
 import { AnimatedNumber } from '../../components/ui/AnimatedNumber';
+import { NarrativeClusterMap } from '../../components/trends/NarrativeClusterMap';
 import { useLiveStream } from '../../contexts/LiveStreamContext';
 import { getNarrativeDisplayName } from '../../utils/narrativeIdentity';
 
@@ -155,6 +156,10 @@ export const OverviewPage: React.FC = () => {
   const liveDelta = rawCorpusCount > 0 && displayTotalMessages > rawCorpusCount
     ? displayTotalMessages - rawCorpusCount
     : liveMessages.length;
+
+  const totalSources = pipelineStatus?.source_count ?? 0;
+  const failedSources = pipelineStatus?.failed_source_count ?? 0;
+  const pipelineLossRate = totalSources > 0 ? (failedSources / totalSources) * 100 : 0;
 
   const cleanTrendId = spotlightTrend
     ? (spotlightTrend.trend_id || spotlightTrend.topic_id || '').replace(/^topic_|^trend_/, '')
@@ -574,14 +579,10 @@ export const OverviewPage: React.FC = () => {
               CONTAINER 1: EDITORIAL TREND ORBIT DOSSIER (Crextio Clean Card)
               Horizontal Split: Topics & Metrics on Left, Orbit Radar on Right
               ========================================================================= */
-          <div className="rounded-[30px] bg-gradient-to-br from-[#FFFDF9] via-white to-[#F8F5ED]/90 dark:from-[#1E2229] dark:to-[#171A21] border border-[#E6DFC9] dark:border-[#2D333F] p-7 sm:p-8 shadow-[0_6px_28px_rgba(245,158,11,0.03)] relative overflow-hidden w-full font-sans">
-            {/* Ambient warm golden glow auras */}
-            <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-amber-400/10 dark:bg-amber-400/5 blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-amber-500/8 dark:bg-amber-500/5 blur-3xl pointer-events-none" />
-
+          <div className="rounded-[30px] bg-white dark:bg-[#151922] border border-slate-200 dark:border-[#2D333F] p-7 sm:p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.2)] relative overflow-hidden w-full font-sans">
             <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-7 lg:gap-8 items-center">
               {/* LEFT SIDE: Header, Headline, Summary, 4 Metrics Pods & Action Button */}
-              <div className="lg:col-span-7 flex flex-col justify-between space-y-5">
+              <div className="lg:col-span-6 flex flex-col justify-between space-y-5">
                 {/* Header: Trend Tag, Cluster Pill & Dominance Pill */}
                 <div className="flex items-center justify-between border-b border-[#EFECE4] dark:border-[#2A303C] pb-3.5">
                   <div className="flex items-center gap-2.5 flex-wrap">
@@ -624,7 +625,11 @@ export const OverviewPage: React.FC = () => {
                   </h3>
                   <p className="text-[13.5px] text-slate-600 dark:text-slate-300 font-normal leading-relaxed">
                     {spotlightTrend?.trend_summary ||
-                      (isLoading ? 'Ingesting telemetry across cluster nodes...' : 'Discovered semantic topic cluster aggregated across channels.')}
+                      (spotlightTrend
+                        ? `Discovered semantic cluster #${cleanTrendId} with ${spotlightTrend.message_count} messages across monitored channels.`
+                        : isLoading
+                        ? 'Ingesting telemetry across cluster nodes...'
+                        : 'Discovered semantic topic cluster aggregated across channels.')}
                   </p>
                 </div>
 
@@ -707,153 +712,12 @@ export const OverviewPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* RIGHT SIDE: The Orbit Constellation Visualizer (Apple-Minimalist Radar) */}
-              <div className="lg:col-span-5 flex items-center justify-center">
-                <div className="w-full relative rounded-[24px] bg-[#FAF9F5] dark:bg-[#13171F] border border-slate-200/80 dark:border-white/[0.08] p-3 sm:p-4 overflow-hidden flex items-center justify-center min-h-[310px] sm:min-h-[340px] shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
-                  <svg viewBox="0 0 420 340" className="w-full h-[300px] sm:h-[330px] select-none overflow-visible">
-                    <defs>
-                      {/* Apple Subtle Glow */}
-                      <radialGradient id="appleOrbitAura" cx="50%" cy="50%" r="50%">
-                        <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.08" />
-                        <stop offset="50%" stopColor="#F59E0B" stopOpacity="0.02" />
-                        <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
-                      </radialGradient>
-                      {/* Apple Soft Drop Shadow for Floating Pills */}
-                      <filter id="applePillShadow" x="-15%" y="-30%" width="130%" height="180%">
-                        <feDropShadow dx="0" dy="1.5" stdDeviation="2.5" floodColor="#0F172A" floodOpacity="0.05" />
-                      </filter>
-                      {/* Apple Soft Shadow for Central Hub */}
-                      <filter id="appleHubShadow" x="-25%" y="-25%" width="150%" height="150%">
-                        <feDropShadow dx="0" dy="2" stdDeviation="3.5" floodColor="#0F172A" floodOpacity="0.07" />
-                      </filter>
-                    </defs>
-
-                    {/* Ambient Core Glow */}
-                    <circle cx="210" cy="170" r="140" fill="url(#appleOrbitAura)" />
-
-                    {/* Apple Minimalist Polar Tracks (Visible Authentic Precision Tracks) */}
-                    <circle cx="210" cy="170" r="52" fill="none" stroke="#94A3B8" strokeWidth="1.1" opacity="0.85" className="dark:stroke-[#4B5563] dark:opacity-90" />
-                    <circle cx="210" cy="170" r="96" fill="none" stroke="#94A3B8" strokeWidth="1.1" opacity="0.75" className="dark:stroke-[#4B5563] dark:opacity-80" />
-                    <circle cx="210" cy="170" r="138" fill="none" stroke="#94A3B8" strokeWidth="1.1" opacity="0.65" className="dark:stroke-[#4B5563] dark:opacity-70" />
-
-                    {/* Minimal Precision Crosshairs */}
-                    <line x1="50" y1="170" x2="370" y2="170" stroke="#94A3B8" strokeWidth="0.9" opacity="0.6" className="dark:stroke-[#4B5563] dark:opacity-60" />
-                    <line x1="210" y1="25" x2="210" y2="315" stroke="#94A3B8" strokeWidth="0.9" opacity="0.6" className="dark:stroke-[#4B5563] dark:opacity-60" />
-
-                    {/* Dynamic Orbital Keywords (100% Data-Driven from Cluster) */}
-                    {(() => {
-                      const cx = 210;
-                      const cy = 170;
-                      const keywords = (spotlightTrend?.representative_keywords && spotlightTrend.representative_keywords.length > 0)
-                        ? spotlightTrend.representative_keywords.slice(0, 6)
-                        : (spotlightTrend?.label
-                            ? spotlightTrend.label.split(',').map((kw, i) => ({
-                                keyword: kw.trim(),
-                                score: Math.max(0.3, +(1.0 - i * 0.15).toFixed(2)),
-                              })).filter((k) => k.keyword.length > 0).slice(0, 6)
-                            : []);
-
-                      const nodePositions = [
-                        { x: 305, y: 95 },   // Top Right
-                        { x: 305, y: 235 },  // Bottom Right
-                        { x: 210, y: 292 },  // Bottom Center
-                        { x: 115, y: 235 },  // Bottom Left
-                        { x: 115, y: 95 },   // Top Left
-                        { x: 210, y: 48 },   // Top Center
-                      ];
-
-                      if (keywords.length === 0) {
-                        return (
-                          <text x={cx} y={cy + 55} textAnchor="middle" className="font-sans text-[11px] fill-slate-400 dark:fill-slate-500 font-medium">
-                            {isLoading ? 'Scanning cluster coordinates...' : 'Awaiting cluster keywords...'}
-                          </text>
-                        );
-                      }
-
-                      return keywords.map((kw, idx) => {
-                        const pos = nodePositions[idx] || { x: cx, y: cy };
-                        const isTopRank = idx === 0;
-                        const tag = `#${kw.keyword}`;
-                        const score = Number(kw.score).toFixed(1);
-                        const badgeWidth = Math.max(86, Math.round(tag.length * 7.4 + 42));
-                        const badgeHeight = 26;
-                        const badgeY = pos.y - badgeHeight / 2;
-
-                        return (
-                          <g key={idx} className="group/node cursor-pointer select-none">
-                            {/* Clean Ray Connector with Authentic Definition */}
-                            <line
-                              x1={cx}
-                              y1={cy}
-                              x2={pos.x}
-                              y2={pos.y}
-                              stroke="#94A3B8"
-                              strokeWidth="1.1"
-                              opacity="0.75"
-                              className="dark:stroke-[#4B5563] group-hover/node:stroke-amber-400 group-hover/node:opacity-100 dark:group-hover/node:stroke-amber-400 transition-all duration-200"
-                            />
-
-                            {/* Minimalist Floating Pill */}
-                            <rect
-                              x={pos.x - badgeWidth / 2}
-                              y={badgeY}
-                              width={badgeWidth}
-                              height={badgeHeight}
-                              rx={badgeHeight / 2}
-                              fill={isTopRank ? '#FFFFFF' : '#FFFFFF'}
-                              stroke={isTopRank ? '#F59E0B' : '#CBD5E1'}
-                              strokeWidth={isTopRank ? '1.4' : '1.1'}
-                              filter="url(#applePillShadow)"
-                              className="dark:fill-[#1A1F29] dark:stroke-[#3E4A5C] group-hover/node:stroke-amber-400 dark:group-hover/node:stroke-amber-400 transition-colors duration-200"
-                            />
-
-                            {/* Tag text - Crisp Sans Typography */}
-                            <text
-                              x={pos.x - badgeWidth / 2 + 11}
-                              y={pos.y + 4}
-                              textAnchor="start"
-                              fill="#1E293B"
-                              className="font-sans font-medium text-[11px] tracking-tight dark:fill-white"
-                            >
-                              {tag}
-                            </text>
-
-                            {/* Score Micro-Badge */}
-                            <rect
-                              x={pos.x + badgeWidth / 2 - 27}
-                              y={pos.y - 7.5}
-                              width="19"
-                              height="15"
-                              rx="7.5"
-                              fill={isTopRank ? '#FEF3C7' : '#F1F5F9'}
-                              className={isTopRank ? 'dark:fill-amber-950/60' : 'dark:fill-[#262E3B]'}
-                            />
-                            <text
-                              x={pos.x + badgeWidth / 2 - 17.5}
-                              y={pos.y + 3.5}
-                              textAnchor="middle"
-                              fill={isTopRank ? '#B45309' : '#64748B'}
-                              className={`font-mono text-[9px] ${isTopRank ? 'font-bold dark:fill-white' : 'font-medium dark:fill-white'}`}
-                            >
-                              {score}
-                            </text>
-                          </g>
-                        );
-                      });
-                    })()}
-
-                    {/* Central Hub (Apple Nucleus) */}
-                    <circle cx="210" cy="170" r="34" fill="none" stroke="#F59E0B" strokeWidth="1" opacity="0.5" />
-                    <circle cx="210" cy="170" r="27" fill="#FFFFFF" filter="url(#appleHubShadow)" className="dark:fill-[#1A1F29]" />
-                    <circle cx="210" cy="170" r="27" fill="none" stroke="#F59E0B" strokeWidth="1.4" opacity="1" />
-                    <text x="210" y="163" textAnchor="middle" className="font-mono text-[7px] font-semibold tracking-[0.2em] fill-slate-400 dark:fill-slate-400">
-                      CLUSTER
-                    </text>
-                    <text x="210" y="179" textAnchor="middle" className="font-sans text-[14px] font-bold fill-slate-900 dark:fill-white">
-                      {spotlightTrend?.cluster_label !== undefined ? `#${spotlightTrend.cluster_label}` : '—'}
-                    </text>
-                  </svg>
-                </div>
+              {/* RIGHT SIDE: The Narrative Cluster Map Visualizer (Authentic Dynamic Constellation) */}
+              <div className="lg:col-span-6 flex items-center justify-center w-full">
+                <NarrativeClusterMap
+                  trend={spotlightTrend}
+                  isLoading={isLoading}
+                />
               </div>
             </div>
           </div>
@@ -872,7 +736,7 @@ export const OverviewPage: React.FC = () => {
                     <span>MTProto Telemetry Stream</span>
                   </div>
                   <div className="text-[12.5px] text-slate-400 font-normal mt-0.5">
-                    Layer 182 • Automated Real-time Telemetry Ingestion
+                    {pipelineStatus?.pipeline_version ? `Pipeline v${pipelineStatus.pipeline_version}` : 'Layer 182'} • {pipelineStatus?.collection_mode ? `${pipelineStatus.collection_mode.toUpperCase()} Ingestion Conduit` : 'Automated Real-time Telemetry Ingestion'}
                   </div>
                 </div>
 
@@ -882,7 +746,7 @@ export const OverviewPage: React.FC = () => {
                     {liveMessages.length > 0 ? `${liveMessages.length} live stream` : `${recentMessages.length} ingested records`}
                   </span>
                   <span className="py-1 px-3 rounded-full bg-[#282F3B] text-slate-300 border border-[#374151] text-[11px] font-medium">
-                    0% Loss
+                    {pipelineLossRate === 0 ? '0% Loss' : `${pipelineLossRate.toFixed(1)}% Loss`}
                   </span>
                 </div>
               </div>
@@ -963,7 +827,9 @@ export const OverviewPage: React.FC = () => {
             <div className="relative z-10 pt-4 border-t border-[#2C3340] flex items-center justify-between gap-4 mt-4">
               <div className="flex items-center gap-2 text-[12px] text-slate-400">
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span>Pipeline Sync: Stages 1-4 Online</span>
+                <span>
+                  Pipeline Sync: {pipelineStatus?.status ? pipelineStatus.status.charAt(0).toUpperCase() + pipelineStatus.status.slice(1) : 'Online'} • {pipelineStatus?.source_count ?? 13} Feeds Ingested
+                </span>
               </div>
               <button
                 type="button"
@@ -1049,9 +915,11 @@ export const OverviewPage: React.FC = () => {
 
                 const coverageLabel = item.distinct_sources_count
                   ? `${item.distinct_sources_count} ${item.distinct_sources_count === 1 ? 'channel' : 'channels'}`
+                  : item.broadcasting_channels && item.broadcasting_channels.length > 0
+                  ? `${item.broadcasting_channels.length} ${item.broadcasting_channels.length === 1 ? 'channel' : 'channels'}`
                   : item.evidence_density
                   ? `${densityBadge.label} Density`
-                  : '1 channel';
+                  : 'Verified Feed';
 
                 return (
                   <div

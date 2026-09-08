@@ -117,6 +117,7 @@ export const EmergingTrendsPage: React.FC = () => {
             onClick={handleRefresh}
             disabled={isRefreshing || isLoading}
             id="refresh-forecasting-btn"
+            className="rounded-full shadow-xs hover:border-amber-400/80 dark:hover:border-amber-500/50"
           >
             Refresh Forecasts
           </Button>
@@ -139,23 +140,29 @@ export const EmergingTrendsPage: React.FC = () => {
         isLoading={isLoading || isRefreshing}
       />
 
-      {/* 4. Results Count Summary */}
-      <div className="flex items-center justify-between text-xs text-slate-400 px-1">
-        <div>
-          Showing{' '}
-          <span className="font-semibold text-slate-200">{forecasts.length}</span>{' '}
-          of{' '}
-          <span className="font-semibold text-slate-200">{totalAvailable}</span>{' '}
-          evaluated topics
+      {/* 4. Results Count Summary Bar */}
+      <div className="rounded-[20px] sm:rounded-full p-3.5 px-5 bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md border border-slate-200/80 dark:border-[#2B323D] flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs font-mono text-[12px] text-[#8591A5] dark:text-slate-400">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span>
+            Showing <strong className="text-[#111727] dark:text-slate-100 font-bold">{forecasts.length}</strong> of{' '}
+            <strong className="text-[#111727] dark:text-slate-100 font-bold">{totalAvailable}</strong> evaluated trends
+          </span>
           {horizon === '24h' ? (
-            <span className="ml-2 text-emerald-400/90 font-medium">(Primary 24h Horizon)</span>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+              Primary 24h Horizon
+            </span>
           ) : (
-            <span className="ml-2 text-amber-400/90 font-medium">(Auxiliary 6h Horizon)</span>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+              Auxiliary 6h Horizon
+            </span>
           )}
         </div>
         {tier !== 'ALL' && (
-          <div className="text-[11px] text-slate-400">
-            Filtered by Tier: <span className="text-slate-200 font-semibold">{tier}</span>
+          <div className="flex items-center gap-1.5 text-[11px]">
+            <span>Filtered by Tier:</span>
+            <span className="px-2.5 py-0.5 rounded-full bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/70 dark:border-[#282F3A] text-[#111727] dark:text-slate-200 font-bold">
+              {tier}
+            </span>
           </div>
         )}
       </div>
@@ -164,31 +171,31 @@ export const EmergingTrendsPage: React.FC = () => {
       {isLoading ? (
         <EmergingTrendsSkeleton />
       ) : isError ? (
-        <div className="bg-red-950/20 border border-red-800/40 rounded-xl p-6 text-center space-y-3">
-          <AlertTriangle className="w-8 h-8 text-red-400 mx-auto" />
-          <h3 className="text-sm font-semibold text-red-200">
+        <div className="rounded-[26px] sm:rounded-[30px] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md border border-red-200 dark:border-red-900/50 p-8 sm:p-10 text-center space-y-3 shadow-xs">
+          <AlertTriangle className="w-8 h-8 text-rose-500 mx-auto" />
+          <h3 className="text-[16px] font-bold text-[#111727] dark:text-slate-100">
             Failed to Load Forecast Data
           </h3>
-          <p className="text-xs text-slate-400 max-w-md mx-auto">
+          <p className="text-[13px] text-[#8591A5] dark:text-slate-400 max-w-md mx-auto">
             {errorMessage || 'The forecasting service could not be reached. Check that the backend server is running and accessible.'}
           </p>
           <Button
             variant="secondary"
             size="sm"
             onClick={() => loadData(true)}
-            className="mt-2"
+            className="mt-2 rounded-full"
           >
             Retry Request
           </Button>
         </div>
       ) : forecasts.length === 0 ? (
-        <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-10 text-center space-y-3">
-          <TrendingUp className="w-8 h-8 text-slate-500 mx-auto" />
-          <h3 className="text-sm font-semibold text-slate-200">
-            No Emerging Topics Found
+        <div className="rounded-[26px] sm:rounded-[30px] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md border border-slate-200/80 dark:border-[#2B323D] p-10 sm:p-14 text-center space-y-3 shadow-xs">
+          <TrendingUp className="w-10 h-10 text-[#8591A5] dark:text-slate-500 mx-auto" />
+          <h3 className="text-[16px] font-bold text-[#111727] dark:text-slate-100">
+            No Emerging Trends Found
           </h3>
-          <p className="text-xs text-slate-400 max-w-md mx-auto">
-            No topics matched the selected criteria (Tier: {tier}, Min Score: {minScore.toFixed(2)}).
+          <p className="text-[13px] text-[#8591A5] dark:text-slate-400 max-w-md mx-auto">
+            No trends matched the selected criteria (Tier: {tier}, Min Score: {minScore.toFixed(2)}).
             Try adjusting your filters or resetting to view all emerging trends.
           </p>
           <Button
@@ -198,6 +205,7 @@ export const EmergingTrendsPage: React.FC = () => {
               setTier('ALL');
               setMinScore(0);
             }}
+            className="rounded-full shadow-xs hover:border-amber-400/80 dark:hover:border-amber-500/50"
           >
             Reset Filters
           </Button>

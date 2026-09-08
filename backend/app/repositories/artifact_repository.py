@@ -1158,7 +1158,9 @@ class ArtifactRepository:
 
         return time_series, summary, bucket_size_str
 
-    def get_trend_sentiment(self, identifier: str) -> TrendSentimentData | None:
+    def get_trend_sentiment(
+        self, identifier: str, bucket_size: str | None = None
+    ) -> TrendSentimentData | None:
         """Compute chronological sentiment time-series for a Trend cluster."""
         if not self.artifacts_loaded:
             raise RuntimeError("Analytics artifact is unavailable.")
@@ -1176,12 +1178,14 @@ class ArtifactRepository:
             if mid in self._messages_by_id
         ]
 
-        time_series, summary, bucket_size = self._compute_sentiment_time_series(cluster_messages)
+        time_series, summary, resolved_bucket_size = self._compute_sentiment_time_series(
+            cluster_messages, override_bucket_size=bucket_size
+        )
 
         return TrendSentimentData(
             trend_id=trend_id,
             topic_id=topic.topic_id,
-            bucket_size=bucket_size,
+            bucket_size=resolved_bucket_size,
             time_series=time_series,
             summary=summary,
         )

@@ -108,13 +108,14 @@ async def get_topic_graph(
 )
 async def get_topic_sentiment(
     topic_id: str,
+    bucket_size: str | None = Query(None, description="Time bucket size ('1h', '6h', '1d')"),
     service: AnalyticsService = Depends(get_analytics_service),
 ):
     """Retrieve chronological sentiment time-series for this topic/trend."""
     try:
-        sentiment = service.get_trend_sentiment(topic_id)
+        sentiment = service.get_trend_sentiment(topic_id, bucket_size=bucket_size)
         if not sentiment:
-            raise HTTPException(
+            raise HTTPException(    
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail={
                     "code": "RESOURCE_NOT_FOUND",

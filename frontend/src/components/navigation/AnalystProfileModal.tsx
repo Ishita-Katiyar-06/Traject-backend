@@ -84,7 +84,7 @@ export const AnalystProfileModal: React.FC<AnalystProfileModalProps> = ({ isOpen
               Multi-Channel Ingestion
             </div>
             <div className="text-[11px] text-[#8591A5] dark:text-slate-400 mt-0.5">
-              Telegram, Discord &amp; Threads active
+              14 Telegram OSINT &amp; CTI channels active
             </div>
           </div>
 

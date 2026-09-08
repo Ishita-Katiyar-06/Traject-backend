@@ -161,9 +161,9 @@ export function formatTopicDisplayName(
   if (topicName && topicName.trim().length > 0) {
     return topicName
       .replace(/#/g, '')
-      .replace(/[]/g, ' – ')
-      .replace(/–/g, ' – ')
-      .replace(/\s+–\s+/g, ' – ')
+      .replace(/[\uFFFD?]+/g, ' – ')
+      .replace(/[–—]/g, ' – ')
+      .replace(/\s*–\s*/g, ' – ')
       .trim();
   }
 

@@ -274,12 +274,12 @@ export const NarrativeSentimentChart: React.FC<NarrativeSentimentChartProps> = (
 
   if (isLoading) {
     return (
-      <div className={`p-6 md:p-8 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-4 ${className}`}>
+      <div className={`p-6 md:p-8 rounded-[30px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs space-y-4 ${className}`}>
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#252B32] pb-4">
-          <div className="h-5 w-44 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
-          <div className="h-7 w-28 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
+          <div className="h-5 w-44 bg-slate-100 dark:bg-slate-800 rounded-full animate-pulse" />
+          <div className="h-7 w-28 bg-slate-100 dark:bg-slate-800 rounded-full animate-pulse" />
         </div>
-        <div className="h-[280px] rounded-[20px] bg-slate-50 dark:bg-[#12161C] border border-slate-100 dark:border-[#20262E] flex flex-col items-center justify-center space-y-3">
+        <div className="h-[280px] rounded-[24px] bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-100 dark:border-[#20262E] flex flex-col items-center justify-center space-y-3">
           <div className="w-7 h-7 border-3 border-[#2F65F6] border-t-transparent rounded-full animate-spin" />
           <span className="text-[12px] font-mono text-[#8591A5] dark:text-slate-400">
             Evaluating narrative constituent sentiment series...
@@ -291,7 +291,7 @@ export const NarrativeSentimentChart: React.FC<NarrativeSentimentChartProps> = (
 
   if (isError) {
     return (
-      <div className={`p-6 md:p-8 rounded-[24px] border border-rose-200 dark:border-rose-900/40 bg-rose-50/40 dark:bg-rose-950/20 shadow-dashboard space-y-4 ${className}`}>
+      <div className={`p-6 md:p-8 rounded-[30px] border border-rose-200 dark:border-rose-900/40 bg-rose-50/40 dark:bg-rose-950/20 shadow-xs space-y-4 ${className}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
@@ -313,16 +313,16 @@ export const NarrativeSentimentChart: React.FC<NarrativeSentimentChartProps> = (
   const hasBuckets = sentimentData && sentimentData.time_series && sentimentData.time_series.length > 0 && totalEvaluated > 0;
 
   return (
-    <section className={`p-6 md:p-8 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-5 transition-all ${className}`}>
+    <section className={`p-6 md:p-8 rounded-[30px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs space-y-6 transition-all ${className}`}>
       {/* 1. Header & Bucket Interval Selector */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-[#252B32] pb-4">
         <div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <TrendingUp className="w-5 h-5 text-[#2F65F6]" />
             <h3 className="text-[17px] font-bold text-[#111727] dark:text-slate-100 tracking-tight">
               Narrative Evidence Sentiment Over Time
             </h3>
-            <span className="text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-900/40">
+            <span className="text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-900/40">
               Constituent Cluster Evidence
             </span>
           </div>
@@ -331,14 +331,14 @@ export const NarrativeSentimentChart: React.FC<NarrativeSentimentChartProps> = (
           </p>
         </div>
 
-        {/* Bucket Interval Toggle */}
-        <div className="flex items-center gap-1 bg-[#F1F4F9] dark:bg-[#12161C] p-1 rounded-xl border border-slate-200/60 dark:border-[#2B323A] self-start sm:self-center">
+        {/* Bucket Interval Toggle - Crextio Pill Capsule Dock */}
+        <div className="flex items-center gap-1 bg-[#F5F1E5] dark:bg-[#1E2229] p-1 rounded-full border border-[#E5DFD3] dark:border-[#2D333F] self-start sm:self-center shadow-xs">
           <button
             type="button"
             onClick={() => setBucketSize('1h')}
-            className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold transition-all ${
+            className={`px-3 py-1 rounded-full text-[11px] font-mono font-bold transition-all cursor-pointer ${
               bucketSize === '1h'
-                ? 'bg-white dark:bg-[#1E252E] text-[#111727] dark:text-white shadow-xs'
+                ? 'bg-white dark:bg-[#252B35] text-[#111727] dark:text-white shadow-xs'
                 : 'text-[#8591A5] hover:text-[#111727] dark:hover:text-slate-200'
             }`}
           >
@@ -347,9 +347,9 @@ export const NarrativeSentimentChart: React.FC<NarrativeSentimentChartProps> = (
           <button
             type="button"
             onClick={() => setBucketSize('6h')}
-            className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold transition-all ${
+            className={`px-3 py-1 rounded-full text-[11px] font-mono font-bold transition-all cursor-pointer ${
               bucketSize === '6h'
-                ? 'bg-white dark:bg-[#1E252E] text-[#111727] dark:text-white shadow-xs'
+                ? 'bg-white dark:bg-[#252B35] text-[#111727] dark:text-white shadow-xs'
                 : 'text-[#8591A5] hover:text-[#111727] dark:hover:text-slate-200'
             }`}
           >
@@ -358,9 +358,9 @@ export const NarrativeSentimentChart: React.FC<NarrativeSentimentChartProps> = (
           <button
             type="button"
             onClick={() => setBucketSize('1d')}
-            className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold transition-all ${
+            className={`px-3 py-1 rounded-full text-[11px] font-mono font-bold transition-all cursor-pointer ${
               bucketSize === '1d'
-                ? 'bg-white dark:bg-[#1E252E] text-[#111727] dark:text-white shadow-xs'
+                ? 'bg-white dark:bg-[#252B35] text-[#111727] dark:text-white shadow-xs'
                 : 'text-[#8591A5] hover:text-[#111727] dark:hover:text-slate-200'
             }`}
           >
@@ -372,7 +372,7 @@ export const NarrativeSentimentChart: React.FC<NarrativeSentimentChartProps> = (
       {/* 2. Sentiment Metrics Breakdown */}
       {summary && (
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          <div className="p-3.5 rounded-[16px] bg-emerald-50/60 dark:bg-emerald-950/25 border border-emerald-200/60 dark:border-emerald-900/40">
+          <div className="p-4 rounded-[20px] bg-emerald-50/60 dark:bg-emerald-950/25 border border-emerald-200/60 dark:border-emerald-900/40 transition-all hover:scale-[1.01]">
             <div className="flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold uppercase tracking-wider">
               <Smile className="w-3.5 h-3.5" /> Positive
             </div>
@@ -384,7 +384,7 @@ export const NarrativeSentimentChart: React.FC<NarrativeSentimentChartProps> = (
             </div>
           </div>
 
-          <div className="p-3.5 rounded-[16px] bg-[#F8FAFD] dark:bg-[#1D232A] border border-slate-200/60 dark:border-[#2B323A]">
+          <div className="p-4 rounded-[20px] bg-[#FAFBFD] dark:bg-[#151921] border border-slate-200/80 dark:border-[#282F3A] transition-all hover:scale-[1.01]">
             <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300 text-[11px] font-bold uppercase tracking-wider">
               <Meh className="w-3.5 h-3.5" /> Neutral
             </div>
@@ -396,7 +396,7 @@ export const NarrativeSentimentChart: React.FC<NarrativeSentimentChartProps> = (
             </div>
           </div>
 
-          <div className="p-3.5 rounded-[16px] bg-rose-50/60 dark:bg-rose-950/25 border border-rose-200/60 dark:border-rose-900/40">
+          <div className="p-4 rounded-[20px] bg-rose-50/60 dark:bg-rose-950/25 border border-rose-200/60 dark:border-rose-900/40 transition-all hover:scale-[1.01]">
             <div className="flex items-center gap-1.5 text-rose-800 dark:text-rose-300 text-[11px] font-bold uppercase tracking-wider">
               <Frown className="w-3.5 h-3.5" /> Negative
             </div>
@@ -408,7 +408,7 @@ export const NarrativeSentimentChart: React.FC<NarrativeSentimentChartProps> = (
             </div>
           </div>
 
-          <div className="p-3.5 rounded-[16px] bg-blue-50/60 dark:bg-blue-950/25 border border-blue-200/60 dark:border-blue-900/40">
+          <div className="p-4 rounded-[20px] bg-blue-50/60 dark:bg-blue-950/25 border border-blue-200/60 dark:border-blue-900/40 transition-all hover:scale-[1.01]">
             <div className="text-[11px] font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider">
               Mean Polarity
             </div>
@@ -421,7 +421,7 @@ export const NarrativeSentimentChart: React.FC<NarrativeSentimentChartProps> = (
             </div>
           </div>
 
-          <div className="p-3.5 rounded-[16px] bg-slate-50 dark:bg-[#13171C] border border-slate-200/50 dark:border-[#252B32] col-span-2 sm:col-span-1">
+          <div className="p-4 rounded-[20px] bg-[#FAFBFD] dark:bg-[#151921] border border-slate-200/80 dark:border-[#282F3A] col-span-2 sm:col-span-1 transition-all hover:scale-[1.01]">
             <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Evaluated Coverage
             </div>
@@ -441,7 +441,7 @@ export const NarrativeSentimentChart: React.FC<NarrativeSentimentChartProps> = (
           <EChartBase option={chartOption} height={280} />
         </div>
       ) : (
-        <div className="h-[200px] rounded-[20px] bg-[#FAFBFD] dark:bg-[#12161C] border border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center p-6 text-center space-y-2">
+        <div className="h-[200px] rounded-[24px] bg-[#FAFBFD] dark:bg-[#12161C] border border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center p-6 text-center space-y-2">
           <Info className="w-7 h-7 text-[#8591A5]" />
           <h4 className="text-[14px] font-bold text-[#111727] dark:text-slate-200">
             No Sentiment Observations Recorded

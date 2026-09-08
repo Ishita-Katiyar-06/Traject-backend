@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, X, RotateCcw } from 'lucide-react';
 import { Select } from '../ui/Select';
 import { Platform } from '../../types/api';
@@ -27,6 +27,21 @@ export const ExplorerFilters: React.FC<ExplorerFiltersProps> = ({
   onReset,
   totalCount,
 }) => {
+  const [localKeyword, setLocalKeyword] = useState(filters.keyword || '');
+
+  useEffect(() => {
+    setLocalKeyword(filters.keyword || '');
+  }, [filters.keyword]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if ((filters.keyword || '') !== localKeyword) {
+        onChange({ ...filters, keyword: localKeyword, page: 1 });
+      }
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [localKeyword, filters, onChange]);
+
   const isFiltered =
     (filters.platform && filters.platform !== 'All') ||
     (filters.language && filters.language !== 'All') ||
@@ -35,48 +50,48 @@ export const ExplorerFilters: React.FC<ExplorerFiltersProps> = ({
     (filters.sort_by && filters.sort_by !== 'published_at') ||
     (filters.order && filters.order !== 'desc');
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...filters, keyword: e.target.value, page: 1 });
-  };
-
   const handleClearQuery = () => {
+    setLocalKeyword('');
     onChange({ ...filters, keyword: '', page: 1 });
   };
 
   return (
-    <div className="p-5 sm:p-6 rounded-[26px] border border-[rgba(228,233,245,0.85)] bg-white shadow-xs space-y-5 font-sans select-none">
+    <div className="p-5 sm:p-6 rounded-[26px] sm:rounded-[30px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs space-y-5 font-sans select-none">
       {/* Search Input Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-lg">
           <Search className="w-4 h-4 text-[#8591A5] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
-            value={filters.keyword || ''}
-            onChange={handleSearch}
+            value={localKeyword}
+            onChange={(e) => setLocalKeyword(e.target.value)}
             placeholder="Search canonical messages by keyword or author/channel..."
-            className="w-full h-10 pl-10 pr-9 bg-white border border-[rgba(228,233,245,0.85)] rounded-full text-[13px] font-medium text-[#111727] placeholder:text-[#8591A5] shadow-xs hover:border-slate-300 focus:outline-none focus:border-[#2F65F6] focus:ring-2 focus:ring-[#2F65F6]/20 transition-all"
+            className="w-full h-10 pl-10 pr-9 bg-[#FAFBFD] dark:bg-[#12161C] border border-slate-200/80 dark:border-[#282F3A] rounded-full text-[13px] font-medium text-[#111727] dark:text-slate-100 placeholder:text-[#8591A5] shadow-xs hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:border-[#2F65F6] focus:ring-2 focus:ring-[#2F65F6]/20 transition-all"
           />
-          {filters.keyword && (
+          {localKeyword && (
             <button
               type="button"
               onClick={handleClearQuery}
               aria-label="Clear query"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8591A5] hover:text-[#111727] p-1"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#8591A5] hover:text-[#111727] dark:hover:text-white p-0.5 transition-colors cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
 
-        <div className="flex items-center gap-3 text-[13px] text-[#8591A5] font-sans self-end sm:self-center">
+        <div className="flex items-center gap-3 text-[13px] text-[#8591A5] dark:text-slate-400 font-sans self-end sm:self-center">
           <span>
-            Total Observations: <strong className="text-[#111727] font-bold">{totalCount.toLocaleString()}</strong>
+            Total Observations: <strong className="text-[#111727] dark:text-slate-100 font-bold font-mono">{totalCount.toLocaleString()}</strong>
           </span>
           {isFiltered && (
             <button
               type="button"
-              onClick={onReset}
-              className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#2F65F6] hover:underline cursor-pointer"
+              onClick={() => {
+                setLocalKeyword('');
+                onReset();
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-mono font-semibold text-[#2F65F6] dark:text-[#93C5FD] hover:bg-blue-50/60 dark:hover:bg-blue-950/30 transition-all cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset Filters</span>
@@ -86,10 +101,10 @@ export const ExplorerFilters: React.FC<ExplorerFiltersProps> = ({
       </div>
 
       {/* Select Controls Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-4 border-t border-[rgba(228,233,245,0.85)]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-4 border-t border-slate-100 dark:border-[#252B32]">
         {/* Platform */}
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8591A5] mb-1.5">
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8591A5] dark:text-slate-400 mb-1.5 font-mono">
             Platform
           </label>
           <Select
@@ -111,7 +126,7 @@ export const ExplorerFilters: React.FC<ExplorerFiltersProps> = ({
 
         {/* Language */}
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8591A5] mb-1.5">
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8591A5] dark:text-slate-400 mb-1.5 font-mono">
             Language
           </label>
           <Select
@@ -134,7 +149,7 @@ export const ExplorerFilters: React.FC<ExplorerFiltersProps> = ({
 
         {/* Sort Field */}
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8591A5] mb-1.5">
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8591A5] dark:text-slate-400 mb-1.5 font-mono">
             Sort By
           </label>
           <Select
@@ -156,7 +171,7 @@ export const ExplorerFilters: React.FC<ExplorerFiltersProps> = ({
 
         {/* Sort Direction */}
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8591A5] mb-1.5">
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8591A5] dark:text-slate-400 mb-1.5 font-mono">
             Order
           </label>
           <Select

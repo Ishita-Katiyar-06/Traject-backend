@@ -29,16 +29,16 @@ export const NarrativeTable: React.FC<NarrativeTableProps> = ({
         {[1, 2, 3, 4, 5].map((idx) => (
           <div
             key={idx}
-            className="p-5 rounded-[22px] border border-border bg-surface flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+            className="p-5 sm:p-6 rounded-[24px] sm:rounded-[26px] border border-slate-200/80 dark:border-[#2B323D] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4"
           >
-            <div className="space-y-2 flex-1">
-              <Skeleton className="h-3 w-44" />
-              <Skeleton className="h-5 w-2/3" />
-              <Skeleton className="h-4 w-1/2" />
+            <div className="space-y-2.5 flex-1">
+              <Skeleton className="h-4 w-44 rounded-full" />
+              <Skeleton className="h-6 w-2/3 rounded-full" />
+              <Skeleton className="h-4 w-1/2 rounded-full" />
             </div>
             <div className="flex items-center gap-4 shrink-0">
-              <Skeleton className="h-10 w-24" />
-              <Skeleton className="h-10 w-44" />
+              <Skeleton className="h-10 w-24 rounded-full" />
+              <Skeleton className="h-10 w-44 rounded-[16px]" />
             </div>
           </div>
         ))}

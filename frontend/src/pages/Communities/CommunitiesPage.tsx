@@ -12,6 +12,7 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { CommunityCard } from '../../components/communities/CommunityCard';
 import { CommunityMetricsHeader } from '../../components/communities/CommunityMetricsHeader';
 import { communityService } from '../../services/communityService';
+import { trendService } from '../../services/trendService';
 import { telemetryApi } from '../../services/telemetryApi';
 import { staggerContainer } from '../../utils/motion';
 import type {
@@ -28,14 +29,23 @@ export const CommunitiesPage: React.FC = () => {
   const [groupingMode, setGroupingMode] = useState<CommunityGroupingMode>('domain');
   const [selectedDomain, setSelectedDomain] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [localSearchQuery, setLocalSearchQuery] = useState('');
+
+  // 200ms debounce to eliminate typing stutter
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(localSearchQuery);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [localSearchQuery]);
 
   const loadData = useCallback(async (isManualRefresh = false) => {
     setIsRefreshing(true);
     try {
       const minDelay = isManualRefresh ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve();
       const [commData, kpiData] = await Promise.all([
-        communityService.getCommunities(groupingMode),
-        communityService.getSummaryKPIs(),
+        communityService.getCommunities(groupingMode, { skipCache: isManualRefresh }),
+        communityService.getSummaryKPIs({ skipCache: isManualRefresh }),
         minDelay,
       ]);
       setCommunities(commData);
@@ -50,6 +60,8 @@ export const CommunitiesPage: React.FC = () => {
 
   const handleRefresh = async () => {
     telemetryApi.clearCache();
+    trendService.clearCache();
+    communityService.clearCache();
     await loadData(true);
   };
 
@@ -87,15 +99,15 @@ export const CommunitiesPage: React.FC = () => {
         description="Dynamic clustering of monitored channels and author nodes based on strategic domains and verifiable cross-source narrative co-occurrence."
         actions={
           <div className="flex items-center gap-2.5">
-            {/* Mode Toggle */}
-            <div className="hidden sm:inline-flex p-1 rounded-xl bg-white dark:bg-[#171C22] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] shadow-xs">
+            {/* Mode Toggle - Crextio Pill Capsule Dock */}
+            <div className="hidden sm:inline-flex items-center gap-1 bg-[#F5F1E5] dark:bg-[#1E2229] p-1 rounded-full border border-[#E5DFD3] dark:border-[#2D333F] shadow-xs">
               <button
                 type="button"
                 onClick={() => setGroupingMode('domain')}
-                className={`px-3 py-1.5 rounded-lg text-[12px] font-mono font-medium transition-all ${
+                className={`px-3.5 py-1 rounded-full text-[12px] font-mono font-bold transition-all cursor-pointer ${
                   groupingMode === 'domain'
-                    ? 'bg-[#2F65F6] text-white shadow-xs'
-                    : 'text-[#64748B] dark:text-slate-400 hover:text-[#111727] dark:hover:text-white'
+                    ? 'bg-white dark:bg-[#252B35] text-[#111727] dark:text-white shadow-xs'
+                    : 'text-[#8591A5] hover:text-[#111727] dark:hover:text-slate-200'
                 }`}
               >
                 Domain Clusters
@@ -103,10 +115,10 @@ export const CommunitiesPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setGroupingMode('co_occurrence')}
-                className={`px-3 py-1.5 rounded-lg text-[12px] font-mono font-medium transition-all ${
+                className={`px-3.5 py-1 rounded-full text-[12px] font-mono font-bold transition-all cursor-pointer ${
                   groupingMode === 'co_occurrence'
-                    ? 'bg-[#2F65F6] text-white shadow-xs'
-                    : 'text-[#64748B] dark:text-slate-400 hover:text-[#111727] dark:hover:text-white'
+                    ? 'bg-white dark:bg-[#252B35] text-[#111727] dark:text-white shadow-xs'
+                    : 'text-[#8591A5] hover:text-[#111727] dark:hover:text-slate-200'
                 }`}
               >
                 Co-Occurrence Density
@@ -127,7 +139,7 @@ export const CommunitiesPage: React.FC = () => {
       />
 
       {/* 2. Analytical Guardrail Callout */}
-      <div className="px-5 py-3.5 rounded-[20px] bg-blue-50/60 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 flex items-start gap-3 shadow-xs">
+      <div className="px-5 py-4 rounded-[20px] bg-blue-50/50 dark:bg-blue-950/25 border border-blue-200/60 dark:border-blue-900/40 flex items-start gap-3 shadow-xs">
         <Info className="w-4 h-4 text-[#2F65F6] dark:text-[#5878C7] shrink-0 mt-0.5" />
         <div className="text-[12px] text-[#475569] dark:text-slate-300 leading-relaxed">
           <strong className="text-[#111727] dark:text-slate-100 font-bold">Observational Source Topology:</strong>{' '}
@@ -145,10 +157,10 @@ export const CommunitiesPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setSelectedDomain('all')}
-            className={`px-3.5 py-1.5 rounded-xl text-[12px] font-mono transition-all shrink-0 cursor-pointer ${
+            className={`px-4 py-1.5 rounded-full text-[12px] font-mono transition-all shrink-0 cursor-pointer ${
               selectedDomain === 'all'
                 ? 'bg-[#111727] dark:bg-white text-white dark:text-[#111727] font-bold shadow-xs'
-                : 'bg-white dark:bg-[#171C22] text-[#64748B] dark:text-slate-400 border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] hover:text-[#111727] dark:hover:text-white'
+                : 'bg-white/90 dark:bg-[#181C22]/90 text-[#64748B] dark:text-slate-400 border border-slate-200/80 dark:border-[#2B323D] hover:border-amber-400/60 dark:hover:border-amber-500/40 hover:text-[#111727] dark:hover:text-white'
             }`}
           >
             All Clusters ({communities.length})
@@ -158,10 +170,10 @@ export const CommunitiesPage: React.FC = () => {
               key={dom}
               type="button"
               onClick={() => setSelectedDomain(dom)}
-              className={`px-3.5 py-1.5 rounded-xl text-[12px] font-mono transition-all shrink-0 cursor-pointer ${
+              className={`px-4 py-1.5 rounded-full text-[12px] font-mono transition-all shrink-0 cursor-pointer ${
                 selectedDomain === dom
                   ? 'bg-[#111727] dark:bg-white text-white dark:text-[#111727] font-bold shadow-xs'
-                  : 'bg-white dark:bg-[#171C22] text-[#64748B] dark:text-slate-400 border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] hover:text-[#111727] dark:hover:text-white'
+                  : 'bg-white/90 dark:bg-[#181C22]/90 text-[#64748B] dark:text-slate-400 border border-slate-200/80 dark:border-[#2B323D] hover:border-amber-400/60 dark:hover:border-amber-500/40 hover:text-[#111727] dark:hover:text-white'
               }`}
             >
               {dom.replace(/_/g, ' ')}
@@ -171,13 +183,13 @@ export const CommunitiesPage: React.FC = () => {
 
         {/* Channel / Keyword Search Input */}
         <div className="relative sm:w-72 shrink-0">
-          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#8591A5] dark:text-slate-500 pointer-events-none" />
+          <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8591A5] dark:text-slate-500 pointer-events-none" />
           <input
             type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={localSearchQuery}
+            onChange={(e) => setLocalSearchQuery(e.target.value)}
             placeholder="Search channels, keywords..."
-            className="w-full h-9 pl-8 pr-3 rounded-xl bg-white dark:bg-[#171C22] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] text-[12px] font-sans text-[#111727] dark:text-slate-100 placeholder:text-[#8591A5] dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#2F65F6]/30 transition-all shadow-xs"
+            className="w-full h-10 pl-9 pr-4 rounded-full bg-white/95 dark:bg-[#181C22]/95 border border-slate-200/80 dark:border-[#2B323D] text-[12px] font-sans text-[#111727] dark:text-slate-100 placeholder:text-[#8591A5] dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/30 dark:focus:ring-amber-500/30 focus:border-amber-400 dark:focus:border-amber-500/60 transition-all shadow-xs"
           />
         </div>
       </div>
@@ -188,12 +200,12 @@ export const CommunitiesPage: React.FC = () => {
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="p-6 rounded-[24px] bg-white dark:bg-[#171C22] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] space-y-4"
+              className="p-6 sm:p-7 rounded-[30px] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md border border-slate-200/80 dark:border-[#2B323D] space-y-4 shadow-xs"
             >
-              <Skeleton className="h-5 w-32 rounded-md" />
-              <Skeleton className="h-4 w-48 rounded-md" />
-              <Skeleton className="h-20 w-full rounded-xl" />
-              <Skeleton className="h-8 w-full rounded-md" />
+              <Skeleton className="h-5 w-32 rounded-full" />
+              <Skeleton className="h-4 w-48 rounded-full" />
+              <Skeleton className="h-20 w-full rounded-[20px]" />
+              <Skeleton className="h-10 w-full rounded-full" />
             </div>
           ))}
         </div>
@@ -209,7 +221,7 @@ export const CommunitiesPage: React.FC = () => {
           ))}
         </motion.div>
       ) : (
-        <div className="text-center py-16 px-4 rounded-[24px] bg-white dark:bg-[#171C22] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] space-y-3 shadow-dashboard">
+        <div className="text-center py-16 px-4 rounded-[30px] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md border border-slate-200/80 dark:border-[#2B323D] space-y-3 shadow-xs">
           <Users className="w-10 h-10 mx-auto text-[#8591A5] dark:text-slate-500" />
           <h4 className="text-[16px] font-bold text-[#111727] dark:text-slate-100">
             No Matching Community Clusters
@@ -223,6 +235,7 @@ export const CommunitiesPage: React.FC = () => {
             onClick={() => {
               setSelectedDomain('all');
               setSearchQuery('');
+              setLocalSearchQuery('');
             }}
           >
             Reset Filters

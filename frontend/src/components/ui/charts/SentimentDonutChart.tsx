@@ -11,6 +11,8 @@ export interface SentimentDonutChartProps {
   modelId?: string | null;
   isLoading?: boolean;
   className?: string;
+  title?: string;
+  subTitle?: string;
 }
 
 export interface SentimentTrack {
@@ -64,6 +66,8 @@ export const SentimentDonutChart: React.FC<SentimentDonutChartProps> = ({
   evaluatedCount = 0,
   isLoading = false,
   className = '',
+  title = 'SENTIMENT',
+  subTitle = 'CORPUS',
 }) => {
   const { isDark } = useTheme();
   const [hoveredTrack, setHoveredTrack] = useState<'neutral' | 'negative' | 'positive' | null>(null);
@@ -350,7 +354,7 @@ export const SentimentDonutChart: React.FC<SentimentDonutChartProps> = ({
                   fill={isDark ? '#94A3B8' : '#64748B'}
                   className="text-[10px] font-extrabold font-sans uppercase tracking-[0.2em]"
                 >
-                  CORPUS
+                  {subTitle}
                 </text>
                 <text
                   x={cx}
@@ -359,7 +363,7 @@ export const SentimentDonutChart: React.FC<SentimentDonutChartProps> = ({
                   fill={isDark ? '#F8FAFC' : '#0F172A'}
                   className="text-[13px] font-bold font-sans uppercase tracking-wider"
                 >
-                  SENTIMENT
+                  {title}
                 </text>
                 <text
                   x={cx}
