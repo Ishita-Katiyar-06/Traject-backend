@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
   ArrowRight,
@@ -15,19 +15,16 @@ import {
   Shield,
   Activity,
   Share2,
-  GitCommit,
-  History,
   Send,
 } from 'lucide-react';
 import { PageHeader } from '../../layout/PageHeader';
 import { Button } from '../../components/ui/Button';
 import { telemetryApi } from '../../services/telemetryApi';
-import { NarrativeDetailData, NarrativeLineageDetailResponse } from '../../types/api';
+import { NarrativeDetailData, TopicDetailData } from '../../types/api';
 import { resolveChannelInfo } from '../../utils/channelRegistry';
 import {
   formatPriorityTierBadge,
   formatEvidenceDensityBadge,
-  formatDecimal,
   formatPercent,
   COORDINATION_WORDING,
   REACH_WORDING,
@@ -42,16 +39,26 @@ import {
   listItemEnter,
 } from '../../utils/motion';
 
+import { getNarrativeDisplayName, getNarrativeExplanation } from '../../utils/narrativeIdentity';
+import { watchlistService } from '../../services/watchlistService';
+
 export const NarrativeDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
 
   const [narrative, setNarrative] = useState<NarrativeDetailData | null>(null);
-  const [lineageDetail, setLineageDetail] = useState<NarrativeLineageDetailResponse | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isError, setIsError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isWatching, setIsWatching] = useState(false);
+  const [parentTrend, setParentTrend] = useState<TopicDetailData | null>(null);
+
+  const trendFromState = (location.state as any)?.fromTrend;
+  const trendFromQuery = searchParams.get('trend');
+  const parentTrendTarget = trendFromState || trendFromQuery || narrative?.promoted_from_topic_id || '';
+  const cleanParentTrendId = parentTrendTarget ? parentTrendTarget.replace(/^topic_|^trend_/, '') : '';
 
   useEffect(() => {
     if (!id) return;
@@ -63,6 +70,13 @@ export const NarrativeDetailPage: React.FC = () => {
       .getNarrativeById(id)
       .then((res) => {
         setNarrative(res.data);
+        const pTarget = trendFromState || trendFromQuery || res.data.promoted_from_topic_id;
+        if (pTarget) {
+          telemetryApi
+            .getTrendById(pTarget)
+            .then((trRes) => setParentTrend(trRes.data))
+            .catch(() => {});
+        }
       })
       .catch((err) => {
         console.error('Failed to load narrative detail:', err);
@@ -72,13 +86,27 @@ export const NarrativeDetailPage: React.FC = () => {
       .finally(() => {
         setIsLoading(false);
       });
-
-    // Milestone 6E: Fetch temporal lineage data
-    telemetryApi
-      .getLineageByNarrative(id)
-      .then((res) => setLineageDetail(res))
-      .catch(() => setLineageDetail(null));
   }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      setIsWatching(watchlistService.isWatched(id));
+    }
+  }, [id]);
+
+  const handleToggleWatch = () => {
+    if (!id || !narrative) return;
+    const isNowWatched = watchlistService.toggleWatch({
+      id,
+      type: 'Narrative',
+      title: displayName,
+      currentStatus: `${(narrative.priority_signal_score * 100).toFixed(1)}% Priority`,
+      lastChange: narrative.priority_tier.toUpperCase(),
+      route: `/narratives/${id}`,
+      addedAt: new Date().toISOString(),
+    });
+    setIsWatching(isNowWatched);
+  };
 
   if (isLoading) {
     return (
@@ -125,34 +153,87 @@ export const NarrativeDetailPage: React.FC = () => {
   const tierBadge = formatPriorityTierBadge(narrative.priority_tier);
   const densityBadge = formatEvidenceDensityBadge(narrative.data_coverage.evidence_density);
 
+  const displayName = getNarrativeDisplayName(narrative);
+  const explanation = getNarrativeExplanation(narrative);
+
   return (
     <div className="space-y-6 sm:space-y-8 font-sans pb-10">
       {/* 1. Page Header */}
       <PageHeader
-        title={narrative.headline_claim}
-        description={`Authoritative 4G narrative evaluation for candidate cluster ${narrative.narrative_id}`}
+        title={displayName}
+        description={`Authoritative 4G narrative dossier for ${narrative.narrative_id}`}
         actions={
           <div className="flex items-center gap-2">
             <Button
               variant="secondary"
               size="sm"
               leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
-              onClick={() => navigate('/narratives')}
+              onClick={() => {
+                if (parentTrendTarget) {
+                  navigate(`/trends/${parentTrendTarget}`);
+                } else {
+                  navigate('/narratives');
+                }
+              }}
             >
-              Narratives
+              {parentTrendTarget ? `Trend #${cleanParentTrendId}` : 'Narratives'}
             </Button>
 
             <Button
               variant={isWatching ? 'primary' : 'secondary'}
               size="sm"
               leftIcon={isWatching ? <Check className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              onClick={() => setIsWatching(!isWatching)}
+              onClick={handleToggleWatch}
             >
               {isWatching ? 'Tracking' : 'Track Candidate'}
             </Button>
           </div>
         }
       />
+
+      {/* Narrative Identity & Evidence-Grounded Explanation */}
+      <div className="p-6 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-4">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-mono text-[11px] font-bold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 px-2.5 py-0.5 rounded-full border border-rose-200/70 dark:border-rose-900/50 uppercase">
+              {narrative.narrative_id.toUpperCase()}
+            </span>
+            {parentTrendTarget && (
+              <button
+                type="button"
+                onClick={() => navigate(`/trends/${parentTrendTarget}`)}
+                className="inline-flex items-center gap-1.5 font-mono text-[11px] font-bold text-[#2F65F6] dark:text-[#93C5FD] bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 px-2.5 py-0.5 rounded-full border border-blue-200/70 dark:border-blue-900/40 transition-colors cursor-pointer"
+                title={`Inspect Parent Trend #${cleanParentTrendId}`}
+              >
+                <Radio className="w-3 h-3 text-[#2F65F6] dark:text-[#93C5FD]" />
+                <span>Parent Trend #{cleanParentTrendId}{parentTrend?.trend_name ? ` • ${parentTrend.trend_name}` : ''}</span>
+              </button>
+            )}
+          </div>
+          <span className="text-[11px] font-mono text-[#8591A5] dark:text-slate-400">
+            Synthesized from {narrative.data_coverage.message_count.toLocaleString()} messages across {narrative.data_coverage.channel_count} discovery channels
+          </span>
+        </div>
+
+        <div>
+          <h2 className="text-[22px] sm:text-[24px] font-bold text-[#111727] dark:text-slate-100 tracking-tight leading-snug">
+            {displayName}
+          </h2>
+          <div className="text-[11px] font-mono text-[#8591A5] dark:text-slate-400 mt-1">
+            Claim Framing: {narrative.headline_claim}
+          </div>
+        </div>
+
+        <div className="p-4 rounded-[18px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32] space-y-1.5">
+          <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#2F65F6] dark:text-[#5878C7] flex items-center gap-1.5">
+            <Info className="w-3.5 h-3.5" />
+            <span>What this narrative represents</span>
+          </div>
+          <p className="text-[13px] sm:text-[14px] text-[#334155] dark:text-slate-300 leading-relaxed font-sans">
+            {explanation}
+          </p>
+        </div>
+      </div>
 
       {/* Metadata Pill Banner */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 rounded-[20px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] text-[13px] font-sans text-[#64748B] dark:text-slate-400 shadow-dashboard">
@@ -197,15 +278,19 @@ export const NarrativeDetailPage: React.FC = () => {
               </span>
             </>
           )}
-          <span className="text-slate-300 dark:text-slate-700">•</span>
-          <button
-            type="button"
-            onClick={() => navigate(`/trends/${narrative.promoted_from_topic_id}`)}
-            className="inline-flex items-center gap-1 font-semibold text-[#2F65F6] dark:text-[#93C5FD] hover:underline"
-          >
-            <Radio className="w-3 h-3" />
-            <span>Parent Trend #{narrative.promoted_from_topic_id}</span>
-          </button>
+          {parentTrendTarget && (
+            <>
+              <span className="text-slate-300 dark:text-slate-700">•</span>
+              <button
+                type="button"
+                onClick={() => navigate(`/trends/${parentTrendTarget}`)}
+                className="inline-flex items-center gap-1 font-semibold text-[#2F65F6] dark:text-[#93C5FD] hover:underline cursor-pointer"
+              >
+                <Radio className="w-3 h-3" />
+                <span>Parent Trend #{cleanParentTrendId}{parentTrend?.trend_name ? ` (${parentTrend.trend_name})` : ''}</span>
+              </button>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-3 text-[12px]">
@@ -572,7 +657,7 @@ export const NarrativeDetailPage: React.FC = () => {
                 Diffusion Footprint & Source Network
               </h3>
               <p className="text-[12px] text-[#8591A5] dark:text-slate-400 font-medium mt-0.5">
-                Observed discovery channels, semantic topic genesis, and secondary broadcast networks.
+                Observed discovery channels, semantic trend genesis, and secondary broadcast networks.
               </p>
             </div>
           </div>
@@ -634,19 +719,19 @@ export const NarrativeDetailPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#2F65F6] dark:text-[#5878C7] flex items-center gap-1.5">
                 <Tag className="w-3.5 h-3.5" />
-                Topic Cluster
+                Parent Trend
               </span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-[#2F65F6] dark:text-[#93C5FD] border border-blue-200 dark:border-blue-900/50">
-                {narrative.promoted_from_topic_id}
+                TREND #{cleanParentTrendId || narrative.promoted_from_topic_id.replace(/^topic_|^trend_/, '')}
               </span>
             </div>
 
             <div className="p-2.5 rounded-xl bg-white dark:bg-[#1A2027] border border-slate-200/80 dark:border-[#252B32] shadow-xs space-y-1.5">
               <div className="text-[13px] font-bold text-[#111727] dark:text-slate-100">
-                Synthesized Topic #{narrative.promoted_from_topic_id}
+                {parentTrend?.trend_name || `Synthesized Trend #${cleanParentTrendId || narrative.promoted_from_topic_id.replace(/^topic_|^trend_/, '')}`}
               </div>
               <p className="text-[11px] text-[#64748B] dark:text-slate-400 line-clamp-2">
-                Evaluated from {narrative.data_coverage.message_count} messages across {narrative.data_coverage.channel_count} discovery channels.
+                {parentTrend?.trend_summary || `Evaluated from ${narrative.data_coverage.message_count} messages across ${narrative.data_coverage.channel_count} discovery channels.`}
               </p>
               <div className="flex flex-wrap gap-1 pt-1">
                 {(narrative.key_entities || []).slice(0, 3).map((e) => (
@@ -702,144 +787,7 @@ export const NarrativeDetailPage: React.FC = () => {
         </div>
       </section>
 
-      {/* 5. Temporal Narrative Lineage (Milestone 6E) */}
-      <section className="p-6 md:p-8 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-6 transition-all">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-[#252B32] pb-4">
-          <div className="flex items-center gap-2.5">
-            <History className="w-5 h-5 text-[#2F65F6] dark:text-[#5878C7]" />
-            <div>
-              <h3 className="text-[17px] font-bold text-[#111727] dark:text-slate-100">
-                Temporal Narrative Lineage
-              </h3>
-              <p className="text-[12px] text-[#8591A5] dark:text-slate-400 font-medium mt-0.5">
-                Cross-snapshot lineage continuity, observed volume trajectories, and transition history
-              </p>
-            </div>
-          </div>
-
-          {lineageDetail && (
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[12px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#1D232A] px-2.5 py-1 rounded-full font-semibold border border-slate-200/60 dark:border-[#2B323A]">
-                {lineageDetail.lineage.lineage_id}
-              </span>
-              <span
-                className={`px-3 py-1 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider ${
-                  lineageDetail.lineage.state === 'new'
-                    ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/50'
-                    : lineageDetail.lineage.state === 'persisting'
-                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/50'
-                    : lineageDetail.lineage.state === 'weakening'
-                    ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50'
-                    : lineageDetail.lineage.state === 'reappeared'
-                    ? 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-900/50'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
-                }`}
-              >
-                {lineageDetail.lineage.state}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {lineageDetail ? (
-          <div className="space-y-6">
-            {/* Metric Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="p-4 rounded-[20px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32]">
-                <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Snapshot Span</div>
-                <div className="text-[20px] font-bold text-[#111727] dark:text-slate-100 font-mono mt-1">
-                  {lineageDetail.lineage.snapshot_count} snapshot{lineageDetail.lineage.snapshot_count !== 1 ? 's' : ''}
-                </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Consecutive: {lineageDetail.lineage.consecutive_snapshot_count}
-                </p>
-              </div>
-
-              <div className="p-4 rounded-[20px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32]">
-                <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Observed Message Trend</div>
-                <div className="text-[20px] font-bold text-[#111727] dark:text-slate-100 font-mono mt-1">
-                  {lineageDetail.lineage.message_count_current.toLocaleString()} msgs
-                </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  {lineageDetail.lineage.message_count_previous !== null
-                    ? `Previous: ${lineageDetail.lineage.message_count_previous.toLocaleString()} msgs`
-                    : 'Initial observation'}
-                </p>
-              </div>
-
-              <div className="p-4 rounded-[20px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32]">
-                <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">First Observed Snapshot</div>
-                <div className="text-[13px] font-bold text-[#111727] dark:text-slate-100 font-mono truncate mt-1">
-                  {lineageDetail.lineage.first_snapshot_id}
-                </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-mono">
-                  {new Date(lineageDetail.lineage.first_seen_at).toLocaleDateString()}
-                </p>
-              </div>
-
-              <div className="p-4 rounded-[20px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32]">
-                <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Lineage Match Score</div>
-                <div className="text-[20px] font-bold text-[#111727] dark:text-slate-100 font-mono mt-1">
-                  {lineageDetail.lineage.lineage_match_score !== null
-                    ? formatDecimal(lineageDetail.lineage.lineage_match_score, 3)
-                    : 'Initial (1.000)'}
-                </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Similarity across snapshot boundary
-                </p>
-              </div>
-            </div>
-
-            {/* Transition Event Timeline */}
-            {lineageDetail.events && lineageDetail.events.length > 0 && (
-              <div className="space-y-3 pt-2">
-                <div className="text-[11px] font-bold text-[#8591A5] dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <GitCommit className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Lineage Transition Events ({lineageDetail.events.length})</span>
-                </div>
-                <motion.div
-                  variants={staggerContainer}
-                  initial="initial"
-                  animate="animate"
-                  className="space-y-2.5"
-                >
-                  {lineageDetail.events.map((ev, i) => (
-                    <motion.div
-                      key={ev.event_id || i}
-                      variants={listItemEnter}
-                      className="p-3.5 rounded-[16px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/80 dark:border-[#252B32] flex items-start justify-between gap-4 text-[12px]"
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-[11px] font-bold uppercase text-slate-700 dark:text-slate-300 bg-white dark:bg-[#1A2027] border border-slate-200 dark:border-[#2B323A] px-2 py-0.5 rounded-full">
-                            {ev.event_type}
-                          </span>
-                          <span className="font-mono text-[11px] text-slate-400">
-                            Snapshot: {ev.snapshot_id}
-                          </span>
-                        </div>
-                        <p className="text-slate-600 dark:text-slate-300 font-sans leading-relaxed">{ev.explanation}</p>
-                      </div>
-                      <span className="font-mono text-[11px] text-slate-400 shrink-0">
-                        {new Date(ev.timestamp).toLocaleTimeString()}
-                      </span>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="p-6 rounded-[18px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/60 dark:border-[#252B32] text-center space-y-1 text-slate-500 dark:text-slate-400 text-[13px]">
-            <p>No active temporal lineage linked to narrative ID <span className="font-mono font-semibold text-[#111727] dark:text-slate-200">{narrative.narrative_id}</span>.</p>
-            <p className="text-[11px] text-slate-400">
-              Run <span className="font-mono">python backend/scripts/update_temporal_lineage.py</span> to track cross-snapshot continuity.
-            </p>
-          </div>
-        )}
-      </section>
-
-      {/* 6. Representative Centroid Messages / Evidence Excerpts */}
+      {/* 5. Representative Centroid Messages / Evidence Excerpts */}
       <section className="p-6 md:p-8 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-4 transition-all">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#252B32] pb-4">
           <div className="flex items-center gap-2.5">

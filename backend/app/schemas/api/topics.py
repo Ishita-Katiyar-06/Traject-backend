@@ -26,6 +26,8 @@ class TopicSummaryResponse(BaseModel):
     message_count: int = Field(ge=1, description="Total messages in cluster")
     percentage_of_dataset: float = Field(ge=0.0, le=100.0, description="Percentage of total dataset messages")
     representative_keywords: list[TopicKeywordResponse] = Field(default_factory=list)
+    trend_name: str | None = Field(default=None, description="Human-readable trend name summarizing central subject")
+    trend_summary: str | None = Field(default=None, description="Short evidence-grounded summary of what this trend represents")
 
 
 class TopicListResponse(BaseModel):
@@ -51,6 +53,8 @@ class TopicDetailData(BaseModel):
     engagement: TopicEngagementFeatures | None = None
     propagation: TopicPropagationFeatures | None = None
     temporal: TopicTemporalFeatures | None = None
+    trend_name: str | None = Field(default=None, description="Human-readable trend name summarizing central subject")
+    trend_summary: str | None = Field(default=None, description="Short evidence-grounded summary of what this trend represents")
 
 
 class TopicDetailResponse(BaseModel):

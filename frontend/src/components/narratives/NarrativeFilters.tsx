@@ -56,7 +56,7 @@ export const NarrativeFilters: React.FC<NarrativeFiltersProps> = ({
             type="text"
             value={filters.query || ''}
             onChange={handleSearch}
-            placeholder="Search narrative candidates by label or representative text..."
+            placeholder="Search by ID (e.g. narrative_012, 012), name, claim, or keywords..."
             className="w-full h-10 pl-10 pr-9 bg-white dark:bg-[#13171C] border border-[rgba(228,233,245,0.85)] dark:border-[#2B323A] rounded-full text-[13px] font-medium text-[#111727] dark:text-[#F8FAFC] placeholder:text-[#8591A5] dark:placeholder:text-slate-500 shadow-xs hover:border-slate-300 dark:hover:border-slate-600 focus:outline-none focus:border-[#2F65F6] focus:ring-2 focus:ring-[#2F65F6]/20 transition-all"
           />
           {filters.query && (

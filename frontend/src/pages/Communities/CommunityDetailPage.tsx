@@ -223,7 +223,7 @@ export const CommunityDetailPage: React.FC = () => {
                   <th className="px-5 py-3.5">Publisher Type</th>
                   <th className="px-5 py-3.5">Ingested Volume</th>
                   <th className="px-5 py-3.5">Narrative Presence</th>
-                  <th className="px-5 py-3.5">Top Topic Coverage</th>
+                  <th className="px-5 py-3.5">Top Trend Coverage</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-[#252B32]">

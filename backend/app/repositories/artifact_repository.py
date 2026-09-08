@@ -87,6 +87,7 @@ class ArtifactRepository:
         self._topic_result: TopicDiscoveryResult | None = None
         self._enrichment_result: TopicEnrichmentResult | None = None
         self._narrative_report: NarrativeAssessmentReport | None = None
+        self._trend_identities: dict[str, tuple[str, str]] = {}
 
     def load_artifacts(
         self,
@@ -144,6 +145,22 @@ class ArtifactRepository:
                     et.topic_id: et for et in pipeline_result.enriched_topics.enriched_topics
                 }
 
+                # Milestone 6C/7: Synthesize human-readable narrative identity & explanation
+                try:
+                    from app.ml.narratives.identity import derive_narrative_identity
+                    for n in pipeline_result.narrative_report.narrative_candidates:
+                        if not n.narrative_name or not n.narrative_summary:
+                            t = self._topics_by_id.get(n.promoted_from_topic_id)
+                            topic_msgs = []
+                            if t:
+                                sample_ids = (t.sample_message_ids or []) + (getattr(t, "representative_message_ids", []) or [])
+                                topic_msgs = [self._messages_by_id[mid] for mid in sample_ids if mid in self._messages_by_id]
+                            name, summary = derive_narrative_identity(n, t, messages=topic_msgs)
+                            n.narrative_name = name
+                            n.narrative_summary = summary
+                except Exception as id_exc:
+                    logger.warning("Could not synthesize narrative identity: %s", id_exc)
+
                 # Index Narratives
                 self._narratives_by_id = {
                     n.narrative_id: n for n in pipeline_result.narrative_report.narrative_candidates
@@ -153,6 +170,19 @@ class ArtifactRepository:
                     key=lambda n: n.priority_signal_score,
                     reverse=True,
                 )
+
+                # Synthesize human-readable trend identity & explanation
+                try:
+                    from app.ml.narratives.identity import derive_trend_identity
+                    for tid, t in self._topics_by_id.items():
+                        et = self._enriched_topics_by_id.get(tid)
+                        sample_ids = (t.sample_message_ids or []) + (getattr(t, "representative_message_ids", []) or [])
+                        topic_msgs = [self._messages_by_id[mid] for mid in sample_ids if mid in self._messages_by_id]
+                        associated = [n for n in self._narratives_by_id.values() if n.promoted_from_topic_id == tid]
+                        tr_name, tr_summary = derive_trend_identity(t, et, messages=topic_msgs, associated_narratives=associated)
+                        self._trend_identities[tid] = (tr_name, tr_summary)
+                except Exception as tr_exc:
+                    logger.warning("Could not synthesize trend identity: %s", tr_exc)
 
                 # Milestone 6C: Compute deterministic narrative validation metrics
                 try:
@@ -335,11 +365,26 @@ class ArtifactRepository:
         has_coordination_signal: bool | None = None,
         sort_by: str = "priority_signal_score",
         order: str = "desc",
+        query: str | None = None,
     ) -> tuple[list[NarrativeSummaryResponse], PaginationMeta]:
         if not self.artifacts_loaded:
             raise RuntimeError("Analytics artifact is unavailable.")
 
         filtered = list(self._narratives_by_id.values())
+
+        if query and query.strip():
+            q = query.strip().lower()
+            clean_q = q.replace("narrative_", "").replace("topic_", "").replace("trend_", "")
+            filtered = [
+                n for n in filtered
+                if q in n.narrative_id.lower()
+                or (clean_q and clean_q in n.narrative_id.lower())
+                or (getattr(n, "narrative_name", None) and q in n.narrative_name.lower())
+                or (getattr(n, "narrative_summary", None) and q in n.narrative_summary.lower())
+                or q in n.headline_claim.lower()
+                or q in n.promoted_from_topic_id.lower()
+                or (n.key_entities and any(q in e.lower() for e in n.key_entities))
+            ]
 
         if priority_tier:
             filtered = [n for n in filtered if n.priority_tier.value.lower() == priority_tier.lower()]
@@ -387,6 +432,8 @@ class ArtifactRepository:
                     narrative_id=n.narrative_id,
                     promoted_from_topic_id=n.promoted_from_topic_id,
                     headline_claim=n.headline_claim,
+                    narrative_name=getattr(n, "narrative_name", None),
+                    narrative_summary=getattr(n, "narrative_summary", None),
                     priority_signal_score=n.priority_signal_score,
                     priority_tier=n.priority_tier,
                     sub_scores=n.sub_scores,
@@ -484,6 +531,8 @@ class ArtifactRepository:
                     TopicKeywordResponse(keyword=k.keyword, score=k.score)
                     for k in t.representative_keywords
                 ],
+                trend_name=self._trend_identities.get(t.topic_id, (None, None))[0],
+                trend_summary=self._trend_identities.get(t.topic_id, (None, None))[1],
             )
             for t in sliced
         ]
@@ -507,6 +556,7 @@ class ArtifactRepository:
             return None
 
         enriched = self._enriched_topics_by_id.get(topic_id)
+        t_ident = self._trend_identities.get(topic.topic_id, (None, None))
 
         return TopicDetailData(
             topic_id=topic.topic_id,
@@ -523,6 +573,8 @@ class ArtifactRepository:
             engagement=enriched.engagement if enriched else None,
             propagation=enriched.propagation if enriched else None,
             temporal=enriched.temporal if enriched else None,
+            trend_name=t_ident[0],
+            trend_summary=t_ident[1],
         )
 
     # --------------------------------------------------------------------------
@@ -580,6 +632,12 @@ class ArtifactRepository:
         for t in sliced:
             top_kws = [k.keyword for k in t.representative_keywords[:3]]
             label = ", ".join(top_kws) if top_kws else f"Trend Cluster {t.cluster_label}"
+            associated_narratives = [
+                cand.narrative_id
+                for cand in self._narratives_by_id.values()
+                if cand.promoted_from_topic_id == t.topic_id
+            ]
+            t_ident = self._trend_identities.get(t.topic_id, (None, None))
             items.append(
                 TrendSummaryResponse(
                     trend_id=self._normalize_trend_id(t.topic_id),
@@ -592,6 +650,9 @@ class ArtifactRepository:
                         TrendKeywordResponse(keyword=k.keyword, score=k.score)
                         for k in t.representative_keywords
                     ],
+                    associated_narrative_ids=associated_narratives,
+                    trend_name=t_ident[0],
+                    trend_summary=t_ident[1],
                 )
             )
 
@@ -657,6 +718,7 @@ class ArtifactRepository:
 
         top_kws = [k.keyword for k in topic.representative_keywords[:3]]
         label = ", ".join(top_kws) if top_kws else f"Trend Cluster {topic.cluster_label}"
+        t_ident = self._trend_identities.get(topic.topic_id, (None, None))
 
         return TrendDetailData(
             trend_id=trend_id,
@@ -677,6 +739,8 @@ class ArtifactRepository:
             temporal=enriched.temporal if enriched else None,
             channels=channels,
             associated_narrative_ids=associated_narratives,
+            trend_name=t_ident[0],
+            trend_summary=t_ident[1],
         )
 
     def get_trend_graph(self, identifier: str) -> TrendGraphData | None:
@@ -692,8 +756,9 @@ class ArtifactRepository:
             return None
 
         enriched = self._enriched_topics_by_id.get(topic_id)
+        t_ident = self._trend_identities.get(topic_id, (None, None))
         top_kws = [k.keyword for k in topic.representative_keywords[:3]]
-        trend_label = f"Trend: {', '.join(top_kws)}" if top_kws else f"Trend {topic.cluster_label}"
+        trend_label = t_ident[0] or (f"Trend: {', '.join(top_kws)}" if top_kws else f"Trend {topic.cluster_label}")
 
         nodes: list[GraphNode] = []
         edges: list[GraphEdge] = []
@@ -708,6 +773,8 @@ class ArtifactRepository:
                 label=trend_label,
                 metadata={
                     "trend_id": trend_id,
+                    "trend_name": t_ident[0],
+                    "trend_summary": t_ident[1],
                     "topic_id": topic.topic_id,
                     "cluster_label": topic.cluster_label,
                     "message_count": topic.message_count,
@@ -810,9 +877,11 @@ class ArtifactRepository:
                         GraphNode(
                             id=nnode_id,
                             type="narrative",
-                            label=cand.headline_claim,
+                            label=cand.narrative_name or cand.headline_claim,
                             metadata={
                                 "narrative_id": cand.narrative_id,
+                                "narrative_name": cand.narrative_name,
+                                "narrative_summary": cand.narrative_summary,
                                 "priority_signal_score": cand.priority_signal_score,
                                 "priority_tier": tier_str,
                             },
@@ -878,6 +947,7 @@ class ArtifactRepository:
         self,
         messages: list[CanonicalMessage],
         default_model_id: str = "cardiffnlp/twitter-roberta-base-sentiment-latest",
+        override_bucket_size: str | None = None,
     ) -> tuple[list[SentimentBucket], SentimentSummary, str]:
         """Aggregate chronological message sentiment into continuous UTC time buckets."""
         if not messages:
@@ -890,14 +960,26 @@ class ArtifactRepository:
                 negative_ratio=None,
                 sentiment_model_id=default_model_id,
             )
-            return [], summary, "1h"
+            return [], summary, override_bucket_size or "1h"
 
         sorted_msgs = sorted(messages, key=lambda m: m.published_at)
         t_min = sorted_msgs[0].published_at
         t_max = sorted_msgs[-1].published_at
         span_seconds = (t_max - t_min).total_seconds()
 
-        if span_seconds <= 48 * 3600:
+        if override_bucket_size == "1h":
+            bucket_sec = 3600
+            bucket_size_str = "1h"
+        elif override_bucket_size == "4h":
+            bucket_sec = 4 * 3600
+            bucket_size_str = "4h"
+        elif override_bucket_size == "6h":
+            bucket_sec = 6 * 3600
+            bucket_size_str = "6h"
+        elif override_bucket_size == "1d":
+            bucket_sec = 86400
+            bucket_size_str = "1d"
+        elif span_seconds <= 48 * 3600:
             bucket_sec = 3600
             bucket_size_str = "1h"
         elif span_seconds <= 14 * 86400:
@@ -1014,7 +1096,9 @@ class ArtifactRepository:
             summary=summary,
         )
 
-    def get_narrative_sentiment(self, narrative_id: str) -> NarrativeSentimentData | None:
+    def get_narrative_sentiment(
+        self, narrative_id: str, bucket_size: str | None = None
+    ) -> NarrativeSentimentData | None:
         """Compute chronological sentiment time-series for a Narrative candidate."""
         if not self.artifacts_loaded:
             raise RuntimeError("Analytics artifact is unavailable.")
@@ -1033,7 +1117,9 @@ class ArtifactRepository:
                 if mid in self._messages_by_id
             ]
 
-        time_series, computed_summary, bucket_size = self._compute_sentiment_time_series(cluster_messages)
+        time_series, computed_summary, resolved_bucket_size = self._compute_sentiment_time_series(
+            cluster_messages, override_bucket_size=bucket_size
+        )
 
         # Preserve narrative's precomputed frozen sentiment profile
         sp = candidate.sentiment_profile
@@ -1055,7 +1141,7 @@ class ArtifactRepository:
         return NarrativeSentimentData(
             narrative_id=narrative_id,
             promoted_from_trend_id=self._normalize_trend_id(promoted_topic_id),
-            bucket_size=bucket_size,
+            bucket_size=resolved_bucket_size,
             time_series=time_series,
             summary=summary,
         )

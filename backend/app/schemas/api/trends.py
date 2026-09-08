@@ -44,6 +44,9 @@ class TrendSummaryResponse(BaseModel):
     message_count: int = Field(ge=1, description="Total observed messages in cluster")
     percentage_of_dataset: float = Field(ge=0.0, le=100.0, description="Percentage of total dataset messages")
     representative_keywords: list[TrendKeywordResponse] = Field(default_factory=list)
+    associated_narrative_ids: list[str] = Field(default_factory=list, description="Linked narrative identifiers")
+    trend_name: str | None = Field(default=None, description="Human-readable trend name summarizing central subject")
+    trend_summary: str | None = Field(default=None, description="Short evidence-grounded summary of what this trend represents")
 
 
 class TrendListResponse(BaseModel):
@@ -73,6 +76,8 @@ class TrendDetailData(BaseModel):
     temporal: TopicTemporalFeatures | None = None
     channels: list[TrendChannelSummary] = Field(default_factory=list)
     associated_narrative_ids: list[str] = Field(default_factory=list)
+    trend_name: str | None = Field(default=None, description="Human-readable trend name summarizing central subject")
+    trend_summary: str | None = Field(default=None, description="Short evidence-grounded summary of what this trend represents")
 
 
 class TrendDetailResponse(BaseModel):

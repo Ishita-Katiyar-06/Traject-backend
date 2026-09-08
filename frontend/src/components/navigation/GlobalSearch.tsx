@@ -73,7 +73,6 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
 
   const getCategoryIcon = (category: SearchCategory) => {
     switch (category) {
-      case 'Topics':
       case 'Trends':
         return <Hash className="w-3.5 h-3.5 text-[#2F65F6]" />;
       case 'Narratives':
@@ -87,7 +86,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
 
   // Group results
   const narrativeResults = results.filter((r) => r.category === 'Narratives');
-  const topicResults = results.filter((r) => r.category === 'Topics' || r.category === 'Trends');
+  const topicResults = results.filter((r) => r.category === 'Trends');
   const communityResults = results.filter((r) => r.category === 'Communities');
 
   const searchNode = (
@@ -128,7 +127,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
                 <Command.Input
                   value={query}
                   onValueChange={setQuery}
-                  placeholder="Search narratives, topic clusters, channels, or jump to page..."
+                  placeholder="Search narratives, trends, channels, or jump to page..."
                   className="w-full bg-transparent text-[14px] font-medium text-[#111727] dark:text-[#F8FAFC] placeholder:text-[#8591A5] dark:placeholder:text-[#8591A5] focus:outline-none focus:ring-0 outline-none border-none"
                   autoFocus
                 />
@@ -164,7 +163,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
                         key={item.id}
                         value={item.id}
                         onSelect={() => handleSelect(item.route)}
-                        className="flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer text-[#111727] dark:text-white hover:bg-[#F1F4F9] dark:hover:bg-[#1D232A] aria-selected:bg-[#F1F4F9] dark:aria-selected:bg-[#1D232A] transition-colors"
+                        className="flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer text-[#111727] dark:text-white hover:bg-[#F1F4F9] dark:hover:bg-[#1D232A] aria-selected:bg-[#F1F4F9] dark:aria-selected:bg-[#1D232A] transition-colors normal-case"
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900/40 text-rose-600 shrink-0">
@@ -187,7 +186,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
                   </Command.Group>
                 )}
 
-                {/* Trend / Topic Group */}
+                {/* Trend Group */}
                 {topicResults.length > 0 && (
                   <Command.Group
                     heading="Trends"
@@ -198,7 +197,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
                         key={item.id}
                         value={item.id}
                         onSelect={() => handleSelect(item.route)}
-                        className="flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer text-[#111727] dark:text-white hover:bg-[#F1F4F9] dark:hover:bg-[#1D232A] aria-selected:bg-[#F1F4F9] dark:aria-selected:bg-[#1D232A] transition-colors"
+                        className="flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer text-[#111727] dark:text-white hover:bg-[#F1F4F9] dark:hover:bg-[#1D232A] aria-selected:bg-[#F1F4F9] dark:aria-selected:bg-[#1D232A] transition-colors normal-case"
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/40 text-[#2F65F6] shrink-0">
@@ -214,7 +213,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
                           </div>
                         </div>
                         <span className="text-[10px] font-mono uppercase font-bold text-blue-700 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-full border border-blue-200/60 shrink-0 ml-2">
-                          {item.category === 'Trends' ? 'Trend' : 'Topic'}
+                          Trend
                         </span>
                       </Command.Item>
                     ))}
@@ -232,7 +231,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
                         key={item.id}
                         value={item.id}
                         onSelect={() => handleSelect(item.route)}
-                        className="flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer text-[#111727] dark:text-white hover:bg-[#F1F4F9] dark:hover:bg-[#1D232A] aria-selected:bg-[#F1F4F9] dark:aria-selected:bg-[#1D232A] transition-colors"
+                        className="flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer text-[#111727] dark:text-white hover:bg-[#F1F4F9] dark:hover:bg-[#1D232A] aria-selected:bg-[#F1F4F9] dark:aria-selected:bg-[#1D232A] transition-colors normal-case"
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/40 text-[#10B981] shrink-0">

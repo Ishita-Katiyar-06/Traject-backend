@@ -288,7 +288,7 @@ export const communityService = {
           source_type: reg?.sourceType || 'independent',
           message_count: estMsgs,
           narratives_count: narrativeHits.length,
-          top_topics: Array.from(new Set(narrativeHits.map((n) => `Topic #${n.promoted_from_topic_id}`))).slice(0, 3),
+          top_topics: Array.from(new Set(narrativeHits.map((n) => `Trend #${n.promoted_from_topic_id.replace(/^topic_|^trend_/, '')}`))).slice(0, 3),
         };
       });
 

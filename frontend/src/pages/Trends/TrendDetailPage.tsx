@@ -9,21 +9,24 @@ import {
   Tag,
   AlertTriangle,
   FileText,
+  GitBranch,
 } from 'lucide-react';
 import { PageHeader } from '../../layout/PageHeader';
 import { Button } from '../../components/ui/Button';
 import { telemetryApi } from '../../services/telemetryApi';
-import { TopicDetailData } from '../../types/api';
+import { TopicDetailData, NarrativeSummaryResponse } from '../../types/api';
 import { formatPercent, formatDecimal } from '../../utils/telemetryFormatters';
 import { KeywordScoresBarChart } from '../../components/ui/charts';
 import { TrendNodeGraph } from '../../components/trends/TrendNodeGraph';
 import { TrendSentimentChart } from '../../components/trends/TrendSentimentChart';
+import { NarrativeTreeNode } from '../../components/trends/TrendNarrativeTree';
 
 export const TrendDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   const [trend, setTrend] = useState<TopicDetailData | null>(null);
+  const [associatedNarratives, setAssociatedNarratives] = useState<NarrativeSummaryResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -34,10 +37,22 @@ export const TrendDetailPage: React.FC = () => {
 
     setIsLoading(true);
     setIsError(false);
-    telemetryApi
-      .getTrendById(id)
-      .then((res) => {
-        setTrend(res.data);
+    Promise.all([
+      telemetryApi.getTrendById(id),
+      telemetryApi.getNarratives({ page: 1, page_size: 100 }),
+    ])
+      .then(([trendRes, narrativesRes]) => {
+        setTrend(trendRes.data);
+        const t = trendRes.data;
+        const cleanId = (t.topic_id || id).replace(/^trend_|^topic_/, '');
+        const allN = narrativesRes.data || [];
+        const matched = allN.filter(
+          (n) =>
+            (t.associated_narrative_ids && t.associated_narrative_ids.includes(n.narrative_id)) ||
+            n.promoted_from_topic_id.replace(/^trend_|^topic_/, '') === cleanId
+        );
+        matched.sort((a, b) => b.priority_signal_score - a.priority_signal_score);
+        setAssociatedNarratives(matched);
       })
       .catch((err) => {
         console.error('Failed to load trend detail:', err);
@@ -89,15 +104,25 @@ export const TrendDetailPage: React.FC = () => {
     );
   }
 
-  const primaryKeyword = trend.representative_keywords[0]?.keyword || `Cluster #${trend.cluster_label}`;
-  const cleanTrendId = trend.topic_id.replace(/^topic_|^trend_/, '');
+  const cleanTrendId = ((trend as any).trend_id || trend.topic_id || id || '').replace(/^topic_|^trend_/, '');
 
   return (
     <div className="space-y-6 sm:space-y-8 font-sans pb-10">
       {/* 1. Page Header */}
       <PageHeader
-        title={`Trend: ${primaryKeyword}`}
-        description={`Algorithmic trend cluster #${cleanTrendId} discovered via HDBSCAN density clustering and c-TF-IDF.`}
+        title={
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[12px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-[#2F65F6] dark:text-[#93C5FD] border border-blue-200/70 dark:border-blue-900/40">
+                TREND #{cleanTrendId}
+              </span>
+            </div>
+            <h1 className="text-[26px] sm:text-[32px] font-bold text-[#111727] dark:text-[#F8FAFC] tracking-tight leading-tight font-sans">
+              {trend.trend_name || `Trend #${cleanTrendId}`}
+            </h1>
+          </div>
+        }
+        description={`Algorithmic trend cluster #${cleanTrendId} discovered via multilingual sentence embeddings and HDBSCAN density clustering.`}
         actions={
           <div className="flex items-center gap-2">
             <Button
@@ -156,42 +181,47 @@ export const TrendDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. c-TF-IDF Lexical Representation */}
-      <section className="p-6 md:p-8 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-4 transition-all">
+      {/* Dedicated Section: What this Trend represents */}
+      <section className="p-6 md:p-8 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-3 transition-all">
+        <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-[#252B32] pb-3">
+          <div className="w-2.5 h-2.5 rounded-full bg-[#2F65F6]" />
+          <h2 className="text-[18px] sm:text-[20px] font-bold text-[#111727] dark:text-slate-100 tracking-tight">
+            What this Trend represents
+          </h2>
+        </div>
+        <p className="text-[14px] sm:text-[15px] text-[#334155] dark:text-slate-300 leading-relaxed font-sans font-normal">
+          {trend.trend_summary || 'Semantic trend cluster synthesized from dense embedding spaces and representative class-based term frequencies.'}
+        </p>
+      </section>
+
+      {/* 2. c-TF-IDF Representative Terms */}
+      <section className="p-6 md:p-8 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-6 transition-all">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#252B32] pb-4">
           <div>
             <h3 className="text-[17px] font-bold text-[#111727] dark:text-slate-100 tracking-tight">
-              c-TF-IDF Lexical Keywords
+              Representative Lexical Features
             </h3>
             <p className="text-[12px] text-[#8591A5] dark:text-slate-400 font-medium mt-0.5">
-              Authoritative class-based term frequency inverse document frequency representations
+              Top keywords identified by class-based TF-IDF across clustered messages
             </p>
           </div>
-          <span className="text-[11px] font-mono text-[#2F65F6] dark:text-[#93C5FD] bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-full border border-blue-100 dark:border-blue-900/40 font-semibold">
-            {trend.representative_keywords.length} terms
-          </span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start pt-2">
-          {/* Keyword Badges */}
-          <div className="space-y-3">
-            <div className="text-[12px] font-semibold text-[#8591A5] dark:text-slate-400 uppercase tracking-wider">
-              Token Frequency Index
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {trend.representative_keywords.map((kw, i) => (
-                <span
-                  key={i}
-                  className="px-3.5 py-1.5 rounded-full bg-[#F6F8FC] dark:bg-[#1D232A] border border-slate-200/80 dark:border-[#2B323A] text-[#111727] dark:text-slate-100 text-[13px] font-medium font-mono"
-                >
-                  #{kw.keyword} <span className="text-[#8591A5] dark:text-slate-400 text-[11px]">({kw.score.toFixed(2)})</span>
-                </span>
-              ))}
-            </div>
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {trend.representative_keywords.map((kw, idx) => (
+              <span
+                key={idx}
+                className="px-3 py-1.5 rounded-full bg-[#F6F8FC] dark:bg-[#1D232A] text-[13px] font-semibold text-[#111727] dark:text-slate-200 border border-slate-200/80 dark:border-[#2B323A] flex items-center gap-1.5"
+              >
+                <span className="text-[#2F65F6] dark:text-[#93C5FD]">#</span>
+                <span>{kw.keyword}</span>
+                <span className="text-[11px] font-mono text-[#8591A5] dark:text-slate-400">({kw.score.toFixed(3)})</span>
+              </span>
+            ))}
           </div>
 
-          {/* c-TF-IDF Analytical Ranking Bar Chart */}
-          <div className="p-4 rounded-[20px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/70 dark:border-[#252B32]">
+          <div className="pt-2">
             <div className="text-[12px] font-bold text-[#111727] dark:text-slate-100 mb-2 font-sans">
               Class-Based Term Weighting (c-TF-IDF)
             </div>
@@ -205,6 +235,39 @@ export const TrendDetailPage: React.FC = () => {
 
       {/* 2.6 Trend Sentiment Trajectory */}
       <TrendSentimentChart trendId={trend.topic_id} />
+
+      {/* 2.7 Trend -> Associated Narratives Tree */}
+      <section className="p-6 md:p-8 rounded-[24px] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] bg-white dark:bg-[#171C22] shadow-dashboard space-y-4 transition-all">
+        <div className="border-b border-slate-100 dark:border-[#252B32] pb-4 flex items-center justify-between">
+          <div>
+            <h3 className="text-[17px] font-bold text-[#111727] dark:text-slate-100 tracking-tight flex items-center gap-2">
+              <GitBranch className="w-5 h-5 text-rose-500" />
+              <span>Associated Narratives ({associatedNarratives.length})</span>
+            </h3>
+            <p className="text-[12px] text-[#8591A5] dark:text-slate-400 font-medium mt-0.5">
+              Hierarchical narrative candidates synthesized from Trend #{cleanTrendId}
+            </p>
+          </div>
+        </div>
+
+        {associatedNarratives.length > 0 ? (
+          <div className="relative pl-6 ml-3 border-l-2 border-slate-200 dark:border-[#2B323A] space-y-2.5 pt-2">
+            {associatedNarratives.map((n, idx) => (
+              <NarrativeTreeNode
+                key={n.narrative_id}
+                narrative={n}
+                parentTrendId={(trend as any).trend_id || trend.topic_id}
+                parentCleanTrendId={cleanTrendId}
+                isLast={idx === associatedNarratives.length - 1}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="py-4 text-center text-[13px] text-[#8591A5] dark:text-slate-400">
+            No narratives are currently associated with this Trend.
+          </div>
+        )}
+      </section>
 
       {/* 3. 4F Feature Telemetry (Temporal & Propagation Dynamics) */}
       {(trend.temporal || trend.engagement || trend.propagation) && (

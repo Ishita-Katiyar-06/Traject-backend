@@ -118,7 +118,9 @@ async def list_temporal_snapshots() -> TemporalSnapshotListResponse:
                     data = json.load(f)
 
                 topics_count = len(data.get("topics", {}).get("topic_records", []))
-                narratives_count = len(data.get("narratives", []))
+                narratives_count = len(
+                    data.get("narrative_report", {}).get("narrative_candidates", [])
+                ) if "narrative_report" in data else len(data.get("narratives", []))
                 created_at = data.get("created_at_utc", "")
                 metrics = data.get("metrics", {})
                 corpus_size = metrics.get("records_ingested", 0)

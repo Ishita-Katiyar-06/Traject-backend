@@ -78,6 +78,8 @@ class NarrativeCandidate(BaseModel):
     narrative_id: str = Field(description="Unique narrative candidate identifier (e.g. narrative_001)")
     promoted_from_topic_id: str = Field(description="Underlying 4E Topic cluster ID (e.g. topic_000)")
     headline_claim: str = Field(description="Deterministic framing composed of key entities and discriminative keywords")
+    narrative_name: str | None = Field(default=None, description="Human-readable title/name summarizing central subject")
+    narrative_summary: str | None = Field(default=None, description="Short evidence-grounded summary of what this narrative represents")
 
     priority_signal_score: float = Field(ge=0.0, le=1.0, description="Explainable composite Priority/Narrative Signal Score")
     priority_tier: PriorityTier

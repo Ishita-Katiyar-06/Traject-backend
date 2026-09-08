@@ -4,7 +4,7 @@ import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { watchlistService, WatchItem } from '../../services/watchlistService';
-import { ArrowUpRight, Trash2, Hash, GitBranch, Users, ShieldCheck } from 'lucide-react';
+import { ArrowUpRight, Trash2, GitBranch, Users, ShieldCheck, TrendingUp } from 'lucide-react';
 
 export interface WatchlistModalProps {
   isOpen: boolean;
@@ -35,8 +35,9 @@ export const WatchlistModal: React.FC<WatchlistModalProps> = ({ isOpen, onClose 
 
   const getTypeIcon = (type: WatchItem['type']) => {
     switch (type) {
+      case 'Trend':
       case 'Topic':
-        return <Hash className="w-3.5 h-3.5 text-data" />;
+        return <TrendingUp className="w-3.5 h-3.5 text-[#2F65F6]" />;
       case 'Narrative':
         return <GitBranch className="w-3.5 h-3.5 text-signal" />;
       case 'Community':
@@ -51,7 +52,7 @@ export const WatchlistModal: React.FC<WatchlistModalProps> = ({ isOpen, onClose 
       isOpen={isOpen}
       onClose={onClose}
       title="Analyst Watchlist"
-      subtitle="Priority topics, narratives, communities, and investigations pinned for active tracking"
+      subtitle="Priority trends, narratives, communities, and investigations pinned for active tracking"
       maxWidth="md"
       footer={
         <div className="flex items-center justify-between w-full">
@@ -84,7 +85,7 @@ export const WatchlistModal: React.FC<WatchlistModalProps> = ({ isOpen, onClose 
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] font-bold text-[#8591A5] dark:text-[#94A3B8] uppercase tracking-wider">
-                      {item.type}
+                      {item.type === 'Topic' ? 'Trend' : item.type}
                     </span>
                     <span className="text-slate-300 dark:text-slate-600">•</span>
                     <span className="text-[11px] text-[#FF6D5A] font-semibold">

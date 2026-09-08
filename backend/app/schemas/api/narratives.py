@@ -17,6 +17,8 @@ class NarrativeSummaryResponse(BaseModel):
     narrative_id: str = Field(description="Unique narrative identifier (e.g. narrative_000)")
     promoted_from_topic_id: str = Field(description="Underlying topic cluster identifier")
     headline_claim: str = Field(description="Deterministic entity-keyword framing claim")
+    narrative_name: str | None = Field(default=None, description="Human-readable title/name summarizing central subject")
+    narrative_summary: str | None = Field(default=None, description="Short evidence-grounded summary of what this narrative represents")
     priority_signal_score: float = Field(ge=0.0, le=1.0, description="Composite priority score")
     priority_tier: PriorityTier = Field(description="Triage priority classification tier")
     sub_scores: NarrativeSubScores = Field(description="Explainable breakdown of 4 sub-scores")

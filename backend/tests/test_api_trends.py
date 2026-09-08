@@ -20,6 +20,8 @@ def test_list_trends_default(client):
         assert "representative_keywords" in trend
         assert len(trend["representative_keywords"]) > 0
         assert all("keyword" in k and "score" in k for k in trend["representative_keywords"])
+        assert "associated_narrative_ids" in trend
+        assert isinstance(trend["associated_narrative_ids"], list)
 
 
 def test_get_trend_by_id_success(client):

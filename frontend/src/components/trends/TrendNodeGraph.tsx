@@ -162,14 +162,16 @@ export const TrendNodeGraph: React.FC<TrendNodeGraphProps> = ({
 
     // 4. Narratives (Right Column - Outgoing Candidates)
     narratives.forEach((n, idx) => {
+      const narrativeName = (n.metadata?.narrative_name as string) || n.label;
       flowNodes.push({
         id: n.id,
         type: 'narrative',
         position: { x: 860, y: 60 + idx * 130 },
         data: {
           narrativeId: n.id.replace(/^narrative:/, ''),
+          narrativeName: narrativeName,
           headlineClaim: n.label,
-          priorityScore: (n.metadata?.priority_score as number) || 0.5,
+          priorityScore: (n.metadata?.priority_score as number) || (n.metadata?.priority_signal_score as number) || 0.5,
           priorityTier: (n.metadata?.priority_tier as any) || 'routine',
           messageCount: (n.metadata?.message_count as number) || undefined,
           ...n.metadata,

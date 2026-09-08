@@ -1,15 +1,14 @@
 import React from 'react';
 import { TrendSummaryResponse, TopicSummaryResponse } from '../../types/api';
-import { TrendRow } from './TrendRow';
+import { TrendNarrativeTree } from './TrendNarrativeTree';
+import { TrendWithNarratives, getCleanTrendId } from '../../services/trendService';
 import { EmptyState } from '../feedback/EmptyState';
 import { ErrorState } from '../feedback/ErrorState';
 import { Skeleton } from '../ui/Skeleton';
 import { Hash } from 'lucide-react';
-import { motion } from 'motion/react';
-import { staggerContainer } from '../../utils/motion';
 
 export interface TrendTableProps {
-  trends: (TrendSummaryResponse | TopicSummaryResponse)[];
+  trends: (TrendWithNarratives | TrendSummaryResponse | TopicSummaryResponse)[];
   isLoading?: boolean;
   isError?: boolean;
   onRetry?: () => void;
@@ -25,14 +24,14 @@ export const TrendTable: React.FC<TrendTableProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="space-y-3" role="status" aria-label="Loading trends">
+      <div className="space-y-4" role="status" aria-label="Loading trends">
         {[1, 2, 3, 4, 5].map((idx) => (
           <div
             key={idx}
             className="p-5 rounded-[22px] border border-border bg-surface flex flex-col md:flex-row md:items-center justify-between gap-4"
           >
-            <div className="space-y-2 flex-1">
-              <Skeleton className="h-3 w-36" />
+            <div className="space-y-2.5 flex-1">
+              <Skeleton className="h-4 w-40" />
               <Skeleton className="h-5 w-2/3" />
               <Skeleton className="h-3 w-1/2" />
             </div>
@@ -67,19 +66,26 @@ export const TrendTable: React.FC<TrendTableProps> = ({
     );
   }
 
-  return (
-    <motion.div
-      variants={staggerContainer}
-      initial="initial"
-      animate="animate"
-      className="space-y-3"
-      role="feed"
-      aria-label="Discovered Trends"
-    >
-      {trends.map((trend) => {
-        const id = 'trend_id' in trend ? trend.trend_id : trend.topic_id;
-        return <TrendRow key={id} trend={trend} />;
-      })}
-    </motion.div>
-  );
+  // Ensure all trends conform to TrendWithNarratives structure
+  const normalizedTrends: TrendWithNarratives[] = trends.map((t) => {
+    const trendId = 'trend_id' in t ? t.trend_id : t.topic_id;
+    const cleanId =
+      'cleanId' in t && (t as any).cleanId
+        ? (t as any).cleanId
+        : getCleanTrendId(trendId);
+    const narratives =
+      'narratives' in t && Array.isArray((t as any).narratives)
+        ? (t as any).narratives
+        : [];
+
+    return {
+      ...(t as TrendSummaryResponse),
+      trend_id: trendId,
+      topic_id: t.topic_id,
+      cleanId,
+      narratives,
+    };
+  });
+
+  return <TrendNarrativeTree trends={normalizedTrends} />;
 };

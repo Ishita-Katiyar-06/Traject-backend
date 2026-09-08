@@ -146,6 +146,8 @@ export interface NarrativeSummaryResponse {
   narrative_id: string;
   promoted_from_topic_id: string;
   headline_claim: string;
+  narrative_name?: string;
+  narrative_summary?: string;
   priority_signal_score: number;
   priority_tier: PriorityTier;
   sub_scores: NarrativeSubScores;
@@ -171,6 +173,8 @@ export interface NarrativeDetailData {
   narrative_id: string;
   promoted_from_topic_id: string;
   headline_claim: string;
+  narrative_name?: string;
+  narrative_summary?: string;
   priority_signal_score: number;
   priority_tier: PriorityTier;
   sub_scores: NarrativeSubScores;
@@ -200,6 +204,7 @@ export interface NarrativeDetailResponse {
 export interface NarrativeQueryParams {
   page?: number;
   page_size?: number;
+  query?: string;
   priority_tier?: PriorityTier;
   min_priority?: number;
   has_coordination_signal?: boolean;
@@ -229,6 +234,8 @@ export interface TopicSummaryResponse {
   message_count: number;
   percentage_of_dataset: number;
   representative_keywords: TopicKeywordResponse[];
+  trend_name?: string;
+  trend_summary?: string;
 }
 
 export interface TopicListResponse {
@@ -287,6 +294,8 @@ export interface TopicDetailData {
   engagement: TopicEngagementFeatures | null;
   propagation: TopicPropagationFeatures | null;
   temporal: TopicTemporalFeatures | null;
+  trend_name?: string;
+  trend_summary?: string;
 }
 
 export interface TopicDetailResponse {
@@ -326,6 +335,9 @@ export interface TrendSummaryResponse {
   message_count: number;
   percentage_of_dataset: number;
   representative_keywords: TrendKeywordResponse[];
+  associated_narrative_ids?: string[];
+  trend_name?: string;
+  trend_summary?: string;
 }
 
 export interface TrendListResponse {
@@ -349,6 +361,8 @@ export interface TrendDetailData {
   temporal: TopicTemporalFeatures | null;
   channels: TrendChannelSummary[];
   associated_narrative_ids: string[];
+  trend_name?: string;
+  trend_summary?: string;
 }
 
 export interface TrendDetailResponse {

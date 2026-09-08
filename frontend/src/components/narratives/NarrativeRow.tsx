@@ -88,13 +88,18 @@ export const NarrativeRow: React.FC<NarrativeRowProps> = ({ narrative }) => {
         </div>
 
         <h3 className="text-[16px] font-bold text-[#111727] dark:text-slate-100 font-sans leading-snug group-hover:text-[#2F65F6] dark:group-hover:text-[#5878C7] transition-colors duration-150">
-          {narrative.headline_claim}
+          {narrative.narrative_name || narrative.headline_claim}
         </h3>
+        {narrative.narrative_summary && (
+          <p className="text-[13px] text-[#64748B] dark:text-slate-400 font-sans mt-1 line-clamp-2 leading-relaxed">
+            {narrative.narrative_summary}
+          </p>
+        )}
 
         <div className="flex items-center gap-3 mt-3 flex-wrap text-[12px] text-[#8591A5] dark:text-slate-400">
           <span className="inline-flex items-center gap-1 font-medium">
             <Radio className="w-3.5 h-3.5 text-[#2F65F6]" />
-            <span>Parent Topic: <strong className="text-[#111727] dark:text-slate-200 font-mono">#{narrative.promoted_from_topic_id}</strong></span>
+            <span>Parent Trend: <strong className="text-[#111727] dark:text-slate-200 font-mono">#{narrative.promoted_from_topic_id.replace(/^topic_|^trend_/, '')}</strong></span>
           </span>
           <span className="text-slate-300 dark:text-slate-700">•</span>
           <span className="inline-flex items-center gap-1 font-medium">

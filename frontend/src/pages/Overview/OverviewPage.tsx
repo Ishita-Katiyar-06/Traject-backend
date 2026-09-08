@@ -723,10 +723,10 @@ export const OverviewPage: React.FC = () => {
                       )}
                     </div>
                     <h4 className="text-[15px] font-bold text-[#111727] dark:text-slate-100 group-hover:text-[#2F65F6] dark:group-hover:text-[#5878C7] transition-colors truncate">
-                      {item.headline_claim}
+                      {item.narrative_name || item.headline_claim}
                     </h4>
                     <p className="text-[12px] text-[#8591A5] dark:text-slate-400 mt-1 font-mono">
-                      Topic: #{item.promoted_from_topic_id} • {item.message_count.toLocaleString()} messages observed
+                      {item.narrative_id.toUpperCase()} • Trend: #{item.promoted_from_topic_id.replace(/^topic_|^trend_/, '')} • {item.message_count.toLocaleString()} messages observed
                       {item.first_observed_at && (
                         <> • First seen: {new Date(item.first_observed_at).toLocaleDateString()}</>
                       )}

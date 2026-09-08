@@ -100,7 +100,7 @@ export const InvestigationContextDrawer: React.FC<InvestigationContextDrawerProp
                   <Activity className="w-4 h-4 text-[#6366F1] dark:text-[#818CF8] shrink-0" />
                 )}
                 <span className="text-[12px] font-bold uppercase tracking-wider text-[#8591A5] dark:text-[#94A3B8] font-mono">
-                  {selectedEntity.type} Context
+                  {selectedEntity.type === 'topic' ? 'trend' : selectedEntity.type} Context
                 </span>
               </div>
               <IconButton

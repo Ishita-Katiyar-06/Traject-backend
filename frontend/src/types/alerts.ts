@@ -19,6 +19,7 @@ export type AlertStatus = 'open' | 'acknowledged' | 'dismissed';
 export interface AlertItem {
   id: string;
   narrative_id: string;
+  narrative_name?: string;
   topic_id: string;
   title: string;
   claim: string;

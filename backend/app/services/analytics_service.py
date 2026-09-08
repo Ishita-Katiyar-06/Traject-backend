@@ -26,6 +26,7 @@ class AnalyticsService:
         has_coordination_signal: bool | None = None,
         sort_by: str = "priority_signal_score",
         order: str = "desc",
+        query: str | None = None,
     ) -> tuple[list[NarrativeSummaryResponse], PaginationMeta]:
         return self.repository.get_narratives(
             page=page,
@@ -35,6 +36,7 @@ class AnalyticsService:
             has_coordination_signal=has_coordination_signal,
             sort_by=sort_by,
             order=order,
+            query=query,
         )
 
     def get_narrative(self, narrative_id: str) -> NarrativeCandidate | None:
@@ -84,8 +86,8 @@ class AnalyticsService:
     def get_trend_sentiment(self, identifier: str):
         return self.repository.get_trend_sentiment(identifier)
 
-    def get_narrative_sentiment(self, narrative_id: str):
-        return self.repository.get_narrative_sentiment(narrative_id)
+    def get_narrative_sentiment(self, narrative_id: str, bucket_size: str | None = None):
+        return self.repository.get_narrative_sentiment(narrative_id, bucket_size=bucket_size)
 
 
 

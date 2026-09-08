@@ -246,7 +246,7 @@ export const PropagationPage: React.FC = () => {
           style: { stroke: '#10B981', strokeWidth: 1.75 },
           labelStyle: { fontSize: 10, fill: '#10B981', fontFamily: 'monospace', fontWeight: 600 },
           data: {
-            relationship: `${chan.title} ➔ Topic #${topic.topic_id}`,
+            relationship: `${chan.title} ➔ Trend #${topic.topic_id.replace(/^topic_|^trend_/, '')}`,
             source: chan.title,
             target: topic.topic_id,
           },
@@ -273,6 +273,7 @@ export const PropagationPage: React.FC = () => {
         position: { x: 760, y: centerY - 55 },
         data: {
           narrativeId: narrative.narrative_id,
+          narrativeName: narrative.narrative_name || narrative.headline_claim,
           headlineClaim: narrative.headline_claim,
           priorityScore: narrative.priority_signal_score,
           priorityTier: narrative.priority_tier,
@@ -292,7 +293,7 @@ export const PropagationPage: React.FC = () => {
         style: { stroke: '#2F65F6', strokeWidth: 2.5 },
         labelStyle: { fontSize: 10, fill: '#2F65F6', fontFamily: 'monospace', fontWeight: 700 },
         data: {
-          relationship: `Topic #${topic.topic_id} ➔ ${narrative.narrative_id}`,
+          relationship: `Trend #${topic.topic_id.replace(/^topic_|^trend_/, '')} ➔ ${narrative.narrative_id}`,
           source: topic.topic_id,
           target: narrative.narrative_id,
         },
@@ -399,6 +400,7 @@ export const PropagationPage: React.FC = () => {
           position: { x: baseX + 690, y: centerY - 50 },
           data: {
             narrativeId: narrative.narrative_id,
+            narrativeName: narrative.narrative_name || narrative.headline_claim,
             headlineClaim: narrative.headline_claim,
             priorityScore: narrative.priority_signal_score,
             priorityTier: narrative.priority_tier,
@@ -440,8 +442,8 @@ export const PropagationPage: React.FC = () => {
       setSelectedEntity({
         type: 'narrative',
         id: nData.narrativeId,
-        title: nData.headlineClaim,
-        subtitle: `Promoted from Topic #${nData.promotedFromTopicId}`,
+        title: nData.narrativeName || nData.headlineClaim,
+        subtitle: `Promoted from Trend #${(nData.promotedFromTopicId || '').replace(/^topic_|^trend_/, '')}`,
         priorityScore: nData.priorityScore,
         priorityTier: nData.priorityTier,
         messageCount: nData.messageCount,
@@ -451,10 +453,11 @@ export const PropagationPage: React.FC = () => {
       });
     } else if (node.type === 'topic') {
       const tData = node.data as any;
+      const cleanTrendId = (tData.topicId || '').replace(/^topic_|^trend_/, '') || String(tData.clusterLabel);
       setSelectedEntity({
         type: 'topic',
         id: tData.topicId,
-        title: `Topic #${tData.topicId} (Cluster ${tData.clusterLabel})`,
+        title: `Trend #${cleanTrendId}`,
         subtitle: `${tData.messageCount} messages analyzed`,
         messageCount: tData.messageCount,
         keywords: tData.keywords,
@@ -963,7 +966,7 @@ export const PropagationPage: React.FC = () => {
                       type: 'narrative',
                       id: activeNarrative.narrative_id,
                       title: activeNarrative.headline_claim,
-                      subtitle: `Promoted from Topic #${activeNarrative.promoted_from_topic_id}`,
+                      subtitle: `Promoted from Trend #${(activeNarrative.promoted_from_topic_id || '').replace(/^topic_|^trend_/, '')}`,
                       priorityScore: activeNarrative.priority_signal_score,
                       priorityTier: activeNarrative.priority_tier,
                       messageCount: activeNarrative.message_count,
@@ -1008,10 +1011,10 @@ export const PropagationPage: React.FC = () => {
               <div className="p-3 rounded-xl bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/60 dark:border-[#252B32] space-y-1">
                 <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#2F65F6] dark:text-[#5878C7] flex items-center gap-1">
                   <Hash className="w-3 h-3" />
-                  Parent Topic
+                  Parent Trend
                 </span>
                 <div className="text-[13px] font-bold text-[#111727] dark:text-slate-100 truncate">
-                  Topic #{activeNarrative.promoted_from_topic_id}
+                  Trend #{activeNarrative.promoted_from_topic_id.replace(/^topic_|^trend_/, '')}
                 </div>
                 <div className="text-[11px] font-mono text-[#8591A5] truncate">
                   {activeTopic?.representative_keywords?.slice(0, 3).map((k) => k.keyword).join(', ') || 'Clustered discourse'}
@@ -1100,7 +1103,7 @@ export const PropagationPage: React.FC = () => {
                       </span>
                       <span className="text-slate-300 dark:text-slate-700">•</span>
                       <span className="font-mono text-[11px] text-[#64748B] dark:text-slate-400">
-                        Topic #{n.promoted_from_topic_id}
+                        Trend #{n.promoted_from_topic_id.replace(/^topic_|^trend_/, '')}
                       </span>
                     </div>
                     <h3 className="text-[15px] font-bold text-[#111727] dark:text-slate-100 mt-1">

@@ -65,7 +65,7 @@ export const ExplorerDetailModal: React.FC<ExplorerDetailModalProps> = ({
                   navigate(`/trends/${detail.assigned_topic_id}`);
                 }}
               >
-                Go to Trend #{detail.assigned_topic_id}
+                Go to Trend #{detail.assigned_topic_id.replace(/^topic_|^trend_/, '')}
               </Button>
             )}
           </div>

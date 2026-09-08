@@ -20,16 +20,27 @@ export const NarrativesPage: React.FC = () => {
   const [isError, setIsError] = useState(false);
 
   const initialTier = (searchParams.get('priority_tier') as any) || 'all';
+  const initialQuery = searchParams.get('q') || '';
+  const initialPage = parseInt(searchParams.get('page') || '1', 10);
 
   const [filters, setFilters] = useState<NarrativeApiFilterParams>({
     priority_tier: initialTier,
     has_coordination_signal: 'all',
     sort_by: 'priority_signal_score',
     order: 'desc',
-    query: '',
-    page: 1,
+    query: initialQuery,
+    page: isNaN(initialPage) ? 1 : initialPage,
     page_size: 10,
   });
+
+  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedQuery(filters.query || '');
+    }, 250);
+    return () => clearTimeout(handler);
+  }, [filters.query]);
 
   const loadNarratives = async (isInitial = false) => {
     if (isInitial) {
@@ -50,21 +61,13 @@ export const NarrativesPage: React.FC = () => {
       if (filters.has_coordination_signal !== undefined && filters.has_coordination_signal !== 'all') {
         apiParams.has_coordination_signal = filters.has_coordination_signal;
       }
+      if (debouncedQuery.trim()) {
+        apiParams.query = debouncedQuery.trim();
+      }
 
       const res = await telemetryApi.getNarratives(apiParams, { skipCache: !isInitial });
 
-      let items = res.data;
-      if (filters.query && filters.query.trim()) {
-        const q = filters.query.toLowerCase().trim();
-        items = items.filter(
-          (n) =>
-            n.headline_claim.toLowerCase().includes(q) ||
-            n.narrative_id.toLowerCase().includes(q) ||
-            n.promoted_from_topic_id.toLowerCase().includes(q)
-        );
-      }
-
-      setNarratives(items);
+      setNarratives(res.data);
       setTotalCount(res.meta.total);
       setTotalPages(res.meta.total_pages);
     } catch (e) {
@@ -93,11 +96,14 @@ export const NarrativesPage: React.FC = () => {
     if (filters.priority_tier && filters.priority_tier !== 'all') {
       p.priority_tier = filters.priority_tier;
     }
+    if (debouncedQuery.trim()) {
+      p.q = debouncedQuery.trim();
+    }
     if (filters.page && filters.page > 1) {
       p.page = String(filters.page);
     }
     setSearchParams(p, { replace: true });
-  }, [filters.page, filters.priority_tier, filters.has_coordination_signal, filters.sort_by, filters.order]);
+  }, [filters.page, filters.priority_tier, filters.has_coordination_signal, filters.sort_by, filters.order, debouncedQuery]);
 
   const handleResetFilters = () => {
     setFilters({

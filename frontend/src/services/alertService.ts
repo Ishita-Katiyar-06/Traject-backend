@@ -130,9 +130,10 @@ function evaluateNarrativeAlert(
   return {
     id: alertId,
     narrative_id: narrative.narrative_id,
+    narrative_name: narrative.narrative_name,
     topic_id: narrative.promoted_from_topic_id,
     title,
-    claim: narrative.headline_claim,
+    claim: narrative.narrative_name || narrative.headline_claim,
     severity,
     category,
     status: persisted ? persisted.status : 'open',

@@ -41,8 +41,8 @@ export const InvestigationPage: React.FC = () => {
     try {
       const minDelay = isManualSync ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve();
       const [narrativesRes, topicsRes] = await Promise.all([
-        telemetryApi.getNarratives({ page: 1, page_size: 20 }),
-        telemetryApi.getTopics({ page: 1, page_size: 20 }),
+        telemetryApi.getNarratives({ page: 1, page_size: 100 }),
+        telemetryApi.getTopics({ page: 1, page_size: 100 }),
         minDelay,
       ]);
       setNarratives(narrativesRes.data);
@@ -87,10 +87,11 @@ export const InvestigationPage: React.FC = () => {
       (t) => String(t.topic_id) === id || String(t.cluster_label) === id
     );
     if (matchedTopic) {
+      const cleanTrendId = matchedTopic.topic_id.replace(/^topic_|^trend_/, '');
       setSelectedEntity({
         type: 'topic',
         id: matchedTopic.topic_id,
-        title: `Topic Cluster #${matchedTopic.cluster_label}`,
+        title: `Trend #${cleanTrendId}`,
         messageCount: matchedTopic.message_count,
         keywords: matchedTopic.representative_keywords?.map((k) => k.keyword) || [],
       });
@@ -135,6 +136,7 @@ export const InvestigationPage: React.FC = () => {
         position: { x: 540, y: 60 + idx * 160 },
         data: {
           narrativeId: n.narrative_id,
+          narrativeName: n.narrative_name || n.headline_claim,
           headlineClaim: n.headline_claim,
           priorityScore: n.priority_signal_score,
           priorityTier: n.priority_tier,
@@ -183,7 +185,7 @@ export const InvestigationPage: React.FC = () => {
       setSelectedEntity({
         type: 'narrative',
         id: nData.narrativeId,
-        title: nData.headlineClaim,
+        title: nData.narrativeName || nData.headlineClaim,
         subtitle: `Priority tier: ${nData.priorityTier.toUpperCase()}`,
         priorityTier: nData.priorityTier,
         priorityScore: nData.priorityScore,
@@ -192,10 +194,11 @@ export const InvestigationPage: React.FC = () => {
       });
     } else if (node.type === 'topic') {
       const tData = node.data as any;
+      const cleanTrendId = (tData.topicId || '').replace(/^topic_|^trend_/, '') || String(tData.clusterLabel);
       setSelectedEntity({
         type: 'topic',
         id: tData.topicId,
-        title: `Topic Cluster #${tData.clusterLabel}`,
+        title: `Trend #${cleanTrendId}`,
         messageCount: tData.messageCount,
         keywords: tData.keywords,
       });
@@ -334,7 +337,7 @@ export const InvestigationPage: React.FC = () => {
 
         <div className="text-[12px] text-[#8591A5] dark:text-[#94A3B8] flex items-center gap-2">
           <Info className="w-3.5 h-3.5 text-[#2F65F6]" />
-          <span>Select any narrative or topic cluster to inspect its synthesized evidence.</span>
+          <span>Select any narrative or trend to inspect its synthesized evidence.</span>
         </div>
       </div>
 

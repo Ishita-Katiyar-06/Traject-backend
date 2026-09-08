@@ -106,7 +106,7 @@ export const AlertFilterBar: React.FC<AlertFilterBarProps> = ({
             type="text"
             value={filterState.search}
             onChange={(e) => onFilterChange({ search: e.target.value })}
-            placeholder="Filter by claim keywords, narrative ID, or topic..."
+            placeholder="Filter by claim keywords, narrative ID, or trend..."
             className="w-full pl-9 pr-4 py-1.5 text-[13px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-[#111727] dark:text-white placeholder-[#8591A5] focus:outline-none focus:ring-2 focus:ring-[#2F65F6]/20 font-sans"
           />
         </div>

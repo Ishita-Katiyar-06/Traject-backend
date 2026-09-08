@@ -21,21 +21,21 @@ const WATCHLIST_STORAGE_KEY = 'tessera_watchlist_items';
 
 const DEFAULT_WATCHLIST: WatchItem[] = [
   {
-    id: 'top-101',
+    id: 'trend_001',
     type: 'Trend',
-    title: 'Regional power supply disruption',
-    currentStatus: 'Rising',
-    lastChange: '+27%',
-    route: '/trends/top-101',
+    title: 'Treaty & Regional Security Discourse',
+    currentStatus: 'Elevated',
+    lastChange: '+24%',
+    route: '/trends/trend_001',
     addedAt: '2026-09-02T19:00:00Z',
   },
   {
-    id: 'nar-201',
+    id: 'narrative_000',
     type: 'Narrative',
-    title: 'Power outage linked to infrastructure failure',
-    currentStatus: 'Developing',
-    lastChange: '+34%',
-    route: '/narratives/nar-201',
+    title: 'Democratic Campaign Strategy & Foreign Policy Framing',
+    currentStatus: 'Elevated',
+    lastChange: '+18%',
+    route: '/narratives/narrative_000',
     addedAt: '2026-09-02T19:15:00Z',
   },
 ];

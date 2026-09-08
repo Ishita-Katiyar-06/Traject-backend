@@ -7,12 +7,12 @@ import { Pagination } from '../../components/ui/Pagination';
 import { TrendFilters, TrendApiFilterParams } from '../../components/trends/TrendFilters';
 import { TrendTable } from '../../components/trends/TrendTable';
 import { telemetryApi } from '../../services/telemetryApi';
-import { TrendSummaryResponse, TopicSummaryResponse } from '../../types/api';
+import { trendService, TrendWithNarratives } from '../../services/trendService';
 
 export const TrendsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [trends, setTrends] = useState<(TrendSummaryResponse | TopicSummaryResponse)[]>([]);
+  const [trends, setTrends] = useState<TrendWithNarratives[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,16 +42,25 @@ export const TrendsPage: React.FC = () => {
         order: filters.order,
       };
 
-      const res = await telemetryApi.getTrends(apiParams, { skipCache: !isInitial });
+      const res = await trendService.getTrendsWithNarratives(apiParams, { skipCache: !isInitial });
 
-      let items = res.data;
+      let items = res.trends;
       if (filters.keyword && filters.keyword.trim()) {
         const q = filters.keyword.toLowerCase().trim();
         items = items.filter(
           (t) =>
+            t.cleanId.toLowerCase().includes(q) ||
+            t.trend_id.toLowerCase().includes(q) ||
             t.topic_id.toLowerCase().includes(q) ||
-            ('trend_id' in t && (t as any).trend_id.toLowerCase().includes(q)) ||
-            t.representative_keywords.some((k) => k.keyword.toLowerCase().includes(q))
+            (t.trend_name && t.trend_name.toLowerCase().includes(q)) ||
+            (t.trend_summary && t.trend_summary.toLowerCase().includes(q)) ||
+            t.representative_keywords.some((k) => k.keyword.toLowerCase().includes(q)) ||
+            t.narratives.some(
+              (n) =>
+                (n.narrative_name && n.narrative_name.toLowerCase().includes(q)) ||
+                n.headline_claim.toLowerCase().includes(q) ||
+                n.narrative_id.toLowerCase().includes(q)
+            )
         );
       }
 

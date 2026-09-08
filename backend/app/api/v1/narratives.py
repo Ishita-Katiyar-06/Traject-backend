@@ -18,7 +18,10 @@ router = APIRouter()
 )
 async def list_narratives(
     page: int = Query(1, ge=1, description="1-indexed page number"),
-    page_size: int = Query(20, ge=1, le=100, description="Page size limit"),
+    page_size: int = Query(20, ge=1, le=1000, description="Page size limit"),
+    query: str | None = Query(
+        None, description="Search query across narrative IDs, names, summaries, and topics"
+    ),
     priority_tier: Literal["critical", "high", "elevated", "routine"] | None = Query(
         None, description="Filter by triage priority classification tier"
     ),
@@ -45,6 +48,7 @@ async def list_narratives(
         items, meta = service.get_narratives(
             page=page,
             page_size=page_size,
+            query=query,
             priority_tier=priority_tier,
             min_priority=min_priority,
             has_coordination_signal=has_coordination_signal,
@@ -99,13 +103,14 @@ async def get_narrative(
 )
 async def get_narrative_sentiment(
     narrative_id: str,
+    bucket_size: str = Query("1d", description="Bucket size for time-series aggregation (1h, 4h, 6h, 1d)"),
     service: AnalyticsService = Depends(get_analytics_service),
 ):
     """Retrieve chronological sentiment time-series for a narrative candidate based on its constituent messages.
     Includes the frozen narrative sentiment profile metrics alongside the temporal bucket progression.
     """
     try:
-        sentiment = service.get_narrative_sentiment(narrative_id)
+        sentiment = service.get_narrative_sentiment(narrative_id, bucket_size=bucket_size)
         if not sentiment:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

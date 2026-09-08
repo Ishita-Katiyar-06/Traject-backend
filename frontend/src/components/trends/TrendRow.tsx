@@ -27,7 +27,6 @@ export const TrendRow: React.FC<TrendRowProps> = ({ trend }) => {
     }
   };
 
-  const topKeyword = trend.representative_keywords[0]?.keyword || `Cluster #${trend.cluster_label}`;
   const cleanId = trendId.replace(/^topic_|^trend_/, '');
 
   return (
@@ -45,10 +44,6 @@ export const TrendRow: React.FC<TrendRowProps> = ({ trend }) => {
           <span className="font-mono text-[11px] font-bold text-[#2F65F6] dark:text-[#93C5FD] bg-blue-50 dark:bg-blue-950/40 px-2.5 py-0.5 rounded-full border border-blue-100 dark:border-blue-900/40">
             TREND #{cleanId}
           </span>
-          <span className="text-slate-300 dark:text-slate-700 text-[11px]">•</span>
-          <span className="text-[12px] font-medium text-[#64748B] dark:text-slate-400">
-            Cluster #{trend.cluster_label}
-          </span>
           {trend.percentage_of_dataset > 0 && (
             <>
               <span className="text-slate-300 dark:text-slate-700 text-[11px]">•</span>
@@ -60,8 +55,14 @@ export const TrendRow: React.FC<TrendRowProps> = ({ trend }) => {
         </div>
 
         <h3 className="text-[16px] font-bold text-[#111727] dark:text-slate-100 font-sans leading-snug group-hover:text-[#2F65F6] dark:group-hover:text-[#5878C7] transition-colors duration-150">
-          Trend: {topKeyword}
+          {trend.trend_name || `TREND #${cleanId}`}
         </h3>
+
+        {trend.trend_summary && (
+          <p className="text-[12.5px] text-[#64748B] dark:text-slate-400 line-clamp-2 mt-1 leading-relaxed">
+            {trend.trend_summary}
+          </p>
+        )}
 
         {/* c-TF-IDF Keywords */}
         {trend.representative_keywords && trend.representative_keywords.length > 0 && (

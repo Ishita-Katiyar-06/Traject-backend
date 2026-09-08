@@ -83,6 +83,39 @@ class TemporalLineageStore:
             except Exception as e:
                 logger.warning("Could not read events file %s: %s", self.events_file, e)
 
+        # 3. Auto-seed if lineages are empty
+        if not self._lineages:
+            self._auto_seed_if_empty()
+
+    def _auto_seed_if_empty(self) -> None:
+        """If lineage state is empty or missing on disk, automatically seed from active analytics artifact."""
+        try:
+            repo_root = find_repo_root()
+            candidate_paths = [
+                repo_root / "data" / "processed" / "telegram" / "telegram-analytics-artifact.json",
+                repo_root / "data" / "processed" / "telegram" / "telegram_messages-analytics-artifact.json",
+            ]
+            target_artifact = next((p for p in candidate_paths if p.is_file()), None)
+            if not target_artifact:
+                return
+
+            logger.info("Lineage store empty. Auto-seeding initial lineages from %s...", target_artifact)
+            from app.ml.pipeline.orchestrator import MLPipelineResult
+            from app.temporal.tracker import TemporalLineageTracker
+
+            with open(target_artifact, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            result = MLPipelineResult.model_validate(data)
+            tracker = TemporalLineageTracker(store=self, repo_root=repo_root)
+            snap_id = f"snapshot_{target_artifact.stem.replace('-analytics-artifact', '')}"
+            tracker.process_snapshot(
+                current_result=result,
+                current_snapshot_id=snap_id,
+            )
+            logger.info("Auto-seeded %d lineages into store.", len(self._lineages))
+        except Exception as e:
+            logger.warning("Auto-seeding temporal lineage store encountered an error: %s", e)
+
     def allocate_lineage_id(self) -> str:
         """Allocate a deterministic, monotonically increasing lineage ID."""
         lid = f"lineage_{self._next_lineage_index:06d}"

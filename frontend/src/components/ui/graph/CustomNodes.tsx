@@ -5,6 +5,7 @@ import type { PriorityTier } from '../../../types/api';
 
 export interface NarrativeNodeData extends Record<string, unknown> {
   narrativeId: string;
+  narrativeName?: string;
   headlineClaim: string;
   priorityScore: number;
   priorityTier: PriorityTier;
@@ -87,7 +88,7 @@ export const NarrativeNode = memo(({ data, selected }: NodeProps<Node<NarrativeN
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
             <GitBranch className="w-3.5 h-3.5 text-[#FF6D5A] shrink-0" />
-            <span className="font-mono text-[11px] font-bold text-[#111727] dark:text-[#F8FAFC] truncate">
+            <span className="font-mono text-[10px] font-bold text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider truncate">
               {data.narrativeId}
             </span>
           </div>
@@ -98,8 +99,8 @@ export const NarrativeNode = memo(({ data, selected }: NodeProps<Node<NarrativeN
           </span>
         </div>
 
-        <p className="text-[12px] font-medium text-[#475569] dark:text-[#CBD5E1] line-clamp-2 leading-relaxed">
-          {data.headlineClaim}
+        <p className="text-[13px] font-bold text-[#111727] dark:text-[#F8FAFC] line-clamp-2 leading-snug">
+          {data.narrativeName || data.headlineClaim}
         </p>
 
         <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-[#8591A5]">
@@ -153,7 +154,7 @@ export const TopicNode = memo(({ data, selected }: NodeProps<Node<TopicNodeData>
           <div className="flex items-center gap-1.5 min-w-0">
             <Hash className="w-3.5 h-3.5 text-[#2F65F6] shrink-0" />
             <span className="font-mono text-[11px] font-bold text-[#111727] dark:text-[#F8FAFC]">
-              Topic #{data.clusterLabel}
+              Trend #{(data.topicId || '').replace(/^topic_|^trend_/, '') || data.clusterLabel}
             </span>
           </div>
           <span className="text-[10px] font-mono text-[#64748B] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">

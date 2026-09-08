@@ -1,13 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
-import { Settings, LogOut, Bookmark, ChevronDown } from 'lucide-react';
+import { Settings, LogOut, Bookmark, ChevronDown, User } from 'lucide-react';
 import { WatchlistModal } from '../watchlist/WatchlistModal';
+import { AnalystProfileModal } from './AnalystProfileModal';
+import { telemetryApi } from '../../services/telemetryApi';
 import { dropdownMenu } from '../../utils/motion';
 
 export const UserMenu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isWatchlistOpen, setIsWatchlistOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -28,6 +33,22 @@ export const UserMenu: React.FC = () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen]);
+
+  const handleOpenProfile = () => {
+    setIsOpen(false);
+    setIsProfileOpen(true);
+  };
+
+  const handleOpenPreferences = () => {
+    setIsOpen(false);
+    navigate('/settings');
+  };
+
+  const handleSignOut = () => {
+    setIsOpen(false);
+    telemetryApi.clearCache();
+    navigate('/overview');
+  };
 
   return (
     <>
@@ -63,10 +84,23 @@ export const UserMenu: React.FC = () => {
               exit="exit"
               className="absolute right-0 top-full mt-2 min-w-[230px] rounded-[20px] bg-white dark:bg-[#171C22] border border-[rgba(228,233,245,0.85)] dark:border-[#2B323A] shadow-modal p-2 z-[10001] font-sans origin-top"
             >
-              <div className="px-3.5 py-2.5 mb-1.5 rounded-[14px] bg-[#F8FAFD] dark:bg-[#1D232A] border border-[rgba(228,233,245,0.7)] dark:border-[#252B32] text-left">
-                <div className="text-[13px] font-bold text-[#111727] dark:text-[#F8FAFC]">Analyst AK</div>
-                <div className="text-[11px] font-medium text-[#8591A5] dark:text-[#94A3B8] mt-0.5">Role: Lead Observer</div>
-              </div>
+              {/* Analyst Profile Header Card - Clickable */}
+              <button
+                type="button"
+                role="menuitem"
+                onClick={handleOpenProfile}
+                className="w-full text-left px-3.5 py-2.5 mb-1.5 rounded-[14px] bg-[#F8FAFD] dark:bg-[#1D232A] border border-[rgba(228,233,245,0.7)] dark:border-[#252B32] hover:border-[#2F65F6]/40 dark:hover:border-[#2F65F6]/40 transition-colors group cursor-pointer"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="text-[13px] font-bold text-[#111727] dark:text-[#F8FAFC] group-hover:text-[#2F65F6] dark:group-hover:text-[#93C5FD] transition-colors">
+                    Analyst AK
+                  </div>
+                  <User className="w-3.5 h-3.5 text-[#8591A5] dark:text-[#94A3B8] group-hover:text-[#2F65F6] transition-colors" />
+                </div>
+                <div className="text-[11px] font-medium text-[#8591A5] dark:text-[#94A3B8] mt-0.5">
+                  Role: Lead Observer (View Profile)
+                </div>
+              </button>
 
               <div className="space-y-0.5">
                 <button
@@ -85,7 +119,7 @@ export const UserMenu: React.FC = () => {
                 <button
                   type="button"
                   role="menuitem"
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleOpenPreferences}
                   className="flex w-full items-center gap-2.5 px-3 py-2 rounded-[12px] text-left text-[13px] font-medium text-[#475569] dark:text-[#CBD5E1] hover:text-[#111727] dark:hover:text-[#F8FAFC] hover:bg-[#F1F4F9] dark:hover:bg-[#191F26] transition-all cursor-pointer"
                 >
                   <Settings className="w-4 h-4 text-[#8591A5] dark:text-[#94A3B8]" />
@@ -97,7 +131,7 @@ export const UserMenu: React.FC = () => {
                 <button
                   type="button"
                   role="menuitem"
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleSignOut}
                   className="flex w-full items-center gap-2.5 px-3 py-2 rounded-[12px] text-left text-[13px] font-medium text-[#E35D5D] dark:text-[#F87171] hover:bg-[#E35D5D]/10 dark:hover:bg-[#E35D5D]/15 transition-all cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
@@ -113,6 +147,11 @@ export const UserMenu: React.FC = () => {
       <WatchlistModal
         isOpen={isWatchlistOpen}
         onClose={() => setIsWatchlistOpen(false)}
+      />
+
+      <AnalystProfileModal
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
       />
     </>
   );

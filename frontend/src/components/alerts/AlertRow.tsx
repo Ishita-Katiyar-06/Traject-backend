@@ -99,7 +99,7 @@ export const AlertRow: React.FC<AlertRowProps> = ({ alert, onStatusChange }) => 
           </span>
           {alert.topic_id && (
             <span className="font-mono text-[11px] text-[#64748B] dark:text-[#94A3B8]">
-              (Topic #{alert.topic_id})
+              (Trend #{alert.topic_id.replace(/^topic_|^trend_/, '')})
             </span>
           )}
         </div>
@@ -113,8 +113,13 @@ export const AlertRow: React.FC<AlertRowProps> = ({ alert, onStatusChange }) => 
       {/* Narrative Headline Claim */}
       <div>
         <h3 className="text-[15px] font-bold text-[#111727] dark:text-[#F8FAFC] leading-snug">
-          {alert.claim}
+          {alert.narrative_name || alert.claim}
         </h3>
+        {alert.narrative_name && alert.claim && alert.claim !== alert.narrative_name && (
+          <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5 line-clamp-1">
+            {alert.claim}
+          </p>
+        )}
       </div>
 
       {/* Telemetry Indicator Tags */}

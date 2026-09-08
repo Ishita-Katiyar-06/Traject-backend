@@ -7,9 +7,9 @@
  */
 
 import { telemetryApi } from './telemetryApi';
-import type { NarrativeSummaryResponse, TopicSummaryResponse } from '../types/api';
+import type { NarrativeSummaryResponse, TopicSummaryResponse, TrendSummaryResponse } from '../types/api';
 
-export type SearchCategory = 'Topics' | 'Trends' | 'Narratives' | 'Communities' | 'Investigations';
+export type SearchCategory = 'Trends' | 'Narratives' | 'Communities' | 'Investigations';
 
 export interface SearchResultItem {
   id: string;
@@ -21,7 +21,7 @@ export interface SearchResultItem {
 
 export const searchService = {
   /**
-   * Search real 5A narrative and topic entities
+   * Search real 5A narrative and trend entities
    */
   async search(query: string): Promise<SearchResultItem[]> {
     try {
@@ -40,35 +40,46 @@ export const searchService = {
 
       // 1. Match Narrative candidates
       for (const n of narrativesRes.data) {
+        const matchesName = n.narrative_name?.toLowerCase().includes(q);
         const matchesClaim = n.headline_claim.toLowerCase().includes(q);
         const matchesId = n.narrative_id.toLowerCase().includes(q);
         const matchesTopic = n.promoted_from_topic_id.toLowerCase().includes(q);
 
-        if (matchesClaim || matchesId || matchesTopic) {
+        if (matchesName || matchesClaim || matchesId || matchesTopic) {
+          const cleanParentId = n.promoted_from_topic_id.replace(/^topic_|^trend_/, '');
           results.push({
             id: n.narrative_id,
             category: 'Narratives',
-            title: n.headline_claim,
-            subtitle: `Priority: ${n.priority_tier.toUpperCase()} (${n.priority_signal_score.toFixed(3)}) • ${n.message_count} msgs • Trend #${n.promoted_from_topic_id}`,
+            title: n.narrative_name || n.headline_claim,
+            subtitle: `${n.narrative_id.toUpperCase()} • Priority: ${n.priority_tier.toUpperCase()} (${n.priority_signal_score.toFixed(3)}) • ${n.message_count} msgs • Trend #${cleanParentId}`,
             route: `/narratives/${encodeURIComponent(n.narrative_id)}`,
           });
         }
       }
 
-      // 2. Match Trend / Topic clusters
-      for (const t of topicsRes.data) {
-        const matchesId = t.topic_id.toLowerCase().includes(q);
+      // 2. Match Trend clusters
+      const trendList = (topicsRes.data || []) as (TrendSummaryResponse | TopicSummaryResponse)[];
+      for (const t of trendList) {
+        const trendId = 'trend_id' in t ? t.trend_id : t.topic_id;
+        const cleanId = (trendId || t.topic_id).replace(/^topic_|^trend_/, '');
+        const trendName = t.trend_name || '';
+        const matchesName = trendName.toLowerCase().includes(q);
+        const matchesSummary = (t.trend_summary || '').toLowerCase().includes(q);
+        const matchesId =
+          t.topic_id.toLowerCase().includes(q) ||
+          trendId.toLowerCase().includes(q) ||
+          cleanId.toLowerCase().includes(q);
         const keywords = t.representative_keywords.map((k) => k.keyword.toLowerCase());
         const matchesKeyword = keywords.some((k) => k.includes(q));
 
-        if (matchesId || matchesKeyword) {
+        if (matchesName || matchesSummary || matchesId || matchesKeyword) {
           const kwList = t.representative_keywords.slice(0, 3).map((k) => k.keyword).join(', ');
           results.push({
-            id: t.topic_id,
+            id: trendId,
             category: 'Trends',
-            title: `Trend #${t.topic_id}`,
+            title: trendName ? `Trend #${cleanId} — ${trendName}` : `Trend #${cleanId}`,
             subtitle: `${t.message_count} observations (${t.percentage_of_dataset.toFixed(1)}%) • Keywords: ${kwList}`,
-            route: `/trends/${encodeURIComponent(t.topic_id)}`,
+            route: `/trends/${encodeURIComponent(trendId)}`,
           });
         }
       }
@@ -105,7 +116,7 @@ export const searchService = {
    */
   buildDefaultResults(
     narratives: NarrativeSummaryResponse[],
-    topics: TopicSummaryResponse[]
+    topics: (TrendSummaryResponse | TopicSummaryResponse)[]
   ): SearchResultItem[] {
     const defaultItems: SearchResultItem[] = [];
 
@@ -114,21 +125,23 @@ export const searchService = {
       defaultItems.push({
         id: n.narrative_id,
         category: 'Narratives',
-        title: n.headline_claim,
-        subtitle: `Priority: ${n.priority_tier.toUpperCase()} (${n.priority_signal_score.toFixed(3)}) • ${n.message_count} msgs`,
+        title: n.narrative_name || n.headline_claim,
+        subtitle: `${n.narrative_id.toUpperCase()} • Priority: ${n.priority_tier.toUpperCase()} (${n.priority_signal_score.toFixed(3)}) • ${n.message_count} msgs`,
         route: `/narratives/${encodeURIComponent(n.narrative_id)}`,
       });
     }
 
     // Top 3 Trends by message count
     for (const t of topics.slice(0, 3)) {
+      const trendId = 'trend_id' in t ? (t as any).trend_id : t.topic_id;
+      const cleanId = (trendId || t.topic_id).replace(/^topic_|^trend_/, '');
       const kwList = t.representative_keywords.slice(0, 3).map((k) => k.keyword).join(', ');
       defaultItems.push({
-        id: t.topic_id,
+        id: trendId,
         category: 'Trends',
-        title: `Trend #${t.topic_id}`,
+        title: t.trend_name ? `Trend #${cleanId} — ${t.trend_name}` : `Trend #${cleanId}`,
         subtitle: `${t.message_count} observations • Keywords: ${kwList}`,
-        route: `/trends/${encodeURIComponent(t.topic_id)}`,
+        route: `/trends/${encodeURIComponent(trendId)}`,
       });
     }
 
