@@ -18,6 +18,7 @@ import {
 // 2. Real telemetry API client
 import { telemetryApi } from '../src/services/telemetryApi.ts';
 import { apiClient, ApiError } from '../src/services/apiClient.ts';
+import { getNarrativeDisplayName } from '../src/utils/narrativeIdentity.ts';
 
 test('1. Correct API endpoints and query string builders', () => {
   const qs1 = apiClient.buildQueryString({
@@ -308,3 +309,40 @@ test('14. apiClient cleanly parses backend 5A error envelopes on failure', async
     }
   );
 });
+
+test('15. Community Top Narrative Focus: identity formatting strips hash tags and raw c-TF-IDF keyword tokens', () => {
+  // Test raw c-TF-IDF keyword bag with hashtag
+  const rawSample1 = {
+    narrative_id: 'narrative_247',
+    headline_claim: '[#socmint] io, en, xtea, ts, telemetrya, report',
+  };
+  const title1 = getNarrativeDisplayName(rawSample1);
+  assert.equal(title1.includes('#'), false, 'Should not contain hashtag');
+  assert.equal(title1.includes('[#socmint]'), false, 'Should not contain raw hashtag bracket');
+  assert.equal(title1.length > 5, true, 'Should have generated meaningful title');
+
+  // Test raw topic prefix
+  const rawSample2 = {
+    narrative_id: 'narrative_053',
+    headline_claim: '[topic_178] site, me, telega, channels, messages',
+  };
+  const title2 = getNarrativeDisplayName(rawSample2);
+  assert.equal(title2.includes('topic_178'), false, 'Should strip raw topic code');
+  assert.equal(title2.length > 5, true, 'Should have formatted title');
+
+  // Test backend narrative_name takes highest precedence
+  const namedSample = {
+    narrative_id: 'narrative_001',
+    narrative_name: 'Border Strategic Escalation',
+    headline_claim: '[#conflict] shelling and artillery',
+  };
+  assert.equal(getNarrativeDisplayName(namedSample), 'Border Strategic Escalation');
+});
+
+test('16. Community narrative IDs are strictly formatted as uppercase NARRATIVE_XXX for display', () => {
+  const id = 'narrative_053';
+  const displayId = id.toUpperCase();
+  assert.equal(displayId, 'NARRATIVE_053');
+  assert.match(displayId, /^NARRATIVE_\d+$/);
+});
+

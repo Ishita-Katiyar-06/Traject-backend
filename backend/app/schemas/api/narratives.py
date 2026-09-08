@@ -34,6 +34,7 @@ class NarrativeSummaryResponse(BaseModel):
     is_cross_source: bool = Field(default=False, description="True if observed across >= 2 distinct sources")
     is_cross_domain: bool = Field(default=False, description="True if observed across >= 2 distinct domains")
     domains_represented: list[str] = Field(default_factory=list, description="Strategic domains represented")
+    broadcasting_channels: list[str] = Field(default_factory=list, description="Broadcasting channel identifiers")
     quality_classification: str = Field(default="moderate_evidence", description="Observational evidence tier")
 
 

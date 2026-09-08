@@ -161,6 +161,7 @@ export interface NarrativeSummaryResponse {
   is_cross_source?: boolean;
   is_cross_domain?: boolean;
   domains_represented?: string[];
+  broadcasting_channels?: string[];
   quality_classification?: 'strong_evidence' | 'moderate_evidence' | 'limited_evidence' | 'insufficient_evidence' | string;
 }
 

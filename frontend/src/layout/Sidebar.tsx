@@ -7,7 +7,6 @@ import {
   Share2,
   AlertCircle,
   Database,
-  ShieldCheck,
   ChevronLeft,
   ChevronRight,
   Sun,
@@ -127,12 +126,6 @@ export const Sidebar: React.FC = () => {
               name="Data Explorer"
               path="/explorer"
               icon={Database}
-              isCollapsed={isSidebarCollapsed}
-            />
-            <NavigationItem
-              name="Investigation"
-              path="/investigation"
-              icon={ShieldCheck}
               isCollapsed={isSidebarCollapsed}
             />
           </div>

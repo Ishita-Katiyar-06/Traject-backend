@@ -8,7 +8,6 @@ import {
   Hash,
   GitBranch,
   Users,
-  ShieldCheck,
   X,
   LayoutDashboard,
   Share2,
@@ -26,7 +25,6 @@ const QUICK_NAVIGATION = [
   { id: 'nav-overview', title: 'Intelligence Overview', route: '/overview', icon: LayoutDashboard },
   { id: 'nav-propagation', title: 'Propagation Cascades', route: '/propagation', icon: Share2 },
   { id: 'nav-communities', title: 'Community Networks', route: '/communities', icon: Users },
-  { id: 'nav-investigation', title: 'Investigation Workspace', route: '/investigation', icon: ShieldCheck },
   { id: 'nav-explorer', title: 'Corpus Message Explorer', route: '/explorer', icon: Database },
 ];
 
@@ -79,8 +77,6 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) =
         return <GitBranch className="w-3.5 h-3.5 text-[#FF6D5A]" />;
       case 'Communities':
         return <Users className="w-3.5 h-3.5 text-[#8591A5]" />;
-      case 'Investigations':
-        return <ShieldCheck className="w-3.5 h-3.5 text-[#10B981]" />;
     }
   };
 

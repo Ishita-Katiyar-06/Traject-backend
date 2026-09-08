@@ -4,7 +4,7 @@ import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { watchlistService, WatchItem } from '../../services/watchlistService';
-import { ArrowUpRight, Trash2, GitBranch, Users, ShieldCheck, TrendingUp } from 'lucide-react';
+import { ArrowUpRight, Trash2, GitBranch, Users, TrendingUp } from 'lucide-react';
 
 export interface WatchlistModalProps {
   isOpen: boolean;
@@ -42,8 +42,8 @@ export const WatchlistModal: React.FC<WatchlistModalProps> = ({ isOpen, onClose 
         return <GitBranch className="w-3.5 h-3.5 text-signal" />;
       case 'Community':
         return <Users className="w-3.5 h-3.5 text-text-secondary" />;
-      case 'Investigation':
-        return <ShieldCheck className="w-3.5 h-3.5 text-confirmed" />;
+      default:
+        return <TrendingUp className="w-3.5 h-3.5 text-[#2F65F6]" />;
     }
   };
 
@@ -52,7 +52,7 @@ export const WatchlistModal: React.FC<WatchlistModalProps> = ({ isOpen, onClose 
       isOpen={isOpen}
       onClose={onClose}
       title="Analyst Watchlist"
-      subtitle="Priority trends, narratives, communities, and investigations pinned for active tracking"
+      subtitle="Priority trends, narratives, and communities pinned for active tracking"
       maxWidth="md"
       footer={
         <div className="flex items-center justify-between w-full">

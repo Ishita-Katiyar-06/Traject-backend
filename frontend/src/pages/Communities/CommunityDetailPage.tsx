@@ -3,12 +3,12 @@ import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft,
   Users,
-  ShieldCheck,
   ExternalLink,
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { formatPriorityTierBadge } from '../../utils/telemetryFormatters';
+import { getNarrativeDisplayName } from '../../utils/narrativeIdentity';
 import { communityService } from '../../services/communityService';
 import type { CommunityCluster } from '../../types/communities';
 
@@ -83,19 +83,6 @@ export const CommunityDetailPage: React.FC = () => {
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Communities</span>
         </Link>
-
-        <div className="flex items-center gap-2">
-          <Link to="/investigation">
-            <Button
-              variant="secondary"
-              size="sm"
-              leftIcon={<ShieldCheck className="w-3.5 h-3.5 text-[#22A06B]" />}
-              className="text-[12px] font-mono"
-            >
-              Investigate in Graph
-            </Button>
-          </Link>
-        </div>
       </div>
 
       {/* 2. Community Hero Banner */}
@@ -277,8 +264,8 @@ export const CommunityDetailPage: React.FC = () => {
             >
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-mono text-[#8591A5] dark:text-slate-400">
-                    {n.narrative_id}
+                  <span className="text-[11px] font-mono font-semibold text-[#8591A5] dark:text-slate-400 tracking-wide">
+                    {n.narrative_id.toUpperCase()}
                   </span>
                   {(() => {
                     const tb = formatPriorityTierBadge(n.priority_tier);
@@ -299,7 +286,7 @@ export const CommunityDetailPage: React.FC = () => {
                   to={`/narratives/${encodeURIComponent(n.narrative_id)}`}
                   className="text-[15px] font-bold text-[#111727] dark:text-slate-100 hover:text-[#2F65F6] dark:hover:text-[#5878C7] transition-colors block"
                 >
-                  {n.headline_claim}
+                  {getNarrativeDisplayName(n)}
                 </Link>
 
                 <div className="text-[12px] font-mono text-[#8591A5] dark:text-slate-400 flex items-center gap-3">

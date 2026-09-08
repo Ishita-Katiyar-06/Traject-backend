@@ -21,7 +21,7 @@ export const Header: React.FC = () => {
 
     if (parts.length > 0) {
       const root = parts[0];
-      if (root === 'explorer' || root === 'investigation') {
+      if (root === 'explorer') {
         section = 'Analysis';
       } else if (root === 'settings') {
         section = 'System';
@@ -38,7 +38,6 @@ export const Header: React.FC = () => {
         propagation: 'Propagation',
         alerts: 'Alerts',
         explorer: 'Data Explorer',
-        investigation: 'Investigation',
         settings: 'Settings',
       };
 

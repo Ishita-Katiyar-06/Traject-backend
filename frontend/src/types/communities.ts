@@ -17,7 +17,9 @@ export interface CommunityMemberSource {
 
 export interface CommunityNarrativeSnippet {
   narrative_id: string;
+  narrative_name?: string;
   headline_claim: string;
+  promoted_from_topic_id?: string;
   priority_signal_score: number;
   priority_tier: 'critical' | 'high' | 'elevated' | 'routine';
   distinct_sources_count: number;

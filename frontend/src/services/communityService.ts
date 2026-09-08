@@ -7,6 +7,8 @@
  */
 
 import { telemetryApi } from './telemetryApi';
+import { getNarrativeDisplayName } from '../utils/narrativeIdentity';
+import { resolveChannelInfo } from '../utils/channelRegistry';
 import type {
   CommunityCluster,
   CommunityMemberSource,
@@ -148,12 +150,21 @@ export const communityService = {
    */
   async getCommunities(mode: CommunityGroupingMode = 'domain'): Promise<CommunityCluster[]> {
     try {
-      const [narrativesRes, analyticsRes] = await Promise.all([
-        telemetryApi.getNarratives({ page: 1, page_size: 100 }),
-        telemetryApi.getAnalyticsOverview(),
-      ]);
+      const firstNarrativesRes = await telemetryApi.getNarratives({ page: 1, page_size: 100 });
+      const totalPages = firstNarrativesRes.meta?.total_pages || 1;
+      const remainingRequests = [];
+      for (let p = 2; p <= totalPages; p++) {
+        remainingRequests.push(
+          telemetryApi.getNarratives({ page: p, page_size: 100 })
+        );
+      }
+      const rest = await Promise.all(remainingRequests);
+      const narratives = [
+        ...firstNarrativesRes.data,
+        ...rest.flatMap((r) => r.data),
+      ];
 
-      const narratives = narrativesRes.data || [];
+      const analyticsRes = await telemetryApi.getAnalyticsOverview();
       const totalMessages = analyticsRes.data?.summary_counts?.total_messages || 6026;
 
       // Group sources and narratives dynamically
@@ -228,27 +239,21 @@ export const communityService = {
     for (const n of narratives) {
       const associatedDomains = new Set<string>();
 
-      // Check narrative domains
+      // Check narrative domains directly from real backend domains_represented
       if (n.domains_represented && n.domains_represented.length > 0) {
         n.domains_represented.forEach((d) => associatedDomains.add(d));
       }
 
-      // Check narrative distinct sources
-      const rawSources: string[] = (n as any).distinct_sources || [];
-      if (rawSources.length > 0) {
-        for (const rawSrc of rawSources) {
-          const s = normalizeSource(rawSrc);
-          const meta = MONITORED_SOURCE_REGISTRY[s];
-          if (meta) {
-            associatedDomains.add(meta.domain);
-          } else {
-            // Dynamically discover source domain if unknown
-            const inferredDomain = 'unclassified';
-            if (!domainBuckets[inferredDomain]) {
-              domainBuckets[inferredDomain] = { sources: new Set(), narratives: [] };
+      // Check broadcasting channels and map through channel registry
+      if (n.broadcasting_channels && n.broadcasting_channels.length > 0) {
+        for (const ch of n.broadcasting_channels) {
+          const info = resolveChannelInfo(ch);
+          if (info && info.handle) {
+            const s = normalizeSource(info.handle);
+            const meta = MONITORED_SOURCE_REGISTRY[s];
+            if (meta) {
+              associatedDomains.add(meta.domain);
             }
-            domainBuckets[inferredDomain].sources.add(s);
-            associatedDomains.add(inferredDomain);
           }
         }
       }
@@ -276,8 +281,13 @@ export const communityService = {
       const memberSources: CommunityMemberSource[] = Array.from(bucket.sources).map((src) => {
         const reg = MONITORED_SOURCE_REGISTRY[src];
         const narrativeHits = bucket.narratives.filter((n) => {
-          const dsList: string[] = (n as any).distinct_sources || [];
-          return dsList.some((ds: string) => normalizeSource(ds) === src);
+          if (n.broadcasting_channels && n.broadcasting_channels.length > 0) {
+            return n.broadcasting_channels.some((ch) => {
+              const info = resolveChannelInfo(ch);
+              return info && normalizeSource(info.handle).toLowerCase() === src.toLowerCase();
+            });
+          }
+          return false;
         });
         const estMsgs = Math.round(totalMessages / (Object.keys(MONITORED_SOURCE_REGISTRY).length || 1));
 
@@ -292,13 +302,15 @@ export const communityService = {
         };
       });
 
-      // Top narrative snippets
+      // Top narrative snippets (strictly sorted by priority signal score descending)
       const sortedNarratives = [...bucket.narratives].sort(
         (a, b) => b.priority_signal_score - a.priority_signal_score
       );
 
       const snippets: CommunityNarrativeSnippet[] = sortedNarratives.slice(0, 5).map((n) => ({
         narrative_id: n.narrative_id,
+        narrative_name: n.narrative_name || getNarrativeDisplayName(n),
+        promoted_from_topic_id: n.promoted_from_topic_id,
         headline_claim: n.headline_claim,
         priority_signal_score: n.priority_signal_score,
         priority_tier: n.priority_tier as any,

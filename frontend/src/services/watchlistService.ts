@@ -5,7 +5,7 @@
  * (Topics, Narratives, Communities, Investigations).
  */
 
-export type WatchEntityType = 'Topic' | 'Trend' | 'Narrative' | 'Community' | 'Investigation';
+export type WatchEntityType = 'Topic' | 'Trend' | 'Narrative' | 'Community';
 
 export interface WatchItem {
   id: string;

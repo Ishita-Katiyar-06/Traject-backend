@@ -452,6 +452,7 @@ class ArtifactRepository:
                     is_cross_source=val_m.is_cross_source if val_m else (n.data_coverage.channel_count >= 2),
                     is_cross_domain=val_m.is_cross_domain if val_m else False,
                     domains_represented=val_m.domains_represented if val_m else [],
+                    broadcasting_channels=n.broadcasting_channels or [],
                     quality_classification=val_m.quality_classification.value if val_m else "moderate_evidence",
                 )
             )

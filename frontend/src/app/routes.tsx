@@ -36,9 +36,6 @@ const ExplorerPage = lazy(() =>
 const SettingsPage = lazy(() =>
   import('../pages/Settings/SettingsPage').then((m) => ({ default: m.SettingsPage }))
 );
-const InvestigationPage = lazy(() =>
-  import('../pages/Investigation/InvestigationPage').then((m) => ({ default: m.InvestigationPage }))
-);
 const NotFoundPage = lazy(() =>
   import('../pages/NotFound/NotFoundPage').then((m) => ({ default: m.NotFoundPage }))
 );
@@ -64,7 +61,6 @@ if (typeof window !== 'undefined') {
     import('../pages/Alerts/AlertsPage');
     import('../pages/Explorer/ExplorerPage');
     import('../pages/Settings/SettingsPage');
-    import('../pages/Investigation/InvestigationPage');
   };
   if (typeof window.requestIdleCallback === 'function') {
     window.requestIdleCallback(preloadRoutes);
@@ -172,19 +168,11 @@ export const AppRoutes: React.FC = () => {
         />
         <Route
           path="investigation"
-          element={
-            <Suspense fallback={<RouteLoadingFallback />}>
-              <InvestigationPage />
-            </Suspense>
-          }
+          element={<Navigate to="/narratives" replace />}
         />
         <Route
           path="investigation/:id"
-          element={
-            <Suspense fallback={<RouteLoadingFallback />}>
-              <InvestigationPage />
-            </Suspense>
-          }
+          element={<Navigate to="/narratives" replace />}
         />
         <Route
           path="*"

@@ -1,19 +1,48 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion, useMotionValue, useSpring, useTransform } from 'motion/react';
 import { Users, ArrowRight } from 'lucide-react';
 import type { CommunityCluster } from '../../types/communities';
 import { listItemEnter } from '../../utils/motion';
+import { getNarrativeDisplayName } from '../../utils/narrativeIdentity';
 
 export interface CommunityCardProps {
   community: CommunityCluster;
 }
 
 export const CommunityCard: React.FC<CommunityCardProps> = ({ community }) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const x = useMotionValue(0.5);
+  const y = useMotionValue(0.5);
+
+  // Subtle tilt: ±1.25 degrees max, spring damped for smooth organic response
+  const rotateX = useSpring(useTransform(y, [0, 1], [1.25, -1.25]), { stiffness: 300, damping: 25 });
+  const rotateY = useSpring(useTransform(x, [0, 1], [-1.25, 1.25]), { stiffness: 300, damping: 25 });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    x.set((e.clientX - rect.left) / rect.width);
+    y.set((e.clientY - rect.top) / rect.height);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0.5);
+    y.set(0.5);
+  };
+
   return (
     <motion.div
+      ref={cardRef}
       variants={listItemEnter}
-      className="group rounded-[24px] bg-white dark:bg-[#171C22] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] p-6 shadow-dashboard hover:shadow-dashboard-hover transition-all duration-200 flex flex-col justify-between font-sans"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        rotateX,
+        rotateY,
+        transformStyle: 'preserve-3d',
+      }}
+      className="group rounded-[24px] bg-white dark:bg-[#171C22] border border-[rgba(228,233,245,0.85)] dark:border-[#252B32] p-6 shadow-dashboard hover:shadow-dashboard-hover transition-shadow duration-200 flex flex-col justify-between font-sans will-change-transform"
     >
       <div>
         {/* Top Header Row: Domain Badge & Source Count */}
@@ -102,24 +131,29 @@ export const CommunityCard: React.FC<CommunityCardProps> = ({ community }) => {
             <span className="text-[11px] font-mono text-[#8591A5] dark:text-slate-400 uppercase tracking-wider block">
               Top Narrative Focus
             </span>
-            {community.top_narratives.slice(0, 2).map((narrative) => (
-              <div
-                key={narrative.narrative_id}
-                className="p-2.5 rounded-[12px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/60 dark:border-[#252B32] text-[12px] space-y-1"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-[10px] font-bold text-[#2F65F6] dark:text-[#93C5FD]">
-                    {narrative.narrative_id}
-                  </span>
-                  <span className="font-mono text-[10px] text-[#8591A5] dark:text-slate-400">
-                    Score: {narrative.priority_signal_score.toFixed(3)}
-                  </span>
-                </div>
-                <p className="text-[12px] text-[#334155] dark:text-slate-200 font-medium truncate">
-                  {narrative.headline_claim}
-                </p>
-              </div>
-            ))}
+            {community.top_narratives.slice(0, 2).map((narrative) => {
+              const displayName = getNarrativeDisplayName(narrative);
+
+              return (
+                <Link
+                  key={narrative.narrative_id}
+                  to={`/narratives/${encodeURIComponent(narrative.narrative_id)}`}
+                  className="block p-2.5 rounded-[12px] bg-[#F8FAFD] dark:bg-[#13171C] border border-slate-200/60 dark:border-[#252B32] hover:border-[#2F65F6]/50 dark:hover:border-[#2F65F6]/50 hover:bg-white dark:hover:bg-[#191F26] text-[12px] space-y-1 transition-all group/narrative cursor-pointer"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] font-bold text-[#2F65F6] dark:text-[#93C5FD] uppercase tracking-wider group-hover/narrative:underline">
+                      {narrative.narrative_id.toUpperCase()}
+                    </span>
+                    <span className="font-mono text-[10px] text-[#8591A5] dark:text-slate-400">
+                      Score: {narrative.priority_signal_score.toFixed(3)}
+                    </span>
+                  </div>
+                  <p className="text-[12px] text-[#334155] dark:text-slate-200 font-semibold truncate group-hover/narrative:text-[#2F65F6] dark:group-hover/narrative:text-[#93C5FD] transition-colors">
+                    {displayName}
+                  </p>
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

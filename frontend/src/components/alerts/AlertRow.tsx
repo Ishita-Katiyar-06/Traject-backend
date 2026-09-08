@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   XCircle,
   RotateCcw,
-  Network,
   ExternalLink,
   Clock,
   MessageSquare,
@@ -211,15 +210,6 @@ export const AlertRow: React.FC<AlertRowProps> = ({ alert, onStatusChange }) => 
 
         {/* Deep Dive Exploration Links */}
         <div className="flex items-center gap-2">
-          <Link to={`/investigation/${alert.narrative_id}`}>
-            <Button
-              variant="subtle"
-              size="sm"
-              leftIcon={<Network className="w-3.5 h-3.5 text-[#2F65F6]" />}
-            >
-              Investigate in Graph
-            </Button>
-          </Link>
           <Link to={`/narratives/${alert.narrative_id}`}>
             <Button
               variant="secondary"

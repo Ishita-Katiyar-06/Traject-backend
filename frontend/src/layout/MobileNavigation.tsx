@@ -9,7 +9,6 @@ import {
   Users,
   Share2,
   Database,
-  ShieldCheck,
   Sun,
   Moon,
   X,
@@ -30,7 +29,6 @@ const MORE_SECONDARY_ITEMS = [
   { name: 'Communities', path: '/communities', icon: Users },
   { name: 'Propagation', path: '/propagation', icon: Share2 },
   { name: 'Data Explorer', path: '/explorer', icon: Database },
-  { name: 'Investigation', path: '/investigation', icon: ShieldCheck },
 ];
 
 export const MobileNavigation: React.FC = () => {
