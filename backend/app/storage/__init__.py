@@ -10,12 +10,23 @@ if TYPE_CHECKING:
         read_parquet_metadata,
         write_canonical_messages,
     )
+    from app.storage.engagement_observations import (
+        ENGAGEMENT_OBSERVATION_ARROW_SCHEMA,
+        observations_to_arrow_table,
+        arrow_table_to_observations,
+        write_engagement_observations,
+        read_engagement_observations,
+        append_engagement_observations,
+    )
 
 
 def __getattr__(name: str):
     import app.storage.parquet as p
     if hasattr(p, name):
         return getattr(p, name)
+    import app.storage.engagement_observations as eo
+    if hasattr(eo, name):
+        return getattr(eo, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -27,4 +38,10 @@ __all__ = [
     "read_parquet_metadata",
     "canonical_messages_to_arrow_table",
     "build_processed_dataset",
+    "ENGAGEMENT_OBSERVATION_ARROW_SCHEMA",
+    "observations_to_arrow_table",
+    "arrow_table_to_observations",
+    "write_engagement_observations",
+    "read_engagement_observations",
+    "append_engagement_observations",
 ]

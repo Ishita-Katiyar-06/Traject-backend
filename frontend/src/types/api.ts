@@ -718,3 +718,7 @@ export interface TemporalStatusResponse {
   lineages_by_state: Record<string, number>;
   last_temporal_update: string | null;
 }
+
+// Milestone 8F: Emerging Trend Forecasting Data Contracts
+export * from './forecasting';
+

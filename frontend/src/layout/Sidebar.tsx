@@ -7,6 +7,7 @@ import {
   Share2,
   AlertCircle,
   Database,
+  TrendingUp,
   ChevronLeft,
   ChevronRight,
   Sun,
@@ -84,6 +85,12 @@ export const Sidebar: React.FC = () => {
               name="Trends"
               path="/trends"
               icon={Hash}
+              isCollapsed={isSidebarCollapsed}
+            />
+            <NavigationItem
+              name="Emerging Trends"
+              path="/emerging-trends"
+              icon={TrendingUp}
               isCollapsed={isSidebarCollapsed}
             />
             <NavigationItem

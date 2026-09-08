@@ -9,6 +9,7 @@ import {
   Users,
   Share2,
   Database,
+  TrendingUp,
   Sun,
   Moon,
   X,
@@ -29,6 +30,7 @@ const PRIMARY_BOTTOM_ITEMS = [
 const ALL_DRAWER_ITEMS = [
   { name: 'Overview', path: '/overview', icon: Activity },
   { name: 'Trends', path: '/trends', icon: Hash },
+  { name: 'Emerging Trends', path: '/emerging-trends', icon: TrendingUp },
   { name: 'Narratives', path: '/narratives', icon: GitBranch },
   { name: 'Communities', path: '/communities', icon: Users },
   { name: 'Propagation', path: '/propagation', icon: Share2 },

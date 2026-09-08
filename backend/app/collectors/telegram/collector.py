@@ -26,6 +26,7 @@ from app.collectors.telegram.client import TelegramClientFactory, TelegramCreden
 from app.collectors.telegram.serializer import TelethonMessageSerializer
 from app.normalizers.telegram import TelegramNormalizer
 from app.schemas.canonical_message import CanonicalMessage
+from app.schemas.engagement_observation import EngagementObservation
 
 logger = logging.getLogger("traject.collectors.telegram")
 
@@ -40,6 +41,7 @@ class CollectionResult:
     canonical_messages_count: int
     raw_file_path: str
     canonical_messages: list[CanonicalMessage] = field(default_factory=list)
+    engagement_observations: list[EngagementObservation] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
     max_message_id: int | None = None
     min_message_id: int | None = None
@@ -57,6 +59,7 @@ class MultiCollectionResult:
     channel_results: dict[str, CollectionResult] = field(default_factory=dict)
     failed_channel_errors: dict[str, str] = field(default_factory=dict)
     canonical_messages: list[CanonicalMessage] = field(default_factory=list)
+    engagement_observations: list[EngagementObservation] = field(default_factory=list)
     raw_file_paths: list[str] = field(default_factory=list)
 
 
@@ -319,6 +322,7 @@ class TelegramCollector:
 
         raw_records: list[dict[str, Any]] = []
         canonical_messages: list[CanonicalMessage] = []
+        engagement_observations: list[EngagementObservation] = []
         errors: list[str] = []
         max_message_id: int | None = None
         min_message_id: int | None = None
@@ -375,6 +379,14 @@ class TelegramCollector:
                     )
                     canonical_messages.append(canonical)
 
+                    # 4. Extract point-in-time EngagementObservation
+                    obs = EngagementObservation.from_canonical_message(
+                        canonical,
+                        observed_at=canonical.collected_at,
+                        raw_reference=raw_dict["raw_reference"],
+                    )
+                    engagement_observations.append(obs)
+
                 except Exception as e:
                     msg_id = getattr(message, "id", "unknown")
                     err_msg = f"Failed processing message {msg_id}: {type(e).__name__} - {str(e)}"
@@ -404,11 +416,25 @@ class TelegramCollector:
             canonical_messages_count=len(canonical_messages),
             raw_file_path=str(raw_file),
             canonical_messages=canonical_messages,
+            engagement_observations=engagement_observations,
             errors=errors,
             max_message_id=max_message_id,
             min_message_id=min_message_id,
             latest_message_date=latest_message_date,
         )
+
+    async def reobserve_channel(
+        self,
+        channel: str,
+        limit: int = 50,
+    ) -> CollectionResult:
+        """Fetch recent messages from a channel to capture updated engagement metrics.
+        
+        Unlike collect_channel which may use min_id to strictly advance beyond a checkpoint,
+        reobserve_channel fetches the most recent messages without min_id so that changed
+        views, forwards, replies, and reactions are recorded as fresh EngagementObservations.
+        """
+        return await self.collect_channel(channel=channel, limit=limit, min_id=None)
 
     async def collect_sources(
         self,
@@ -463,6 +489,7 @@ class TelegramCollector:
         channel_results: dict[str, CollectionResult] = {}
         failed_errors: dict[str, str] = {}
         all_canonical: list[CanonicalMessage] = []
+        all_observations: list[EngagementObservation] = []
         all_raw_paths: list[str] = []
 
         logger.info(
@@ -484,6 +511,7 @@ class TelegramCollector:
                 res = await self.collect_channel(source, limit=ch_limit, min_id=ch_min_id)
                 channel_results[source] = res
                 all_canonical.extend(res.canonical_messages)
+                all_observations.extend(res.engagement_observations)
                 if res.raw_file_path:
                     all_raw_paths.append(res.raw_file_path)
             except Exception as e:
@@ -498,6 +526,7 @@ class TelegramCollector:
                     canonical_messages_count=0,
                     raw_file_path="",
                     canonical_messages=[],
+                    engagement_observations=[],
                     errors=[err_msg],
                 )
 
@@ -523,6 +552,7 @@ class TelegramCollector:
             channel_results=channel_results,
             failed_channel_errors=failed_errors,
             canonical_messages=all_canonical,
+            engagement_observations=all_observations,
             raw_file_paths=all_raw_paths,
         )
 

@@ -25,6 +25,8 @@ export interface TrendWithNarratives extends TrendSummaryResponse {
  */
 export function getCleanTrendId(identifier: string): string {
   if (!identifier) return '';
+  const causalMatch = identifier.match(/^causal_\d+_\d+_(\d+)$/);
+  if (causalMatch) return causalMatch[1];
   return identifier.replace(/^trend_|^topic_/, '');
 }
 

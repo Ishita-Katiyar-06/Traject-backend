@@ -85,15 +85,6 @@
       "description": "Cyber Threat Intelligence alerts and vulnerability reporting."
     },
     {
-      "username": "@cveNotify",
-      "display_name": "CVE Notify",
-      "domain": "cybersecurity",
-      "expected_language": "en",
-      "source_type": "independent",
-      "enabled": true,
-      "description": "Automated and curated Common Vulnerabilities and Exposures alerts."
-    },
-    {
       "username": "@cybdetective",
       "display_name": "Cyber Detective",
       "domain": "cybersecurity",

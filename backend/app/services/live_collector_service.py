@@ -20,8 +20,10 @@ from app.core.config import find_repo_root
 from app.normalizers.telegram import TelegramNormalizer
 from app.repositories.artifact_repository import ArtifactRepository, get_artifact_repository
 from app.schemas.canonical_message import CanonicalMessage
+from app.schemas.engagement_observation import EngagementObservation
 from app.services.streaming_manager import StreamingManager, get_streaming_manager
 from app.storage.parquet import append_canonical_messages
+from app.storage.engagement_observations import append_engagement_observations
 
 logger = logging.getLogger("traject.services.live_collector")
 
@@ -331,7 +333,19 @@ class LiveCollectorService:
         # 2. Normalize to CanonicalMessage contract
         canonical = TelegramNormalizer.normalize(raw_dict)
 
-        # 3. Append to in-memory ArtifactRepository
+        # 3. Always capture point-in-time Engagement Observation (Milestone 7B)
+        try:
+            obs = EngagementObservation.from_canonical_message(
+                canonical,
+                observed_at=canonical.collected_at,
+                raw_reference=raw_dict.get("raw_reference"),
+            )
+            obs_parquet = self._repo_root / "data" / "processed" / "telegram" / "telegram_engagement_observations.parquet"
+            append_engagement_observations(obs_parquet, [obs])
+        except Exception as obs_err:
+            logger.debug("Could not append live observation to Parquet: %s", obs_err)
+
+        # 4. Append to in-memory ArtifactRepository
         is_new = self.repo.append_message(canonical)
         if not is_new:
             return

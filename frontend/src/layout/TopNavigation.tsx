@@ -25,6 +25,7 @@ interface NavItemDef {
 const PRIMARY_NAV_ITEMS: NavItemDef[] = [
   { name: 'Overview', path: '/overview' },
   { name: 'Trends', path: '/trends' },
+  { name: 'Emerging Trends', path: '/emerging-trends' },
   { name: 'Narratives', path: '/narratives' },
   { name: 'Communities', path: '/communities' },
   { name: 'Propagation', path: '/propagation' },

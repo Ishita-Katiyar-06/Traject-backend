@@ -4,6 +4,7 @@ import json
 import logging
 import math
 from pathlib import Path
+import re
 from typing import Any, Sequence
 import urllib.parse
 
@@ -633,11 +634,12 @@ class ArtifactRepository:
         if not self.artifacts_loaded:
             raise RuntimeError("Analytics artifact is unavailable.")
 
-        topic = self._topics_by_id.get(topic_id)
+        norm_topic_id = self._normalize_topic_id(topic_id)
+        topic = self._topics_by_id.get(norm_topic_id) or self._topics_by_id.get(topic_id)
         if not topic:
             return None
 
-        enriched = self._enriched_topics_by_id.get(topic_id)
+        enriched = self._enriched_topics_by_id.get(topic.topic_id)
         t_ident = self._trend_identities.get(topic.topic_id, (None, None))
 
         return TopicDetailData(
@@ -665,6 +667,9 @@ class ArtifactRepository:
 
     def _normalize_trend_id(self, identifier: str) -> str:
         ident = identifier.strip()
+        causal_match = re.match(r"^causal_\d+_\d+_(\d+)$", ident)
+        if causal_match:
+            return f"trend_{causal_match.group(1)}"
         if ident.startswith("trend_"):
             return ident
         if ident.startswith("topic_"):
@@ -673,6 +678,9 @@ class ArtifactRepository:
 
     def _normalize_topic_id(self, identifier: str) -> str:
         ident = identifier.strip()
+        causal_match = re.match(r"^causal_\d+_\d+_(\d+)$", ident)
+        if causal_match:
+            return f"topic_{causal_match.group(1)}"
         if ident.startswith("topic_"):
             return ident
         if ident.startswith("trend_"):

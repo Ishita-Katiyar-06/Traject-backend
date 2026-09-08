@@ -33,6 +33,9 @@ const AlertsPage = lazy(() =>
 const ExplorerPage = lazy(() =>
   import('../pages/Explorer/ExplorerPage').then((m) => ({ default: m.ExplorerPage }))
 );
+const EmergingTrendsPage = lazy(() =>
+  import('../pages/EmergingTrends/EmergingTrendsPage').then((m) => ({ default: m.EmergingTrendsPage }))
+);
 const SettingsPage = lazy(() =>
   import('../pages/Settings/SettingsPage').then((m) => ({ default: m.SettingsPage }))
 );
@@ -53,6 +56,7 @@ if (typeof window !== 'undefined') {
     import('../pages/Overview/OverviewPage');
     import('../pages/Trends/TrendsPage');
     import('../pages/Trends/TrendDetailPage');
+    import('../pages/EmergingTrends/EmergingTrendsPage');
     import('../pages/Narratives/NarrativesPage');
     import('../pages/Narratives/NarrativeDetailPage');
     import('../pages/Communities/CommunitiesPage');
@@ -99,9 +103,25 @@ export const AppRoutes: React.FC = () => {
             </Suspense>
           }
         />
-        {/* Backward-compatibility redirects for legacy /topics URLs */}
+        {/* Emerging Trend Forecasting Route */}
+        <Route
+          path="emerging-trends"
+          element={
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <EmergingTrendsPage />
+            </Suspense>
+          }
+        />
+        {/* Topics navigation and backward-compatibility aliases */}
         <Route path="topics" element={<Navigate to="/trends" replace />} />
-        <Route path="topics/:id" element={<Navigate to="/trends" replace />} />
+        <Route
+          path="topics/:id"
+          element={
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <TrendDetailPage />
+            </Suspense>
+          }
+        />
         <Route
           path="narratives"
           element={

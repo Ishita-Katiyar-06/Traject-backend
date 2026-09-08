@@ -17,6 +17,7 @@ from app.core.config import find_repo_root
 from app.quality.validation import process_quality
 from app.schemas.canonical_message import CanonicalMessage
 from app.storage.parquet import append_canonical_messages, read_canonical_messages
+from app.storage.engagement_observations import append_engagement_observations
 
 logger = logging.getLogger("traject.collectors.telegram.incremental_runner")
 
@@ -29,6 +30,9 @@ class IncrementalRunConfig:
     dry_run: bool = False
     dataset_name: str = "telegram_messages"
     run_quality: bool = True
+    reobserve_recent: bool = False
+    reobserve_limit: int = 50
+    persist_observations: bool = True
 
     @classmethod
     def from_file_or_default(
@@ -73,6 +77,11 @@ class IncrementalRunManifest:
     first_message_timestamp: str | None = None
     latest_message_timestamp: str | None = None
     corpus_snapshot_id: str = ""
+    # Milestone 7B additive observation metadata
+    observations_generated: int = 0
+    observations_persisted: int = 0
+    duplicate_observations_skipped: int = 0
+    observation_store_path: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -144,6 +153,9 @@ class TelegramIncrementalRunner:
         all_new_normalized = 0
         all_new_persisted = 0
         all_duplicates = 0
+        all_obs_generated = 0
+        all_obs_persisted = 0
+        all_obs_skipped = 0
 
         parquet_path = (
             self.repo_root
@@ -151,6 +163,13 @@ class TelegramIncrementalRunner:
             / "processed"
             / "telegram"
             / f"{self.config.dataset_name}.parquet"
+        )
+        observation_parquet_path = (
+            self.repo_root
+            / "data"
+            / "processed"
+            / "telegram"
+            / "telegram_engagement_observations.parquet"
         )
 
         # Process each source in sequential isolation
@@ -231,6 +250,32 @@ class TelegramIncrementalRunner:
                 else:
                     curr_last_id = res.max_message_id or prev_last_id
 
+                # 5. Extract and persist Engagement Observations (Milestone 7B)
+                source_obs = list(res.engagement_observations)
+                if self.config.reobserve_recent:
+                    try:
+                        reobs_res = await self.collector.reobserve_channel(
+                            channel=source,
+                            limit=self.config.reobserve_limit,
+                        )
+                        source_obs.extend(reobs_res.engagement_observations)
+                    except Exception as reobs_err:
+                        logger.warning("Re-observation failed for source %s: %s", source, reobs_err)
+
+                all_obs_generated += len(source_obs)
+                appended_obs = 0
+                if self.config.persist_observations and not self.config.dry_run and source_obs:
+                    try:
+                        appended_obs, _ = append_engagement_observations(
+                            observation_parquet_path,
+                            source_obs,
+                            metadata={"incremental_run_id": run_id},
+                        )
+                        all_obs_persisted += appended_obs
+                        all_obs_skipped += (len(source_obs) - appended_obs)
+                    except Exception as obs_err:
+                        logger.warning("Failed appending observations for %s: %s", source, obs_err)
+
                 sources_succeeded += 1
                 per_source_metrics[source_key] = {
                     "status": "SUCCESS",
@@ -240,6 +285,8 @@ class TelegramIncrementalRunner:
                     "canonical_normalized": norm_count,
                     "duplicates_detected": dups_detected,
                     "new_persisted": persisted_count,
+                    "observations_generated": len(source_obs),
+                    "observations_persisted": appended_obs,
                     "error": None,
                 }
 
@@ -302,6 +349,10 @@ class TelegramIncrementalRunner:
             first_message_timestamp=first_ts,
             latest_message_timestamp=latest_ts,
             corpus_snapshot_id=corpus_snapshot_id,
+            observations_generated=all_obs_generated,
+            observations_persisted=all_obs_persisted,
+            duplicate_observations_skipped=all_obs_skipped,
+            observation_store_path=str(observation_parquet_path),
         )
 
         manifest_dir = self.repo_root / "data" / "manifests" / "telegram" / "incremental"
