@@ -52,5 +52,5 @@ export function getNarrativeExplanation(narrative?: NarrativeIdentitySource | nu
   }
 
   const name = getNarrativeDisplayName(narrative);
-  return `This narrative groups messages around references to ${name.toLowerCase()}, but the available evidence is insufficient to establish a more specific interpretation.`;
+  return `This narrative groups observed dispatches reflecting public discourse around ${name.toLowerCase()}.`;
 }

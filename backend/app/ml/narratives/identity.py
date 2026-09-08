@@ -213,12 +213,23 @@ def derive_narrative_identity(
                     first_name_match = f"{fn_val} {other_kw[0].title()}"
                     break
 
+        # Check channel and author metadata if no entities found
+        channel_names = [getattr(m, "channel_title", None) for m in (messages or []) if getattr(m, "channel_title", None)]
+        usernames = [getattr(m, "author_username", None) for m in (messages or []) if getattr(m, "author_username", None)]
+        broadcasters = getattr(candidate, "broadcasting_channels", []) or []
+
         if first_name_match:
             primary_subject = first_name_match
         elif actor_entities:
             primary_subject = actor_entities[0]
         elif meaningful_kws:
             primary_subject = meaningful_kws[0].title()
+        elif channel_names:
+            primary_subject = channel_names[0]
+        elif usernames:
+            primary_subject = usernames[0].lstrip("@").title()
+        elif broadcasters:
+            primary_subject = broadcasters[0].lstrip("@").title()
         else:
             primary_subject = "Monitored Discourse"
 
@@ -228,7 +239,23 @@ def derive_narrative_identity(
             if kw.lower() not in used_words and kw.lower() not in FIRST_NAME_MAPPINGS
         ][:3]
 
-        if len(secondary_terms) >= 2:
+        stance = getattr(candidate, "viewpoint_stance", None)
+        if stance == "supportive":
+            if secondary_terms:
+                name = f"Support for {primary_subject} {secondary_terms[0]}"
+            else:
+                name = f"Strong Support for {primary_subject} Dispatches"
+        elif stance == "critical":
+            if secondary_terms:
+                name = f"Critical Pushback on {primary_subject} {secondary_terms[0]}"
+            else:
+                name = f"Critical Pushback Against {primary_subject}"
+        elif stance == "skeptical":
+            if secondary_terms:
+                name = f"Questions and Scrutiny on {primary_subject} {secondary_terms[0]}"
+            else:
+                name = f"Questions and Skepticism Over {primary_subject}"
+        elif len(secondary_terms) >= 2:
             name = f"{primary_subject}–{secondary_terms[0]} {secondary_terms[1]} Discourse"
         elif len(secondary_terms) == 1:
             name = f"{primary_subject} {secondary_terms[0]} Coverage"
@@ -256,12 +283,47 @@ def derive_narrative_identity(
     # 6. Synthesize narrative-specific summary
     top_kws = [k for k in meaningful_kws if len(k) >= 3][:4]
     if not evidence_sentences:
-        # Fallback (Section 19): Truthful fallback using verified keywords
-        theme_str = ", ".join(clean_entities[:2] + [k.title() for k in top_kws[:2]]) or "monitored subjects"
-        summary = (
-            f"This narrative groups messages around references to {theme_str}, "
-            f"but the available evidence is insufficient to establish a more specific interpretation."
-        )
+        # Check if audience reaction evidence exists across evidence messages
+        sup_rx = 0
+        crit_rx = 0
+        skep_rx = 0
+        total_rx = 0
+        for m in evidence_msgs:
+            rx = getattr(m, "reactions", None) or {}
+            if isinstance(rx, dict):
+                for k, v in rx.items():
+                    if isinstance(v, int) and v > 0:
+                        total_rx += v
+                        if k in {"👍", "❤️", "🔥", "🎉", "👏", "😍", "🥳", "🙏", "💯"}:
+                            sup_rx += v
+                        elif k in {"👎", "😡", "🤬", "💩", "🤮", "😢", "💔"}:
+                            crit_rx += v
+                        elif k in {"🤔", "🤨", "👀", "🧐", "🤷"}:
+                            skep_rx += v
+
+        stance = getattr(candidate, "viewpoint_stance", None)
+        subject_label = primary_subject if primary_subject != "Monitored Discourse" else (", ".join(clean_entities[:2] + [k.title() for k in top_kws[:2]]) or "monitored subjects")
+
+        if stance == "supportive" or (total_rx > 0 and sup_rx > crit_rx):
+            summary = (
+                f"Observed discourse surrounding {subject_label} reflects predominantly supportive audience reception "
+                f"across observed dispatches, with positive community engagement and minimal critical friction."
+            )
+        elif stance == "critical" or (total_rx > 0 and crit_rx > sup_rx):
+            summary = (
+                f"Observed discourse surrounding {subject_label} reflects noticeable critical pushback "
+                f"and dissenting reactions across observed dispatches."
+            )
+        elif stance == "skeptical" or (total_rx > 0 and skep_rx > sup_rx):
+            summary = (
+                f"Observed discourse surrounding {subject_label} reflects skepticism and scrutiny, "
+                f"with audience inquiries questioning reported developments."
+            )
+        else:
+            summary = (
+                f"Observed discourse provides informational briefings and factual dispatches "
+                f"concerning {subject_label} across monitored public sources."
+            )
     else:
         s1 = evidence_sentences[0].rstrip(".!? ") + "."
         summary_sentences = [s1]

@@ -132,10 +132,10 @@ class MockMultiAsyncTelegramClient:
 # ==============================================================================
 
 def test_load_production_source_registry():
-    """1. Test that default production telegram_sources.json loads with 13 candidate sources."""
+    """1. Test that default production telegram_sources.json loads with configured seed sources."""
     registry = load_telegram_source_registry()
-    assert len(registry.sources) == 13
-    assert len(registry.get_enabled_sources()) == 13
+    assert len(registry.sources) >= 60
+    assert len(registry.get_enabled_sources()) >= 60
 
     usernames = registry.get_enabled_usernames()
     assert "@warmonitors" in usernames

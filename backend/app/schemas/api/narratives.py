@@ -37,6 +37,13 @@ class NarrativeSummaryResponse(BaseModel):
     broadcasting_channels: list[str] = Field(default_factory=list, description="Broadcasting channel identifiers")
     quality_classification: str = Field(default="moderate_evidence", description="Observational evidence tier")
 
+    # Milestone: Multi-Perspective Narrative Intelligence (additive & backward compatible)
+    viewpoint_stance: str | None = Field(default=None, description="Internal viewpoint stance: supportive, critical, skeptical, informational")
+    narrative_rank: int = Field(default=1, ge=1, description="Rank within parent trend")
+    is_dominant: bool = Field(default=True, description="True if dominant viewpoint")
+    evidence_strength_score: float | None = Field(default=None, ge=0.0, le=1.0)
+    sibling_narrative_ids: list[str] = Field(default_factory=list)
+
 
 class NarrativeListResponse(BaseModel):
     """Paginated collection response for GET /api/v1/narratives."""

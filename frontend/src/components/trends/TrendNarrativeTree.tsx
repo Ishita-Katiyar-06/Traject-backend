@@ -289,6 +289,16 @@ export const NarrativeTreeNode: React.FC<NarrativeTreeNodeProps> = ({
               <span>NARRATIVE #{cleanNarrativeId}</span>
             </span>
 
+            {narrative.is_dominant ? (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-900/40">
+                Dominant Viewpoint
+              </span>
+            ) : narrative.is_dominant === false ? (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-slate-50 dark:bg-slate-850/40 text-slate-600 dark:text-slate-400 border-slate-200/60 dark:border-slate-700/40">
+                Alternative Perspective
+              </span>
+            ) : null}
+
             {(() => {
               const tierBadge = formatPriorityTierBadge(narrative.priority_tier);
               return (

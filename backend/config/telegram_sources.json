@@ -1,7 +1,7 @@
 {
   "$schema": "./telegram_sources.schema.json",
-  "description": "Version-controlled Telegram Source Registry for TRAJECT narrative intelligence collection.",
-  "version": "1.0.0",
+  "description": "Version-controlled Telegram Source Registry for TRAJECT narrative intelligence collection (60-channel seed + operational monitors).",
+  "version": "1.1.0",
   "sources": [
     {
       "username": "@warmonitors",
@@ -128,6 +128,519 @@
       "source_type": "independent",
       "enabled": true,
       "description": "Custom real-time analyst testing and broadcast verification channel."
+    },
+    {
+      "username": "@nytimes",
+      "display_name": "The New York Times",
+      "domain": "general_news",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "The New York Times global news dispatches."
+    },
+    {
+      "username": "@guardian",
+      "display_name": "The Guardian",
+      "domain": "general_news",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "The Guardian international news reporting."
+    },
+    {
+      "username": "@washingtonpost",
+      "display_name": "The Washington Post",
+      "domain": "general_news",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "The Washington Post world news dispatches."
+    },
+    {
+      "username": "@skynews",
+      "display_name": "Sky News",
+      "domain": "general_news",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Sky News international breaking news."
+    },
+    {
+      "username": "@France24_en",
+      "display_name": "France 24 (English)",
+      "domain": "general_news",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "France 24 international English news broadcast."
+    },
+    {
+      "username": "@France24_fr",
+      "display_name": "France 24 (Français)",
+      "domain": "general_news",
+      "expected_language": "fr",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "France 24 actualités internationales en français."
+    },
+    {
+      "username": "@TRTWORLD",
+      "display_name": "TRT World",
+      "domain": "general_news",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "TRT World international public broadcaster."
+    },
+    {
+      "username": "@aljazeeraenglish",
+      "display_name": "Al Jazeera English",
+      "domain": "general_news",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Al Jazeera English international news."
+    },
+    {
+      "username": "@AJENews_Official",
+      "display_name": "AJE News Official",
+      "domain": "general_news",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Official Al Jazeera English news dispatches."
+    },
+    {
+      "username": "@middleeasteye_tg",
+      "display_name": "Middle East Eye",
+      "domain": "geopolitics",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Middle East Eye regional and geopolitical coverage."
+    },
+    {
+      "username": "@KyivIndependent_official",
+      "display_name": "The Kyiv Independent",
+      "domain": "conflict",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Ukrainian independent journalism and conflict monitoring."
+    },
+    {
+      "username": "@Kyivpost_official",
+      "display_name": "Kyiv Post",
+      "domain": "conflict",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Kyiv Post English-language Ukraine coverage."
+    },
+    {
+      "username": "@moscowtimes_en",
+      "display_name": "The Moscow Times",
+      "domain": "geopolitics",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "The Moscow Times English-language Russian affairs."
+    },
+    {
+      "username": "@the_jerusalem_post",
+      "display_name": "The Jerusalem Post",
+      "domain": "geopolitics",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "The Jerusalem Post Middle East and world news."
+    },
+    {
+      "username": "@disclosetv",
+      "display_name": "Disclose.tv",
+      "domain": "general_news",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Independent breaking news and current events feed."
+    },
+    {
+      "username": "@bricsnews",
+      "display_name": "BRICS News",
+      "domain": "geopolitics",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "News and geopolitical developments across BRICS economies."
+    },
+    {
+      "username": "@insiderpaper",
+      "display_name": "Insider Paper",
+      "domain": "general_news",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Global breaking news and current events aggregation."
+    },
+    {
+      "username": "@WorldNews",
+      "display_name": "World News",
+      "domain": "general_news",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Global world news aggregation and headline alerts."
+    },
+    {
+      "username": "@indianexpress",
+      "display_name": "The Indian Express",
+      "domain": "india_affairs",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "The Indian Express national news and investigative reporting."
+    },
+    {
+      "username": "@ieexplained",
+      "display_name": "IE Explained",
+      "domain": "india_affairs",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Indian Express Explained deep-dives on policy and current affairs."
+    },
+    {
+      "username": "@hindustantimes",
+      "display_name": "Hindustan Times",
+      "domain": "india_affairs",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Hindustan Times national and international news."
+    },
+    {
+      "username": "@timesofindia",
+      "display_name": "The Times of India",
+      "domain": "india_affairs",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "The Times of India English daily news."
+    },
+    {
+      "username": "@TOIcampaigns",
+      "display_name": "TOI Campaigns",
+      "domain": "india_affairs",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Times of India initiatives and editorial campaigns."
+    },
+    {
+      "username": "@news18hindi",
+      "display_name": "News18 Hindi",
+      "domain": "india_affairs",
+      "expected_language": "hi",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "News18 Hindi national breaking news and state affairs."
+    },
+    {
+      "username": "@firstpostin",
+      "display_name": "Firstpost",
+      "domain": "india_affairs",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Firstpost geopolitical commentary and national news."
+    },
+    {
+      "username": "@zeenews",
+      "display_name": "Zee News",
+      "domain": "india_affairs",
+      "expected_language": "hi",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Zee News national and global news in Hindi."
+    },
+    {
+      "username": "@bsindiaofficial",
+      "display_name": "Business Standard",
+      "domain": "business_finance",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Business Standard financial and Indian economic reporting."
+    },
+    {
+      "username": "@livemint",
+      "display_name": "Mint",
+      "domain": "business_finance",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Mint Indian economy, policy, and business news."
+    },
+    {
+      "username": "@moneycontrolcom",
+      "display_name": "Moneycontrol",
+      "domain": "business_finance",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Moneycontrol Indian stock markets, companies, and economy."
+    },
+    {
+      "username": "@cnbc_tv18",
+      "display_name": "CNBC-TV18",
+      "domain": "business_finance",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "CNBC-TV18 Indian business, market, and corporate news."
+    },
+    {
+      "username": "@TheFinancialExpressOnline",
+      "display_name": "Financial Express",
+      "domain": "business_finance",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "The Financial Express Indian business and markets."
+    },
+    {
+      "username": "@THnewsupdates",
+      "display_name": "The Hindu",
+      "domain": "india_affairs",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "The Hindu national news, editorial, and international updates."
+    },
+    {
+      "username": "@pibindiaenglish",
+      "display_name": "Press Information Bureau (PIB)",
+      "domain": "india_affairs",
+      "expected_language": "en",
+      "source_type": "official",
+      "enabled": true,
+      "description": "Official Press Information Bureau of the Government of India."
+    },
+    {
+      "username": "@bleepingcomputer",
+      "display_name": "BleepingComputer",
+      "domain": "cybersecurity",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "BleepingComputer cybersecurity, ransomware, and technology news."
+    },
+    {
+      "username": "@cyber_security_feed",
+      "display_name": "Cyber Security Feed",
+      "domain": "cybersecurity",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Cybersecurity updates, vulnerability disclosures, and alerts."
+    },
+    {
+      "username": "@Daily_Writeups",
+      "display_name": "Daily Bug Bounty & Writeups",
+      "domain": "cybersecurity",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Bug bounty writeups, exploit analysis, and security research."
+    },
+    {
+      "username": "@CisoasaService",
+      "display_name": "CISO as a Service",
+      "domain": "cybersecurity",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Information security leadership, risk management, and governance."
+    },
+    {
+      "username": "@computer_science_and_programming",
+      "display_name": "Computer Science & Programming",
+      "domain": "technology",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Software engineering, computer science concepts, and programming news."
+    },
+    {
+      "username": "@androidMalware",
+      "display_name": "Android Malware & Threats",
+      "domain": "cybersecurity",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Mobile threat intelligence, APK reverse engineering, and Android malware research."
+    },
+    {
+      "username": "@sysadm_in_channel",
+      "display_name": "SysAdmin & DevOps",
+      "domain": "technology",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Systems administration, cloud infrastructure, and DevOps practices."
+    },
+    {
+      "username": "@hacker_news_feed",
+      "display_name": "Hacker News Feed",
+      "domain": "technology",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Curated top submissions from Y Combinator Hacker News."
+    },
+    {
+      "username": "@Cisco",
+      "display_name": "Cisco Official",
+      "domain": "technology",
+      "expected_language": "en",
+      "source_type": "official",
+      "enabled": true,
+      "description": "Cisco official technology, networking, and security announcements."
+    },
+    {
+      "username": "@linuxgram",
+      "display_name": "Linuxgram",
+      "domain": "technology",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Linux ecosystem news, open-source utilities, and kernel releases."
+    },
+    {
+      "username": "@CodingNews",
+      "display_name": "Coding News",
+      "domain": "technology",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Developer ecosystem updates, programming frameworks, and tools."
+    },
+    {
+      "username": "@ml_world",
+      "display_name": "Machine Learning World",
+      "domain": "technology",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Machine learning research papers, AI model releases, and tutorials."
+    },
+    {
+      "username": "@datascienceiot",
+      "display_name": "Data Science & IoT",
+      "domain": "technology",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Data science, artificial intelligence, and IoT systems analysis."
+    },
+    {
+      "username": "@QubesOS",
+      "display_name": "Qubes OS News",
+      "domain": "cybersecurity",
+      "expected_language": "en",
+      "source_type": "official",
+      "enabled": true,
+      "description": "Security-focused operating system announcements and release updates."
+    },
+    {
+      "username": "@Bloomberg",
+      "display_name": "Bloomberg",
+      "domain": "business_finance",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Bloomberg global business, market intelligence, and economic dispatches."
+    },
+    {
+      "username": "@cnalatest",
+      "display_name": "CNA Latest",
+      "domain": "general_news",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Channel NewsAsia latest Asian and international news."
+    },
+    {
+      "username": "@www_Bitcoin_com",
+      "display_name": "Bitcoin.com News",
+      "domain": "crypto_finance",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Cryptocurrency market developments, blockchain news, and regulatory updates."
+    },
+    {
+      "username": "@CryptoWorldNews",
+      "display_name": "Crypto World News",
+      "domain": "crypto_finance",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Cryptocurrency market analysis, token launches, and decentralized finance news."
+    },
+    {
+      "username": "@BinanceResearch",
+      "display_name": "Binance Research",
+      "domain": "crypto_finance",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Institutional cryptocurrency research reports and macroeconomic analysis."
+    },
+    {
+      "username": "@statista_infographics_statistics",
+      "display_name": "Statista Infographics",
+      "domain": "business_finance",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "Global economic statistics, market share visual data, and infographics."
+    },
+    {
+      "username": "@HinduBusinessLine",
+      "display_name": "The Hindu BusinessLine",
+      "domain": "business_finance",
+      "expected_language": "en",
+      "source_type": "publisher",
+      "enabled": true,
+      "description": "The Hindu BusinessLine financial news, commodities, and agriculture."
+    },
+    {
+      "username": "@indianstartupnewsofficial",
+      "display_name": "Indian Startup News",
+      "domain": "business_finance",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Indian venture capital, startup funding rounds, and entrepreneurial ecosystem."
+    },
+    {
+      "username": "@stocknews_live",
+      "display_name": "Stock News Live",
+      "domain": "business_finance",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Real-time stock market alerts, earnings updates, and corporate actions."
+    },
+    {
+      "username": "@news_finance",
+      "display_name": "Finance News Today",
+      "domain": "business_finance",
+      "expected_language": "en",
+      "source_type": "independent",
+      "enabled": true,
+      "description": "Global financial headlines, central bank policy, and commodities."
     }
   ]
 }

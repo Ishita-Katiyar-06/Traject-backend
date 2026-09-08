@@ -112,6 +112,9 @@ class ArtifactRepository:
 
             self._messages_by_id = {m.canonical_id: m for m in self._messages}
 
+            # Load precomputed sentiment cache for instant queries and profile hydration
+            self._load_sentiment_cache()
+
             # 2. Load Precomputed Analytics
             pipeline_result: MLPipelineResult | None = None
             if analytics_override is not None:
@@ -149,7 +152,13 @@ class ArtifactRepository:
                 try:
                     from app.ml.narratives.identity import derive_narrative_identity
                     for n in pipeline_result.narrative_report.narrative_candidates:
-                        if not n.narrative_name or not n.narrative_summary:
+                        is_generic = (
+                            not n.narrative_name or
+                            not n.narrative_summary or
+                            "Monitored Discourse" in (n.narrative_name or "") or
+                            "insufficient to establish a more specific interpretation" in (n.narrative_summary or "")
+                        )
+                        if is_generic:
                             t = self._topics_by_id.get(n.promoted_from_topic_id)
                             topic_msgs = []
                             if t:
@@ -158,6 +167,48 @@ class ArtifactRepository:
                             name, summary = derive_narrative_identity(n, t, messages=topic_msgs)
                             n.narrative_name = name
                             n.narrative_summary = summary
+
+                    # Populate sibling_narrative_ids if not already populated
+                    siblings_by_topic: dict[str, list[str]] = {}
+                    for n in pipeline_result.narrative_report.narrative_candidates:
+                        siblings_by_topic.setdefault(n.promoted_from_topic_id, []).append(n.narrative_id)
+                    for n in pipeline_result.narrative_report.narrative_candidates:
+                        if not n.sibling_narrative_ids:
+                            n.sibling_narrative_ids = [nid for nid in siblings_by_topic.get(n.promoted_from_topic_id, []) if nid != n.narrative_id]
+
+                    # Populate sentiment profile from cached inference if not already populated
+                    if self._sentiment_by_cache_key:
+                        import hashlib
+                        from app.ml.pipeline.cache import compute_cache_key
+                        for n in pipeline_result.narrative_report.narrative_candidates:
+                            if not n.sentiment_profile.is_available:
+                                t = self._topics_by_id.get(n.promoted_from_topic_id)
+                                if t:
+                                    sample_ids = (t.sample_message_ids or []) + (getattr(t, "representative_message_ids", []) or [])
+                                    t_msgs = [self._messages_by_id[mid] for mid in sample_ids if mid in self._messages_by_id and self._messages_by_id[mid].text_content]
+                                    n_pos, n_neu, n_neg = 0, 0, 0
+                                    for tm in t_msgs:
+                                        text_id = f"text_{hashlib.sha256(tm.text_content.encode('utf-8')).hexdigest()[:16]}"
+                                        k = compute_cache_key("sentiment", text_id, tm.text_content, "cardiffnlp/twitter-roberta-base-sentiment-latest", "default", "4h.v1")
+                                        lbl = self._sentiment_by_cache_key.get(k)
+                                        if lbl == "positive":
+                                            n_pos += 1
+                                        elif lbl == "neutral":
+                                            n_neu += 1
+                                        elif lbl == "negative":
+                                            n_neg += 1
+                                    tot = n_pos + n_neu + n_neg
+                                    if tot > 0:
+                                        from app.ml.narratives.models import NarrativeSentimentProfile
+                                        n.sentiment_profile = NarrativeSentimentProfile(
+                                            is_available=True,
+                                            total_text_messages_evaluated=tot,
+                                            text_positive_ratio=round(n_pos / tot, 4),
+                                            text_neutral_ratio=round(n_neu / tot, 4),
+                                            text_negative_ratio=round(n_neg / tot, 4),
+                                            emoji_polarity_score=n.sentiment_profile.emoji_polarity_score,
+                                            sentiment_model_id="cardiffnlp/twitter-roberta-base-sentiment-latest",
+                                        )
                 except Exception as id_exc:
                     logger.warning("Could not synthesize narrative identity: %s", id_exc)
 
@@ -302,34 +353,59 @@ class ArtifactRepository:
             if tier not in priority_dist:
                 priority_dist[tier] = sum(1 for n in self._narratives_by_id.values() if n.priority_tier.value == tier)
 
-        # Sentiment summary across narrative candidates
-        eval_count = 0
-        sum_pos = 0.0
-        sum_neu = 0.0
-        sum_neg = 0.0
-        model_id = None
-        for cand in self._narratives_by_id.values():
-            sp = cand.sentiment_profile
-            if sp.is_available:
-                eval_count += sp.total_text_messages_evaluated
-                model_id = sp.sentiment_model_id
-                if sp.text_positive_ratio is not None:
-                    sum_pos += sp.text_positive_ratio
-                if sp.text_neutral_ratio is not None:
-                    sum_neu += sp.text_neutral_ratio
-                if sp.text_negative_ratio is not None:
-                    sum_neg += sp.text_negative_ratio
+        # Corpus Sentiment Summary: compute actual evaluated message distribution from cache
+        if self._sentiment_by_cache_key:
+            from collections import Counter
+            counts = Counter(self._sentiment_by_cache_key.values())
+            total_eval = len(self._sentiment_by_cache_key)
+            sentiment_overview = SentimentOverview(
+                sentiment_model_id="cardiffnlp/twitter-roberta-base-sentiment-latest",
+                evaluated_messages_count=total_eval,
+                distribution=SentimentDistribution(
+                    positive_ratio=round(counts.get("positive", 0) / total_eval, 4),
+                    neutral_ratio=round(counts.get("neutral", 0) / total_eval, 4),
+                    negative_ratio=round(counts.get("negative", 0) / total_eval, 4),
+                ),
+            )
+        else:
+            total_weighted_msgs = 0
+            weighted_pos = 0.0
+            weighted_neu = 0.0
+            weighted_neg = 0.0
+            model_id = None
+            for cand in self._narratives_by_id.values():
+                sp = cand.sentiment_profile
+                if sp.is_available and sp.total_text_messages_evaluated > 0:
+                    cnt = sp.total_text_messages_evaluated
+                    total_weighted_msgs += cnt
+                    model_id = sp.sentiment_model_id or model_id
+                    if sp.text_positive_ratio is not None:
+                        weighted_pos += sp.text_positive_ratio * cnt
+                    if sp.text_neutral_ratio is not None:
+                        weighted_neu += sp.text_neutral_ratio * cnt
+                    if sp.text_negative_ratio is not None:
+                        weighted_neg += sp.text_negative_ratio * cnt
 
-        n_cands = max(len(self._narratives_by_id), 1)
-        sentiment_overview = SentimentOverview(
-            sentiment_model_id=model_id,
-            evaluated_messages_count=eval_count if eval_count > 0 else text_bearing,
-            distribution=SentimentDistribution(
-                positive_ratio=round(sum_pos / n_cands, 4),
-                neutral_ratio=round(sum_neu / n_cands, 4),
-                negative_ratio=round(sum_neg / n_cands, 4),
-            ),
-        )
+            if total_weighted_msgs > 0:
+                sentiment_overview = SentimentOverview(
+                    sentiment_model_id=model_id or "cardiffnlp/twitter-roberta-base-sentiment-latest",
+                    evaluated_messages_count=total_weighted_msgs,
+                    distribution=SentimentDistribution(
+                        positive_ratio=round(weighted_pos / total_weighted_msgs, 4),
+                        neutral_ratio=round(weighted_neu / total_weighted_msgs, 4),
+                        negative_ratio=round(weighted_neg / total_weighted_msgs, 4),
+                    ),
+                )
+            else:
+                sentiment_overview = SentimentOverview(
+                    sentiment_model_id=None,
+                    evaluated_messages_count=0,
+                    distribution=SentimentDistribution(
+                        positive_ratio=0.0,
+                        neutral_ratio=0.0,
+                        negative_ratio=0.0,
+                    ),
+                )
 
         pipeline_exec = PipelineExecutionSummary(
             created_at_utc=self.created_at_utc,
@@ -454,6 +530,11 @@ class ArtifactRepository:
                     domains_represented=val_m.domains_represented if val_m else [],
                     broadcasting_channels=n.broadcasting_channels or [],
                     quality_classification=val_m.quality_classification.value if val_m else "moderate_evidence",
+                    viewpoint_stance=getattr(n, "viewpoint_stance", None),
+                    narrative_rank=getattr(n, "narrative_rank", 1),
+                    is_dominant=getattr(n, "is_dominant", True),
+                    evidence_strength_score=getattr(n, "evidence_strength_score", None),
+                    sibling_narrative_ids=getattr(n, "sibling_narrative_ids", []),
                 )
             )
 

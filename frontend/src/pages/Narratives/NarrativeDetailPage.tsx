@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation, useSearchParams } from 'react-rout
 import {
   ArrowLeft,
   ArrowRight,
+  ArrowUpRight,
   Clock,
   Radio,
   Layers,
@@ -198,6 +199,15 @@ export const NarrativeDetailPage: React.FC = () => {
             <span className="font-mono text-[11px] font-bold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 px-2.5 py-0.5 rounded-full border border-rose-200/70 dark:border-rose-900/50 uppercase">
               {narrative.narrative_id.toUpperCase()}
             </span>
+            {narrative.is_dominant ? (
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full border bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-900/40 uppercase font-mono">
+                Dominant Viewpoint
+              </span>
+            ) : narrative.is_dominant === false ? (
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full border bg-slate-100 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-slate-200/60 dark:border-slate-700/40 uppercase font-mono">
+                Alternative Perspective
+              </span>
+            ) : null}
             {parentTrendTarget && (
               <button
                 type="button"
@@ -233,6 +243,23 @@ export const NarrativeDetailPage: React.FC = () => {
             {explanation}
           </p>
         </div>
+
+        {narrative.sibling_narrative_ids && narrative.sibling_narrative_ids.length > 0 && (
+          <div className="pt-2 border-t border-slate-100 dark:border-[#252B32] flex items-center gap-2 flex-wrap text-[12px]">
+            <span className="text-[#8591A5] dark:text-slate-400 font-medium">Alternative Perspectives for this Trend:</span>
+            {narrative.sibling_narrative_ids.map((sibId) => (
+              <button
+                key={sibId}
+                type="button"
+                onClick={() => navigate(`/narratives/${sibId}?trend=${encodeURIComponent(parentTrendTarget)}`)}
+                className="inline-flex items-center gap-1 font-mono text-[11px] font-bold text-[#2F65F6] dark:text-[#93C5FD] bg-slate-50 dark:bg-slate-800/40 hover:bg-blue-50 dark:hover:bg-blue-950/40 px-2 py-0.5 rounded-lg border border-slate-200/70 dark:border-slate-700/50 transition-colors cursor-pointer"
+              >
+                <span>{sibId.toUpperCase()}</span>
+                <ArrowUpRight className="w-3 h-3" />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Metadata Pill Banner */}

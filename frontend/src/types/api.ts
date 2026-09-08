@@ -163,6 +163,11 @@ export interface NarrativeSummaryResponse {
   domains_represented?: string[];
   broadcasting_channels?: string[];
   quality_classification?: 'strong_evidence' | 'moderate_evidence' | 'limited_evidence' | 'insufficient_evidence' | string;
+  viewpoint_stance?: 'supportive' | 'critical' | 'skeptical' | 'informational' | string | null;
+  narrative_rank?: number;
+  is_dominant?: boolean;
+  evidence_strength_score?: number | null;
+  sibling_narrative_ids?: string[];
 }
 
 export interface NarrativeListResponse {
@@ -196,6 +201,11 @@ export interface NarrativeDetailData {
   domains_represented?: string[];
   quality_classification?: 'strong_evidence' | 'moderate_evidence' | 'limited_evidence' | 'insufficient_evidence' | string;
   validation_notes?: string[];
+  viewpoint_stance?: 'supportive' | 'critical' | 'skeptical' | 'informational' | string | null;
+  narrative_rank?: number;
+  is_dominant?: boolean;
+  evidence_strength_score?: number | null;
+  sibling_narrative_ids?: string[];
 }
 
 export interface NarrativeDetailResponse {

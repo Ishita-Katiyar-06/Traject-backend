@@ -37,6 +37,11 @@ from app.ml.narratives.signals import (
     extract_potential_coordination_signals,
     generate_signal_audit_notes,
 )
+from app.ml.narratives.viewpoints import (
+    discover_trend_viewpoints,
+    extract_branch_representative_excerpts,
+)
+from app.ml.narratives.identity import derive_narrative_identity
 from app.ml.sentiment.inference import SentimentModelAdapter
 from app.ml.topics.discovery import discover_topics
 from app.ml.topics.models import ClusteringConfig
@@ -72,8 +77,6 @@ def promote_narratives(
     total_sentiment_time = 0.0
 
     for idx, enriched_topic in enumerate(enrichment_result.enriched_topics):
-        narrative_id = f"narrative_{idx:03d}"
-
         # Resolve constituent messages
         cluster_msgs = [
             msg_map[mid] for mid in enriched_topic.representative_keywords
@@ -101,75 +104,119 @@ def promote_narratives(
         if not topic_matched_msgs:
             topic_matched_msgs = list(messages[:enriched_topic.message_count])
 
-        # 1. Batched Sentiment Synthesis over all text messages
-        t_sent_start = time.perf_counter()
-        sentiment_profile = evaluate_cluster_sentiment(
+        # Discover coherent viewpoints within this trend cluster
+        viewpoints = discover_trend_viewpoints(
             messages=topic_matched_msgs,
-            adapter=sentiment_adapter,
-            emoji_polarity_score=enriched_topic.engagement.emoji_polarity_score,
-        )
-        total_sentiment_time += (time.perf_counter() - t_sent_start)
-
-        # 2. Four Sub-Scores in [0.0, 1.0]
-        s_spread = compute_spread_score(enriched_topic)
-        s_coord = compute_coordination_score(enriched_topic)
-        s_reach = compute_reach_score(enriched_topic)
-        s_friction = compute_friction_score(enriched_topic, sentiment_profile)
-
-        sub_scores = NarrativeSubScores(
-            spread_score=s_spread,
-            coordination_score=s_coord,
-            reach_score=s_reach,
-            friction_score=s_friction,
+            topic_entities=list(topic_entities),
+            sentiment_adapter=sentiment_adapter,
         )
 
-        # 3. Composite Priority / Narrative Signal Score
-        priority_score = compute_priority_signal_score(sub_scores, weights=scoring_weights)
-        tier = assign_priority_tier(priority_score)
+        channel_context = None
+        for m in topic_matched_msgs:
+            if getattr(m, "channel_title", None):
+                channel_context = m.channel_title
+                break
 
-        # 4. Potential Coordination & Anomaly Signals
-        coord_signals = extract_potential_coordination_signals(enriched_topic)
-        signal_notes = generate_signal_audit_notes(enriched_topic, coord_signals)
+        topic_candidates: list[NarrativeCandidate] = []
 
-        # 5. Evidence Coverage & Deterministic Framing
-        data_coverage = compute_data_coverage(enriched_topic, topic_matched_msgs)
-        headline = synthesize_headline_claim(enriched_topic)
-        excerpts = extract_representative_excerpts(topic_matched_msgs)
+        for viewpoint in viewpoints:
+            if viewpoint.is_dominant:
+                narrative_id = f"narrative_{idx:03d}"
+            else:
+                narrative_id = f"narrative_{idx:03d}_{viewpoint.rank}"
 
-        # 6. Audit Attribution
-        audit_rationale: list[str] = [
-            f"Priority/Narrative Signal Score: {priority_score:.4f} ({tier.value.upper()}) | "
-            f"Component attribution: Spread {s_spread:.2f} (w={DEFAULT_SCORING_WEIGHTS['spread']}), "
-            f"Coordination {s_coord:.2f} (w={DEFAULT_SCORING_WEIGHTS['coordination']}), "
-            f"Observed Reach {s_reach:.2f} (w={DEFAULT_SCORING_WEIGHTS['reach']}), "
-            f"Friction {s_friction:.2f} (w={DEFAULT_SCORING_WEIGHTS['friction']})."
-        ]
-        audit_rationale.extend(signal_notes)
+            branch_msgs = viewpoint.messages if viewpoint.messages else topic_matched_msgs
 
-        # Format entities and channels
-        top_entities = [f"{e.category.value}:{e.text}" for e in enriched_topic.entities[:8]]
-        broadcasters = sorted(list(set(enriched_topic.propagation.unique_amplifying_channels)))
-        origins = sorted(list(set(enriched_topic.propagation.unique_origin_channels)))
+            # 1. Batched Sentiment Synthesis over branch messages
+            t_sent_start = time.perf_counter()
+            sentiment_profile = evaluate_cluster_sentiment(
+                messages=branch_msgs,
+                adapter=sentiment_adapter,
+                emoji_polarity_score=enriched_topic.engagement.emoji_polarity_score,
+            )
+            total_sentiment_time += (time.perf_counter() - t_sent_start)
 
-        candidate = NarrativeCandidate(
-            narrative_id=narrative_id,
-            promoted_from_topic_id=enriched_topic.topic_id,
-            headline_claim=headline,
-            priority_signal_score=priority_score,
-            priority_tier=tier,
-            sub_scores=sub_scores,
-            coordination_signals=coord_signals,
-            data_coverage=data_coverage,
-            sentiment_profile=sentiment_profile,
-            key_entities=top_entities,
-            broadcasting_channels=broadcasters,
-            origin_channels=origins,
-            representative_message_excerpts=excerpts,
-            first_observed_at=enriched_topic.temporal.first_published_at,
-            last_observed_at=enriched_topic.temporal.last_published_at,
-            audit_rationale=audit_rationale,
-        )
-        candidates.append(candidate)
+            # 2. Four Sub-Scores in [0.0, 1.0] (Strict frozen 4G formula)
+            s_spread = compute_spread_score(enriched_topic)
+            s_coord = compute_coordination_score(enriched_topic)
+            s_reach = compute_reach_score(enriched_topic)
+            s_friction = compute_friction_score(enriched_topic, sentiment_profile)
+
+            sub_scores = NarrativeSubScores(
+                spread_score=s_spread,
+                coordination_score=s_coord,
+                reach_score=s_reach,
+                friction_score=s_friction,
+            )
+
+            # 3. Composite Priority / Narrative Signal Score
+            priority_score = compute_priority_signal_score(sub_scores, weights=scoring_weights)
+            tier = assign_priority_tier(priority_score)
+
+            # 4. Potential Coordination & Anomaly Signals
+            coord_signals = extract_potential_coordination_signals(enriched_topic)
+            signal_notes = generate_signal_audit_notes(enriched_topic, coord_signals)
+
+            # 5. Evidence Coverage & Deterministic Framing
+            data_coverage = compute_data_coverage(enriched_topic, branch_msgs)
+            headline = synthesize_headline_claim(
+                enriched_topic,
+                stance=viewpoint.stance,
+                subject_context=channel_context,
+            )
+            excerpts = extract_branch_representative_excerpts(branch_msgs)
+
+            # 6. Audit Attribution
+            audit_rationale: list[str] = [
+                f"Priority/Narrative Signal Score: {priority_score:.4f} ({tier.value.upper()}) | "
+                f"Component attribution: Spread {s_spread:.2f} (w={DEFAULT_SCORING_WEIGHTS['spread']}), "
+                f"Coordination {s_coord:.2f} (w={DEFAULT_SCORING_WEIGHTS['coordination']}), "
+                f"Observed Reach {s_reach:.2f} (w={DEFAULT_SCORING_WEIGHTS['reach']}), "
+                f"Friction {s_friction:.2f} (w={DEFAULT_SCORING_WEIGHTS['friction']})."
+            ]
+            audit_rationale.extend(signal_notes)
+
+            # Format entities and channels
+            top_entities = [f"{e.category.value}:{e.text}" for e in enriched_topic.entities[:8]]
+            broadcasters = sorted(list(set(enriched_topic.propagation.unique_amplifying_channels)))
+            origins = sorted(list(set(enriched_topic.propagation.unique_origin_channels)))
+
+            cand = NarrativeCandidate(
+                narrative_id=narrative_id,
+                promoted_from_topic_id=enriched_topic.topic_id,
+                headline_claim=headline,
+                priority_signal_score=priority_score,
+                priority_tier=tier,
+                sub_scores=sub_scores,
+                coordination_signals=coord_signals,
+                data_coverage=data_coverage,
+                sentiment_profile=sentiment_profile,
+                key_entities=top_entities,
+                broadcasting_channels=broadcasters,
+                origin_channels=origins,
+                representative_message_excerpts=excerpts,
+                first_observed_at=enriched_topic.temporal.first_published_at,
+                last_observed_at=enriched_topic.temporal.last_published_at,
+                audit_rationale=audit_rationale,
+                viewpoint_stance=viewpoint.stance,
+                narrative_rank=viewpoint.rank,
+                is_dominant=viewpoint.is_dominant,
+                evidence_strength_score=viewpoint.evidence_strength,
+                sibling_narrative_ids=[],
+            )
+
+            # Synthesize authentic narrative identity
+            name, summary = derive_narrative_identity(cand, enriched_topic, messages=branch_msgs)
+            cand.narrative_name = name
+            cand.narrative_summary = summary
+
+            topic_candidates.append(cand)
+
+        # Link sibling narrative IDs across branches of the same parent trend
+        all_topic_nids = [c.narrative_id for c in topic_candidates]
+        for c in topic_candidates:
+            c.sibling_narrative_ids = [nid for nid in all_topic_nids if nid != c.narrative_id]
+            candidates.append(c)
 
     # Rank candidates by priority signal score descending (highest priority triage first)
     candidates.sort(key=lambda c: c.priority_signal_score, reverse=True)

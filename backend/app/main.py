@@ -21,6 +21,7 @@ logger = logging.getLogger("traject.api")
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Application lifecycle management: initialize in-memory artifact repository on startup."""
     settings = get_settings()
+    # Milestone 4G & 7 Multi-Perspective Narrative Intelligence
     repo = get_artifact_repository()
     
     # Configure logging level

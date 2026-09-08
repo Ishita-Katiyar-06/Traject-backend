@@ -97,6 +97,13 @@ class NarrativeCandidate(BaseModel):
     last_observed_at: datetime
     audit_rationale: list[str] = Field(default_factory=list, description="Audit-ready natural-language factor attributions")
 
+    # Milestone: Multi-Perspective Narrative Intelligence (additive & backward compatible)
+    viewpoint_stance: str | None = Field(default=None, description="Internal viewpoint stance category: supportive, critical, skeptical, informational")
+    narrative_rank: int = Field(default=1, ge=1, description="Evidence-supported rank within the parent trend (1=dominant, 2..N=secondary)")
+    is_dominant: bool = Field(default=True, description="True if this is the dominant observed viewpoint for the parent trend")
+    evidence_strength_score: float | None = Field(default=None, ge=0.0, le=1.0, description="Internal evidence support strength within the parent trend")
+    sibling_narrative_ids: list[str] = Field(default_factory=list, description="IDs of other narrative branches under the same parent trend")
+
 
 class NarrativeAssessmentReport(BaseModel):
     """Complete analytical triage report for an ingested social media dataset."""

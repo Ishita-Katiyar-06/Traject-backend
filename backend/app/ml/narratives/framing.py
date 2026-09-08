@@ -71,11 +71,15 @@ def compute_data_coverage(
     )
 
 
-def synthesize_headline_claim(candidate: EnrichedTopicCandidate) -> str:
+def synthesize_headline_claim(
+    candidate: EnrichedTopicCandidate,
+    stance: str | None = None,
+    subject_context: str | None = None,
+) -> str:
     """Synthesize deterministic, explainable headline framing without generative LLMs.
     
     Structure:
-        "[Key Entities] Dominant c-TF-IDF Action/Topic Keywords"
+        "[Key Entities] Dominant c-TF-IDF Action/Topic Keywords [• Stance Framing]"
     """
     # 1. Prioritize Geopolitical / Org gazetteers, then hashtags, then handles
     geo_org = [
@@ -98,15 +102,32 @@ def synthesize_headline_claim(candidate: EnrichedTopicCandidate) -> str:
 
     if focus_entities:
         entity_prefix = f"[{', '.join(focus_entities[:3])}]"
+    elif subject_context:
+        entity_prefix = f"[{subject_context}]"
     else:
         entity_prefix = f"[{candidate.topic_id}]"
 
-    # 2. Top discriminative c-TF-IDF keywords
+    # 2. Top discriminative c-TF-IDF keywords or stance framing
     keywords = candidate.representative_keywords[:5]
     if keywords:
         kw_str = ", ".join(keywords)
+        if stance == "supportive" and "support" not in kw_str.lower():
+            kw_str = f"{kw_str} • supportive reception"
+        elif stance == "critical" and "critic" not in kw_str.lower():
+            kw_str = f"{kw_str} • critical pushback"
+        elif stance == "skeptical" and "question" not in kw_str.lower():
+            kw_str = f"{kw_str} • skeptical inquiries"
     else:
-        kw_str = "general discourse"
+        if stance == "supportive":
+            kw_str = "supportive commentary and approval"
+        elif stance == "critical":
+            kw_str = "critical pushback and dissenting reactions"
+        elif stance == "skeptical":
+            kw_str = "skeptical inquiry and scrutiny"
+        elif stance == "informational":
+            kw_str = "broadcast updates and reporting"
+        else:
+            kw_str = "monitored discourse updates"
 
     return f"{entity_prefix} {kw_str}"
 
