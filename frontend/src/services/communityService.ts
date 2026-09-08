@@ -51,6 +51,12 @@ const MONITORED_SOURCE_REGISTRY: Record<
     sourceType: 'publisher',
     description: 'International news agency providing breaking news wire dispatches.',
   },
+  traject_test: {
+    displayName: 'Traject Test (Tactical)',
+    domain: 'geopolitics',
+    sourceType: 'independent',
+    description: 'Real-time field broadcast and live simulation testing channel.',
+  },
   Ministry_Of_Defence_Gvt_India: {
     displayName: 'Ministry of Defence (India)',
     domain: 'india_defence',

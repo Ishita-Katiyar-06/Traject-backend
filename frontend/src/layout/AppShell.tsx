@@ -7,6 +7,7 @@ import { PageContainer } from './PageContainer';
 import { MobileNavigation } from './MobileNavigation';
 import { GlobalSearch } from '../components/navigation/GlobalSearch';
 import { useNavigation } from '../contexts/NavigationContext';
+import { LiveStreamProvider } from '../contexts/LiveStreamContext';
 import { pageEnter } from '../utils/motion';
 
 export const AppShell: React.FC = () => {
@@ -14,7 +15,8 @@ export const AppShell: React.FC = () => {
   const location = useLocation();
 
   return (
-    <div className="h-screen w-full bg-bg text-text-primary flex font-sans antialiased overflow-hidden">
+    <LiveStreamProvider>
+      <div className="h-screen w-full bg-bg text-text-primary flex font-sans antialiased overflow-hidden">
       {/* Persistent Left Sidebar (Desktop / Tablet) - fixed to viewport height, never moves on scroll */}
       <Sidebar />
 
@@ -47,5 +49,6 @@ export const AppShell: React.FC = () => {
       {/* Compact Mobile Navigation (Bottom Bar + More Sheet) */}
       <MobileNavigation />
     </div>
+  </LiveStreamProvider>
   );
 };

@@ -50,8 +50,16 @@ export const AlertsPage: React.FC = () => {
   useEffect(() => {
     loadAlerts();
 
-    const handleSync = () => {
-      loadAlerts();
+    const handleSync = (e: Event) => {
+      const customEvt = e as CustomEvent<AlertItem | undefined>;
+      if (customEvt.detail && customEvt.detail.id) {
+        setAlerts((prev) => {
+          if (prev.some((a) => a.id === customEvt.detail!.id)) return prev;
+          return [customEvt.detail!, ...prev];
+        });
+      } else {
+        loadAlerts();
+      }
     };
 
     window.addEventListener(ALERTS_CHANGED_EVENT, handleSync);

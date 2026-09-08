@@ -35,6 +35,7 @@ import {
   badgeSettle,
   listItemEnter,
 } from '../../utils/motion';
+import { useLiveStream } from '../../contexts/LiveStreamContext';
 
 export const OverviewPage: React.FC = () => {
   const navigate = useNavigate();
@@ -47,6 +48,8 @@ export const OverviewPage: React.FC = () => {
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [isMetricsOpen, setIsMetricsOpen] = useState(false);
+
+  const { totalCorpusCount, liveMessages, connectionStatus } = useLiveStream();
 
   const loadData = async (isInitial = false) => {
     if (isInitial) {
@@ -102,6 +105,15 @@ export const OverviewPage: React.FC = () => {
   const summary = overviewData?.summary_counts;
   const sentiment = overviewData?.sentiment_overview;
   const execution = overviewData?.pipeline_execution;
+
+  // Derive dynamic real-time corpus counts
+  const rawCorpusCount = summary?.total_messages ?? pipelineStatus?.cumulative_record_count ?? 0;
+  const displayTotalMessages = totalCorpusCount !== null && totalCorpusCount > 0
+    ? Math.max(totalCorpusCount, rawCorpusCount)
+    : rawCorpusCount;
+  const liveDelta = rawCorpusCount > 0 && displayTotalMessages > rawCorpusCount
+    ? displayTotalMessages - rawCorpusCount
+    : liveMessages.length;
 
   return (
     <div className="space-y-6 sm:space-y-8 font-sans pb-10">
@@ -178,20 +190,29 @@ export const OverviewPage: React.FC = () => {
               </span>
             </>
           )}
-
-          {pipelineStatus?.cumulative_record_count && (
+          <span className="text-slate-300 dark:text-slate-700">•</span>
+          <span>
+            Corpus:{' '}
+            <span className="font-mono font-medium text-[#111727] dark:text-slate-200">
+              <AnimatedNumber value={displayTotalMessages > 0 ? displayTotalMessages : (pipelineStatus?.cumulative_record_count ?? 0)} /> msgs
+            </span>
+          </span>
+          {liveMessages.length > 0 ? (
             <>
               <span className="text-slate-300 dark:text-slate-700">•</span>
               <span>
-                Corpus:{' '}
-                <span className="font-mono font-medium text-[#111727] dark:text-slate-200">
-                  <AnimatedNumber value={pipelineStatus.cumulative_record_count} /> msgs
+                Last Ingested:{' '}
+                <span className="font-mono text-[12px] text-[#475569] dark:text-slate-300">
+                  {new Date(liveMessages[0].timestamp).toLocaleTimeString()}
                 </span>
+                {liveDelta > 0 && (
+                  <span className="ml-1 text-[11px] font-mono font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-900/50">
+                    +{liveDelta} live
+                  </span>
+                )}
               </span>
             </>
-          )}
-
-          {pipelineStatus?.last_collection_run && (
+          ) : pipelineStatus?.last_collection_run ? (
             <>
               <span className="text-slate-300 dark:text-slate-700">•</span>
               <span className="flex items-center gap-1.5">
@@ -212,8 +233,7 @@ export const OverviewPage: React.FC = () => {
                 )}
               </span>
             </>
-          )}
-
+          ) : null}
           {execution && (
             <>
               <span className="text-slate-300 dark:text-slate-700">•</span>
@@ -238,9 +258,23 @@ export const OverviewPage: React.FC = () => {
             </>
           )}
         </div>
-
         <div className="flex items-center gap-2 font-semibold shrink-0">
-          {pipelineStatus?.analytics_current === false ? (
+          {connectionStatus === 'connected' ? (
+            <div className="flex items-center gap-1.5">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <span className="text-emerald-700 dark:text-emerald-400 font-mono text-[11px] uppercase tracking-wider font-bold">
+                MTProto Stream Active
+              </span>
+              {liveMessages.length > 0 && (
+                <span className="text-[10px] font-mono font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/80 px-1.5 py-0.5 rounded">
+                  {liveMessages.length} msgs
+                </span>
+              )}
+            </div>
+          ) : pipelineStatus?.analytics_current === false ? (
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
               <span
@@ -285,15 +319,33 @@ export const OverviewPage: React.FC = () => {
             </div>
           </div>
           <div className="mt-5">
-            <div className="text-[34px] sm:text-[36px] font-bold text-[#111727] dark:text-slate-100 font-mono tracking-tight leading-none">
+            <div className="text-[34px] sm:text-[36px] font-bold text-[#111727] dark:text-slate-100 font-mono tracking-tight leading-none flex items-baseline gap-2 flex-wrap">
               {isLoading ? (
                 <div className="h-9 w-32 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
               ) : (
-                <AnimatedNumber value={summary?.total_messages ?? 0} />
+                <AnimatedNumber value={displayTotalMessages > 0 ? displayTotalMessages : (summary?.total_messages ?? 0)} />
+              )}
+              {liveDelta > 0 && (
+                <span className="inline-flex items-center gap-1 text-[12px] font-mono font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-full animate-pulse">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  +{liveDelta} live
+                </span>
               )}
             </div>
-            <div className="text-[12px] text-[#8591A5] dark:text-slate-400 font-medium mt-2">
-              Noise filtered: <span className="font-mono text-[#475569] dark:text-slate-300 font-semibold"><AnimatedNumber value={summary?.noise_messages ?? 0} /></span> items
+            <div className="text-[12px] text-[#8591A5] dark:text-slate-400 font-medium mt-2 flex items-center justify-between">
+              <span>
+                Noise filtered:{' '}
+                <span className="font-mono text-[#475569] dark:text-slate-300 font-semibold">
+                  <AnimatedNumber value={summary?.noise_messages ?? 0} />
+                </span>{' '}
+                items
+              </span>
+              {connectionStatus === 'connected' && (
+                <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  MTProto Live
+                </span>
+              )}
             </div>
           </div>
         </motion.div>
@@ -402,6 +454,77 @@ export const OverviewPage: React.FC = () => {
           </div>
         </motion.div>
       </motion.section>
+
+      {/* Real-Time Live Ingestion Feed */}
+      <section className="rounded-[20px] bg-white dark:bg-[#171C22] border border-[rgba(228,233,245,0.85)] dark:border-[#2B323A] p-6 shadow-dashboard space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#2B323A] pb-3 flex-wrap gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
+            </div>
+            <div>
+              <h3 className="text-[16px] font-bold text-[#111727] dark:text-slate-100 flex items-center gap-2 flex-wrap">
+                Real-Time Telegram Ingestion Stream
+                <span className="text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900/60 px-2 py-0.5 rounded-full">
+                  {displayTotalMessages > 0 ? displayTotalMessages.toLocaleString() : '...'} msgs canonical
+                </span>
+              </h3>
+              <p className="text-[12px] text-[#8591A5] dark:text-slate-400">
+                Live MTProto push feed from monitored Telegram sources including <span className="font-mono text-[#2F65F6] dark:text-[#93C5FD]">@traject_test</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate('/explorer')}
+              className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#2F65F6] dark:text-[#93C5FD] hover:underline"
+            >
+              <span>Explore all in Data Explorer</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {liveMessages.length === 0 ? (
+          <div className="py-6 px-4 rounded-[14px] bg-slate-50/70 dark:bg-[#12161C] border border-slate-100 dark:border-[#252B32] text-center text-[13px] text-[#64748B] dark:text-slate-400 flex items-center justify-center gap-2">
+            <Radio className="w-4 h-4 text-emerald-500 animate-pulse" />
+            <span>Listening to live Telegram broadcast socket. New messages from @traject_test will appear here instantly.</span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
+            {liveMessages.slice(0, 6).map((msg) => (
+              <div
+                key={msg.message_id}
+                onClick={() => navigate(`/explorer?keyword=${encodeURIComponent(msg.message_id)}`)}
+                className="p-3.5 rounded-[14px] bg-slate-50/60 dark:bg-[#12161C] border border-slate-200/70 dark:border-[#2B323A] hover:border-[#2F65F6] dark:hover:border-blue-500 transition-all cursor-pointer flex flex-col justify-between group"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span className="text-[12px] font-bold text-[#2F65F6] dark:text-[#93C5FD] font-mono truncate max-w-[160px]">
+                      {msg.channel_username ? `@${msg.channel_username}` : msg.channel_title}
+                    </span>
+                    <span className="text-[11px] font-mono text-[#8591A5] dark:text-slate-400 shrink-0">
+                      {new Date(msg.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  <p className="text-[12px] text-[#334155] dark:text-slate-300 line-clamp-2 leading-relaxed font-sans">
+                    {msg.text || '<media attachment>'}
+                  </p>
+                </div>
+                <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-[#252B32] flex items-center justify-between text-[11px] font-mono text-[#8591A5] dark:text-slate-400">
+                  <span>{msg.views} views • {msg.forwards} fwd</span>
+                  <span className="text-[#2F65F6] dark:text-[#93C5FD] group-hover:underline flex items-center gap-0.5">
+                    Inspect <ArrowRight className="w-3 h-3" />
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* 4. Priority Tier Distribution & Sentiment Profiling */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">

@@ -78,6 +78,10 @@ class ArtifactRepository:
         self._narrative_validation_by_id: dict[str, Any] = {}
         self._sentiment_by_cache_key: dict[str, str] = {}
         
+        # Live streaming tracking
+        self._last_live_ingestion_time: str | None = None
+        self._live_messages_count: int = 0
+        
         # Metrics & Summary state
         self._metrics: PipelineStageMetrics | None = None
         self._topic_result: TopicDiscoveryResult | None = None
@@ -194,6 +198,17 @@ class ArtifactRepository:
                 except Exception as err:
                     logger.warning("Could not index sentiment cache from %s: %s", db_file, err)
 
+    def append_message(self, message: CanonicalMessage) -> bool:
+        """Thread-safe append of a new canonical message into active in-memory repository indices."""
+        cid = message.canonical_id
+        if cid in self._messages_by_id:
+            return False
+        self._messages_by_id[cid] = message
+        self._messages.append(message)
+        self._live_messages_count += 1
+        self._last_live_ingestion_time = message.published_at.isoformat()
+        logger.debug("Appended live message %s (total: %d)", cid, len(self._messages))
+        return True
 
     def _resolve_parquet_path(self, override: Path | str | None) -> Path | None:
         if override:
@@ -1181,7 +1196,7 @@ class ArtifactRepository:
                 failed_source_count = manifest_data.get("sources_failed")
                 last_new_record_count = manifest_data.get("total_new_canonical_persisted")
                 if manifest_data.get("cumulative_corpus_count"):
-                    cumulative_record_count = manifest_data.get("cumulative_corpus_count")
+                    cumulative_record_count = max(len(self._messages), int(manifest_data.get("cumulative_corpus_count") or 0))
                 corpus_snapshot_id = manifest_data.get("corpus_snapshot_id")
             except Exception as e:
                 logger.warning("Failed reading incremental manifest for pipeline status: %s", e)
@@ -1213,6 +1228,15 @@ class ArtifactRepository:
 
         if self._messages and not cumulative_record_count:
             cumulative_record_count = len(self._messages)
+
+        # Reflect live real-time ingestion in pipeline collection provenance
+        if self._last_live_ingestion_time:
+            last_collection_run = self._last_live_ingestion_time
+            last_successful_collection = self._last_live_ingestion_time
+            collection_mode = "realtime_streaming"
+            if self._live_messages_count > 0:
+                last_new_record_count = (last_new_record_count or 0) + self._live_messages_count
+            cumulative_record_count = max(cumulative_record_count or 0, len(self._messages))
 
         # Milestone 6E: Stale Analytics Detection
         analytics_current = True

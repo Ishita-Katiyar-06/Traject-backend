@@ -3,6 +3,8 @@ import { useLocation } from 'react-router-dom';
 import { Search, ChevronRight } from 'lucide-react';
 import { useNavigation } from '../contexts/NavigationContext';
 import { SystemStatus } from '../components/status/SystemStatus';
+import { LiveStreamBadge } from '../components/status/LiveStreamBadge';
+import { LiveAlertToast } from '../components/feedback/LiveAlertToast';
 import { UserMenu } from '../components/navigation/UserMenu';
 
 export const Header: React.FC = () => {
@@ -91,10 +93,18 @@ export const Header: React.FC = () => {
 
       {/* Right Area: System Health, Search Palette, User Menu */}
       <div className="flex items-center gap-3">
+        {/* Real-time WebSocket Stream Beacon */}
+        <div className="flex items-center">
+          <LiveStreamBadge />
+        </div>
+
         {/* Header Operational System Health Probe */}
         <div className="hidden md:flex items-center">
           <SystemStatus />
         </div>
+
+        {/* Floating Real-time Alert Toast Notifications */}
+        <LiveAlertToast />
 
         {/* Workstation Command Palette Trigger */}
         <button

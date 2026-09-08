@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 import logging
@@ -37,8 +38,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     else:
         logger.warning("Backend started in degraded mode (analytics artifacts not loaded).")
     
+    # Initialize and start Real-Time Telegram Collector & In-flight Alerting
+    from app.services.live_collector_service import get_live_collector_service
+    collector_service = get_live_collector_service()
+    collector_task = asyncio.create_task(collector_service.start())
+
     yield
+
     logger.info("Shutting down TRAJECT Backend Analytics API.")
+    await collector_service.stop()
+    if not collector_task.done():
+        collector_task.cancel()
 
 
 def create_app(settings: APISettings | None = None) -> FastAPI:
