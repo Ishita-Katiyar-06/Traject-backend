@@ -15,10 +15,13 @@ import {
   formatPriorityScore,
 } from '../src/utils/telemetryFormatters.ts';
 
-// 2. Real telemetry API client
 import { telemetryApi } from '../src/services/telemetryApi.ts';
 import { apiClient, ApiError } from '../src/services/apiClient.ts';
 import { getNarrativeDisplayName } from '../src/utils/narrativeIdentity.ts';
+import {
+  resolveTelegramMessageUrl,
+  resolveTelegramChannelUrl,
+} from '../src/utils/channelRegistry.ts';
 
 test('1. Correct API endpoints and query string builders', () => {
   const qs1 = apiClient.buildQueryString({
@@ -133,13 +136,14 @@ test('10. Static audit: verify zero mock imports in production pages', () => {
     'pages/Overview/OverviewPage.tsx',
     'pages/Narratives/NarrativesPage.tsx',
     'pages/Narratives/NarrativeDetailPage.tsx',
-    'pages/Topics/TopicsPage.tsx',
-    'pages/Topics/TopicDetailPage.tsx',
+    'pages/Trends/TrendsPage.tsx',
+    'pages/Trends/TrendDetailPage.tsx',
     'pages/Explorer/ExplorerPage.tsx',
     'components/narratives/NarrativeTable.tsx',
     'components/narratives/NarrativeRow.tsx',
-    'components/topics/TopicTable.tsx',
-    'components/topics/TopicRow.tsx',
+    'components/trends/TrendTable.tsx',
+    'components/trends/TrendRow.tsx',
+    'components/trends/TrendNodeGraph.tsx',
     'components/explorer/ExplorerTable.tsx',
     'components/explorer/ExplorerDetailModal.tsx',
   ];
@@ -345,4 +349,31 @@ test('16. Community narrative IDs are strictly formatted as uppercase NARRATIVE_
   assert.equal(displayId, 'NARRATIVE_053');
   assert.match(displayId, /^NARRATIVE_\d+$/);
 });
+
+test('17. Topology Graph: resolveTelegramMessageUrl accurately constructs direct Telegram message redirects', () => {
+  // Test case A: Known registered channel (BNO News - 1241816060 -> @bnonews)
+  const bnoUrl = resolveTelegramMessageUrl('telegram:1241816060:40523');
+  assert.equal(bnoUrl, 'https://t.me/bnonews/40523');
+
+  // Test case B: Author username in metadata takes explicit precedence
+  const customMetaUrl = resolveTelegramMessageUrl('telegram:1317428262:83849', {
+    author_username: 'BBCWorld',
+  });
+  assert.equal(customMetaUrl, 'https://t.me/BBCWorld/83849');
+
+  // Test case C: Precomputed telegram_url in metadata
+  const precomputedUrl = resolveTelegramMessageUrl('telegram:999:123', {
+    telegram_url: 'https://t.me/bnonews/123',
+  });
+  assert.equal(precomputedUrl, 'https://t.me/bnonews/123');
+
+  // Test case D: Private / numeric channel fallback without username
+  const numericUrl = resolveTelegramMessageUrl('telegram:-10099887766:54321');
+  assert.equal(numericUrl, 'https://t.me/c/99887766/54321');
+
+  // Test case E: Channel URL resolution
+  const channelUrl = resolveTelegramChannelUrl('1241816060');
+  assert.equal(channelUrl, 'https://t.me/bnonews');
+});
+
 

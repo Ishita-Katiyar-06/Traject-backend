@@ -898,6 +898,14 @@ class ArtifactRepository:
         for aid, cinfo in channel_stats.items():
             cnode_id = f"channel:{aid}"
             if cnode_id not in seen_node_ids:
+                channel_url = None
+                if cinfo.get("author_username"):
+                    clean_u = cinfo["author_username"].lstrip("@").strip()
+                    channel_url = f"https://t.me/{clean_u}"
+                elif aid:
+                    clean_aid = str(aid).removeprefix("-100").removeprefix("-").strip()
+                    channel_url = f"https://t.me/c/{clean_aid}"
+
                 nodes.append(
                     GraphNode(
                         id=cnode_id,
@@ -906,6 +914,7 @@ class ArtifactRepository:
                         metadata={
                             "author_id": aid,
                             "author_username": cinfo["author_username"],
+                            "telegram_url": channel_url,
                             "messages_in_trend": cinfo["message_count"],
                             "total_views": cinfo["views_count"],
                         },
@@ -1000,6 +1009,21 @@ class ArtifactRepository:
                 mnode_id = f"message:{msg.canonical_id}"
                 if mnode_id not in seen_node_ids:
                     preview = (msg.text_content[:45] + "...") if len(msg.text_content) > 45 else msg.text_content
+                    # Construct exact direct Telegram message redirect URL
+                    telegram_url = None
+                    if msg.canonical_id.startswith("telegram:"):
+                        parts = msg.canonical_id.split(":")
+                        if len(parts) >= 3:
+                            chat_id = parts[1]
+                            msg_id = parts[2]
+                            if msg.author_username:
+                                clean_uname = msg.author_username.lstrip("@").strip()
+                                telegram_url = f"https://t.me/{clean_uname}/{msg_id}"
+                            else:
+                                clean_chat = chat_id.removeprefix("-100").removeprefix("-").strip()
+                                telegram_url = f"https://t.me/c/{clean_chat}/{msg_id}"
+
+                    platform_val = msg.platform.value if hasattr(msg.platform, "value") else str(msg.platform)
                     nodes.append(
                         GraphNode(
                             id=mnode_id,
@@ -1007,6 +1031,12 @@ class ArtifactRepository:
                             label=preview or msg.canonical_id,
                             metadata={
                                 "canonical_id": msg.canonical_id,
+                                "native_id": msg.native_id,
+                                "platform": platform_val,
+                                "author_username": msg.author_username,
+                                "channel_title": msg.channel_title,
+                                "telegram_url": telegram_url,
+                                "text_content": msg.text_content,
                                 "published_at": msg.published_at.isoformat(),
                                 "views_count": msg.views_count,
                             },

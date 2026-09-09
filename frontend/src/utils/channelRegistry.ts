@@ -174,3 +174,109 @@ export function resolveChannelInfo(rawId: string): RegisteredChannel {
     platform: 'telegram',
   };
 }
+
+/**
+ * Resolves the exact direct Telegram URL for a message from its canonical ID and optional metadata.
+ * 
+ * Priority resolution:
+ * 1. Direct `telegram_url` already present in metadata
+ * 2. Public handle in metadata (`author_username`) + message ID
+ * 3. Registered channel handle from KNOWN_TELEGRAM_CHANNELS + message ID
+ * 4. Deep link format: `https://t.me/c/{clean_chat_id}/{message_id}`
+ */
+export function resolveTelegramMessageUrl(
+  canonicalId?: string,
+  metadata?: Record<string, unknown>
+): string | null {
+  // 1. Direct telegram_url in metadata
+  if (
+    metadata?.telegram_url &&
+    typeof metadata.telegram_url === 'string' &&
+    metadata.telegram_url.startsWith('http')
+  ) {
+    return metadata.telegram_url;
+  }
+
+  // 2. Extract from canonical_id or raw ID
+  const rawId = (canonicalId || (metadata?.canonical_id as string) || '').trim();
+  const cleanId = rawId.replace(/^message:/, '');
+  const parts = cleanId.split(':');
+
+  if (parts.length >= 3 && parts[0] === 'telegram') {
+    const chatId = parts[1];
+    const messageId = parts[2];
+
+    // Check author_username in metadata
+    if (metadata?.author_username && typeof metadata.author_username === 'string') {
+      const handle = metadata.author_username.replace(/^@/, '').trim();
+      if (handle) {
+        return `https://t.me/${handle}/${messageId}`;
+      }
+    }
+
+    // Check known channel registry
+    const channelInfo = resolveChannelInfo(chatId);
+    if (
+      channelInfo &&
+      channelInfo.handle &&
+      channelInfo.handle.startsWith('@') &&
+      !channelInfo.title.startsWith('Feed @')
+    ) {
+      const handle = channelInfo.handle.replace(/^@/, '').trim();
+      if (handle) {
+        return `https://t.me/${handle}/${messageId}`;
+      }
+    }
+
+    // Fallback to internal/supergroup link
+    const cleanChat = chatId.replace(/^-100/, '').replace(/^-/, '').trim();
+    if (cleanChat && messageId) {
+      return `https://t.me/c/${cleanChat}/${messageId}`;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Resolves the direct Telegram URL for a channel/source.
+ */
+export function resolveTelegramChannelUrl(
+  channelId?: string,
+  metadata?: Record<string, unknown>
+): string | null {
+  if (
+    metadata?.telegram_url &&
+    typeof metadata.telegram_url === 'string' &&
+    metadata.telegram_url.startsWith('http')
+  ) {
+    return metadata.telegram_url;
+  }
+
+  const rawId = (channelId || (metadata?.author_id as string) || '').trim();
+  const cleanId = rawId.replace(/^channel:/, '').replace(/^telegram:/, '');
+
+  if (metadata?.author_username && typeof metadata.author_username === 'string') {
+    const handle = metadata.author_username.replace(/^@/, '').trim();
+    if (handle) return `https://t.me/${handle}`;
+  }
+
+  const channelInfo = resolveChannelInfo(cleanId);
+  if (
+    channelInfo &&
+    channelInfo.handle &&
+    channelInfo.handle.startsWith('@') &&
+    !channelInfo.title.startsWith('Feed @')
+  ) {
+    const handle = channelInfo.handle.replace(/^@/, '').trim();
+    if (handle) return `https://t.me/${handle}`;
+  }
+
+  const cleanChat = cleanId.replace(/^-100/, '').replace(/^-/, '').trim();
+  if (cleanChat && /^\d+$/.test(cleanChat)) {
+    return `https://t.me/c/${cleanChat}`;
+  }
+
+  return null;
+}
+

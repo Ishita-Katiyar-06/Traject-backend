@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ReactFlow,
   Background,
@@ -25,12 +26,21 @@ import {
   Info,
   TrendingUp,
   MessageSquare,
+  Send,
+  ExternalLink,
+  Copy,
+  Check,
+  Search,
 } from 'lucide-react';
 import { telemetryApi } from '../../services/telemetryApi';
 import { TrendGraphData, GraphNode } from '../../types/api';
 import { nodeTypes } from '../ui/graph/CustomNodes';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Button } from '../ui/Button';
+import {
+  resolveTelegramMessageUrl,
+  resolveTelegramChannelUrl,
+} from '../../utils/channelRegistry';
 
 export interface TrendNodeGraphProps {
   trendId: string;
@@ -42,6 +52,7 @@ export const TrendNodeGraph: React.FC<TrendNodeGraphProps> = ({
   className = '',
 }) => {
   const { isDark } = useTheme();
+  const navigate = useNavigate();
 
   const [graphData, setGraphData] = useState<TrendGraphData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,9 +60,18 @@ export const TrendNodeGraph: React.FC<TrendNodeGraphProps> = ({
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'channel' | 'entity' | 'narrative' | 'message'>('all');
+  const [isCopied, setIsCopied] = useState(false);
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+
+  const handleCopyLink = useCallback((url: string) => {
+    if (!url) return;
+    navigator.clipboard.writeText(url).then(() => {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    });
+  }, []);
 
   const fetchGraph = useCallback(async () => {
     if (!trendId) return;
@@ -110,6 +130,9 @@ export const TrendNodeGraph: React.FC<TrendNodeGraphProps> = ({
 
     // 1. Channels (Left Column)
     channels.forEach((n, idx) => {
+      const telegramUrl =
+        (n.metadata?.telegram_url as string) ||
+        resolveTelegramChannelUrl(n.id, n.metadata);
       flowNodes.push({
         id: n.id,
         type: 'channel',
@@ -119,6 +142,7 @@ export const TrendNodeGraph: React.FC<TrendNodeGraphProps> = ({
           channelTitle: n.label,
           platform: 'telegram',
           role: 'origin',
+          telegramUrl,
           messageCount: (n.metadata?.message_count as number) || undefined,
           ...n.metadata,
         },
@@ -181,13 +205,20 @@ export const TrendNodeGraph: React.FC<TrendNodeGraphProps> = ({
 
     // 5. Evidence Messages (Bottom cluster)
     messages.forEach((n, idx) => {
+      const canonicalId = (n.metadata?.canonical_id as string) || n.id.replace(/^message:/, '');
+      const telegramUrl =
+        (n.metadata?.telegram_url as string) ||
+        resolveTelegramMessageUrl(canonicalId, n.metadata);
       flowNodes.push({
         id: n.id,
         type: 'message',
         position: { x: 530 + (idx % 2 === 0 ? -110 : 110), y: 350 + Math.floor(idx / 2) * 75 },
         data: {
           messageId: n.id.replace(/^message:/, ''),
-          channelName: (n.metadata?.channel as string) || undefined,
+          canonicalId,
+          channelName: (n.metadata?.channel_title as string) || (n.metadata?.channel as string) || undefined,
+          telegramUrl,
+          textPreview: (n.metadata?.text_content as string) || n.label,
           ...n.metadata,
         },
       });
@@ -256,7 +287,35 @@ export const TrendNodeGraph: React.FC<TrendNodeGraphProps> = ({
       if (!graphData) return;
       const raw = graphData.nodes.find((n) => n.id === node.id);
       if (raw) {
+        setIsCopied(false);
         setSelectedNode(raw);
+      }
+    },
+    [graphData]
+  );
+
+  // Direct double-click redirect to external source (e.g. Telegram message or channel)
+  const handleNodeDoubleClick: NodeMouseHandler = useCallback(
+    (_, node) => {
+      if (!graphData) return;
+      const raw = graphData.nodes.find((n) => n.id === node.id);
+      if (!raw) return;
+
+      if (raw.type === 'message') {
+        const canonicalId = (raw.metadata?.canonical_id as string) || raw.id.replace(/^message:/, '');
+        const url =
+          (raw.metadata?.telegram_url as string) ||
+          resolveTelegramMessageUrl(canonicalId, raw.metadata);
+        if (url) {
+          window.open(url, '_blank', 'noopener,noreferrer');
+        }
+      } else if (raw.type === 'channel') {
+        const url =
+          (raw.metadata?.telegram_url as string) ||
+          resolveTelegramChannelUrl(raw.id, raw.metadata);
+        if (url) {
+          window.open(url, '_blank', 'noopener,noreferrer');
+        }
       }
     },
     [graphData]
@@ -264,6 +323,7 @@ export const TrendNodeGraph: React.FC<TrendNodeGraphProps> = ({
 
   const handlePaneClick = useCallback(() => {
     setSelectedNode(null);
+    setIsCopied(false);
   }, []);
 
   // Relationship counts for filter badges
@@ -435,6 +495,7 @@ export const TrendNodeGraph: React.FC<TrendNodeGraphProps> = ({
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onNodeClick={handleNodeClick}
+          onNodeDoubleClick={handleNodeDoubleClick}
           onPaneClick={handlePaneClick}
           fitView={true}
           fitViewOptions={{ padding: 0.2 }}
@@ -474,60 +535,148 @@ export const TrendNodeGraph: React.FC<TrendNodeGraphProps> = ({
         </ReactFlow>
 
         {/* Floating Node Inspector Drawer */}
-        {selectedNode && (
-          <div className="absolute top-4 right-4 z-40 w-72 max-w-[calc(100%-2rem)] rounded-[18px] bg-white/95 dark:bg-[#1A2027]/95 backdrop-blur-md border border-[rgba(228,233,245,0.9)] dark:border-[#2E3743] shadow-lg p-4 space-y-3 transition-all animate-in fade-in slide-in-from-top-2 duration-150">
-            <div className="flex items-start justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-              <div className="flex items-center gap-2 min-w-0">
-                {selectedNode.type === 'trend' && <TrendingUp className="w-4 h-4 text-[#2F65F6] shrink-0" />}
-                {selectedNode.type === 'channel' && <Share2 className="w-4 h-4 text-emerald-600 shrink-0" />}
-                {selectedNode.type === 'narrative' && <GitBranch className="w-4 h-4 text-rose-500 shrink-0" />}
-                {selectedNode.type === 'entity' && <Globe className="w-4 h-4 text-purple-600 shrink-0" />}
-                {selectedNode.type === 'message' && <MessageSquare className="w-4 h-4 text-blue-500 shrink-0" />}
-                <span className="font-bold text-[13px] text-[#111727] dark:text-slate-100 truncate">
-                  {selectedNode.label}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedNode(null)}
-                className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
+        {selectedNode && (() => {
+          const isMessage = selectedNode.type === 'message';
+          const isChannel = selectedNode.type === 'channel';
 
-            <div className="space-y-1.5 text-[12px] font-sans">
-              <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-                <span>Node Type:</span>
-                <span className="font-mono font-bold uppercase text-[#111727] dark:text-slate-200 text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800">
-                  {selectedNode.type}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-                <span>Node ID:</span>
-                <span className="font-mono text-[11px] text-[#2F65F6] dark:text-blue-400 truncate max-w-[140px]">
-                  {selectedNode.id}
-                </span>
-              </div>
+          const canonicalId =
+            (selectedNode.metadata?.canonical_id as string) ||
+            selectedNode.id.replace(/^message:/, '');
 
-              {selectedNode.metadata && Object.keys(selectedNode.metadata).length > 0 && (
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1">
-                  <span className="text-[10px] font-mono uppercase font-bold text-slate-400 tracking-wider">
-                    Relationship Metadata
+          const telegramUrl = isMessage
+            ? (selectedNode.metadata?.telegram_url as string) ||
+              resolveTelegramMessageUrl(canonicalId, selectedNode.metadata)
+            : isChannel
+            ? (selectedNode.metadata?.telegram_url as string) ||
+              resolveTelegramChannelUrl(selectedNode.id, selectedNode.metadata)
+            : null;
+
+          const textContent = (selectedNode.metadata?.text_content as string) || '';
+
+          return (
+            <div className="absolute top-4 right-4 z-40 w-80 max-w-[calc(100%-2rem)] rounded-[18px] bg-white/95 dark:bg-[#1A2027]/95 backdrop-blur-md border border-[rgba(228,233,245,0.9)] dark:border-[#2E3743] shadow-xl p-4 space-y-2.5 transition-all animate-in fade-in slide-in-from-top-2 duration-150 font-sans">
+              <div className="flex items-start justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  {selectedNode.type === 'trend' && <TrendingUp className="w-4 h-4 text-[#2F65F6] shrink-0" />}
+                  {selectedNode.type === 'channel' && <Share2 className="w-4 h-4 text-emerald-600 shrink-0" />}
+                  {selectedNode.type === 'narrative' && <GitBranch className="w-4 h-4 text-rose-500 shrink-0" />}
+                  {selectedNode.type === 'entity' && <Globe className="w-4 h-4 text-purple-600 shrink-0" />}
+                  {selectedNode.type === 'message' && <MessageSquare className="w-4 h-4 text-blue-500 shrink-0" />}
+                  <span className="font-bold text-[13px] text-[#111727] dark:text-slate-100 truncate" title={selectedNode.label}>
+                    {selectedNode.label}
                   </span>
-                  {Object.entries(selectedNode.metadata).slice(0, 5).map(([k, v]) => (
-                    <div key={k} className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-500 capitalize">{k.replace(/_/g, ' ')}:</span>
-                      <span className="font-mono font-medium text-[#111727] dark:text-slate-200 truncate max-w-[140px]">
-                        {typeof v === 'number' ? v.toLocaleString() : String(v)}
-                      </span>
-                    </div>
-                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedNode(null)}
+                  className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Message text excerpt */}
+              {isMessage && textContent && (
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#12161C] border border-slate-100 dark:border-slate-800/80 text-[11.5px] text-slate-700 dark:text-slate-300 italic leading-snug line-clamp-2">
+                  "{textContent}"
                 </div>
               )}
+
+              {/* DIRECT TELEGRAM REDIRECT OPTION */}
+              {telegramUrl && (
+                <div className="space-y-2 p-2.5 rounded-xl bg-gradient-to-b from-blue-50/70 to-blue-50/30 dark:from-blue-950/40 dark:to-blue-950/15 border border-blue-200/70 dark:border-blue-900/40">
+                  <div className="flex items-center justify-between text-[10px] font-mono uppercase font-bold text-blue-700 dark:text-blue-300">
+                    <span className="flex items-center gap-1">
+                      <Send className="w-3 h-3 text-[#2F65F6]" />
+                      {isMessage ? 'Telegram Message' : 'Telegram Channel'}
+                    </span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-100/90 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 font-bold">
+                      EXACT LINK
+                    </span>
+                  </div>
+
+                  <a
+                    href={telegramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-xl bg-[#2F65F6] hover:bg-[#2452D6] active:scale-[0.99] text-white text-[12px] font-semibold shadow-sm hover:shadow transition-all group cursor-pointer"
+                  >
+                    <Send className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    <span>{isMessage ? 'Redirect to Telegram Message' : 'Open Channel in Telegram'}</span>
+                    <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                  </a>
+
+                  <div className="flex items-center gap-2 pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => handleCopyLink(telegramUrl)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-white dark:bg-[#1E252E] hover:bg-slate-50 dark:hover:bg-[#252E3A] border border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 text-[11px] font-medium transition-colors cursor-pointer"
+                    >
+                      {isCopied ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-500" />
+                          <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Copied Link!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3 text-slate-400" />
+                          <span>Copy Link</span>
+                        </>
+                      )}
+                    </button>
+
+                    {isMessage && (
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/explorer?search=${encodeURIComponent(canonicalId)}`)}
+                        title="Inspect full canonical record in Data Explorer"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-white dark:bg-[#1E252E] hover:bg-slate-50 dark:hover:bg-[#252E3A] border border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 text-[11px] font-medium transition-colors cursor-pointer"
+                      >
+                        <Search className="w-3 h-3 text-slate-400" />
+                        <span>Explorer</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Node Details & Metadata */}
+              <div className="space-y-1 text-[12px] font-sans">
+                <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+                  <span>Node Type:</span>
+                  <span className="font-mono font-bold uppercase text-[#111727] dark:text-slate-200 text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800">
+                    {selectedNode.type}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+                  <span>Node ID:</span>
+                  <span className="font-mono text-[11px] text-[#2F65F6] dark:text-blue-400 truncate max-w-[140px]" title={selectedNode.id}>
+                    {selectedNode.id}
+                  </span>
+                </div>
+
+                {selectedNode.metadata && Object.keys(selectedNode.metadata).length > 0 && (
+                  <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800 space-y-1">
+                    <span className="text-[10px] font-mono uppercase font-bold text-slate-400 tracking-wider">
+                      Relationship Metadata
+                    </span>
+                    {Object.entries(selectedNode.metadata)
+                      .filter(([k]) => k !== 'text_content' && k !== 'telegram_url')
+                      .slice(0, 5)
+                      .map(([k, v]) => (
+                        <div key={k} className="flex items-center justify-between text-[11px]">
+                          <span className="text-slate-500 capitalize">{k.replace(/_/g, ' ')}:</span>
+                          <span className="font-mono font-medium text-[#111727] dark:text-slate-200 truncate max-w-[140px]" title={String(v)}>
+                            {typeof v === 'number' ? v.toLocaleString() : String(v)}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
 
       {/* 3. Topology Legend */}

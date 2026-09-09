@@ -1,7 +1,8 @@
 import { memo } from 'react';
 import { Handle, Position, type NodeProps, type Node } from '@xyflow/react';
-import { GitBranch, Hash, Send, Radio, Globe, MessageSquare, TrendingUp, Tag } from 'lucide-react';
+import { GitBranch, Hash, Send, Radio, Globe, MessageSquare, TrendingUp, Tag, ExternalLink } from 'lucide-react';
 import type { PriorityTier } from '../../../types/api';
+import { resolveTelegramMessageUrl } from '../../../utils/channelRegistry';
 
 export interface NarrativeNodeData extends Record<string, unknown> {
   narrativeId: string;
@@ -38,8 +39,10 @@ export interface EntityNodeData extends Record<string, unknown> {
 
 export interface MessageNodeData extends Record<string, unknown> {
   messageId: string;
+  canonicalId?: string;
   channelName?: string;
   textPreview?: string;
+  telegramUrl?: string;
 }
 
 export interface ChannelNodeData extends Record<string, unknown> {
@@ -386,30 +389,53 @@ EntityNode.displayName = 'EntityNode';
 export const MessageNode = memo(({ data, selected }: NodeProps<Node<MessageNodeData>>) => {
   const isSubdued = Boolean((data as any)?.isSubdued);
 
+  const telegramUrl =
+    data.telegramUrl ||
+    resolveTelegramMessageUrl(data.canonicalId || data.messageId, data);
+
   const stateClass = selected
     ? 'border-[#2F65F6] ring-2 ring-[#2F65F6]/30 shadow-md scale-[1.025] opacity-100 z-20'
     : isSubdued
     ? 'opacity-[0.28] scale-[0.98]'
-    : 'border-slate-200 dark:border-slate-700 opacity-100';
+    : 'border-slate-200 dark:border-slate-700 opacity-100 hover:border-blue-400 dark:hover:border-blue-500';
 
   return (
     <div
-      className={`w-44 rounded-[12px] bg-white dark:bg-[#181E25] border p-2 space-y-1 transition-all shadow-xs ${stateClass}`}
+      className={`w-48 rounded-[12px] bg-white dark:bg-[#181E25] border p-2 space-y-1.5 transition-all shadow-xs group ${stateClass}`}
     >
       <Handle
         type="source"
         position={Position.Right}
         className="!w-2 !h-2 !bg-[#2F65F6] !border-2 !border-white dark:!border-[#181E25]"
       />
-      <div className="flex items-center gap-1.5 min-w-0">
-        <MessageSquare className="w-3 h-3 text-[#2F65F6] shrink-0" />
-        <span className="font-mono text-[10px] font-bold text-[#111727] dark:text-[#F8FAFC] truncate">
-          {data.messageId}
-        </span>
+      <div className="flex items-center justify-between gap-1.5 min-w-0">
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <MessageSquare className="w-3 h-3 text-[#2F65F6] shrink-0" />
+          <span className="font-mono text-[10px] font-bold text-[#111727] dark:text-[#F8FAFC] truncate">
+            {data.messageId}
+          </span>
+        </div>
+        {telegramUrl && (
+          <a
+            href={telegramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Redirect to exact Telegram message"
+            onClick={(e) => e.stopPropagation()}
+            className="p-1 rounded-md bg-blue-50 dark:bg-blue-950/70 text-[#2F65F6] dark:text-blue-400 hover:bg-[#2F65F6] hover:text-white transition-all shrink-0 cursor-pointer shadow-2xs"
+          >
+            <ExternalLink className="w-2.5 h-2.5" />
+          </a>
+        )}
       </div>
       {data.channelName && (
-        <div className="text-[9px] text-[#8591A5] font-mono truncate">
-          {data.channelName}
+        <div className="text-[9px] text-[#8591A5] font-mono truncate flex items-center justify-between">
+          <span>{data.channelName}</span>
+          {telegramUrl && (
+            <span className="text-[8.5px] font-sans text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+              Telegram ↗
+            </span>
+          )}
         </div>
       )}
     </div>
