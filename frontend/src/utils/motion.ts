@@ -111,6 +111,24 @@ export const kpiCardEnter: Variants = {
 };
 
 /**
+ * Standard card entrance
+ */
+export const cardEnter: Variants = {
+  initial: {
+    opacity: 0,
+    y: 8,
+  },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: MOTION_DURATIONS.standard,
+      ease: MOTION_EASINGS.out,
+    },
+  },
+};
+
+/**
  * Card and section entrance
  */
 export const sectionEnter: Variants = {

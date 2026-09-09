@@ -300,14 +300,14 @@ export const LandingPage: React.FC = () => {
               Real-time social media intelligence for a more informed tomorrow.
             </p>
 
-            {/* Feature Micro-Pills */}
+            {/* Feature Micro-Pills with Subtle Hover Feedback */}
             <div
               className={`flex items-center gap-4 mb-9 flex-wrap transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] delay-300 ${
                 isDocked ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8 pointer-events-none'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <div className="w-[40px] h-[40px] rounded-xl bg-[#F59E0B]/12 flex items-center justify-center border border-[#F59E0B]/25 shadow-[0_2px_6px_rgba(245,158,11,0.08)] shrink-0">
+              <div className="group/pill flex items-center gap-3 transition-transform duration-150 hover:-translate-y-0.5 cursor-default">
+                <div className="w-[40px] h-[40px] rounded-xl bg-[#F59E0B]/12 flex items-center justify-center border border-[#F59E0B]/25 shadow-[0_2px_6px_rgba(245,158,11,0.08)] shrink-0 transition-all duration-150 group-hover/pill:scale-105 group-hover/pill:border-[#F59E0B]/50">
                   <Eye className="w-4 h-4 text-[#D97706]" />
                 </div>
                 <div className="flex flex-col">
@@ -316,8 +316,8 @@ export const LandingPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="w-[40px] h-[40px] rounded-xl bg-[#F59E0B]/12 flex items-center justify-center border border-[#F59E0B]/25 shadow-[0_2px_6px_rgba(245,158,11,0.08)] shrink-0">
+              <div className="group/pill flex items-center gap-3 transition-transform duration-150 hover:-translate-y-0.5 cursor-default">
+                <div className="w-[40px] h-[40px] rounded-xl bg-[#F59E0B]/12 flex items-center justify-center border border-[#F59E0B]/25 shadow-[0_2px_6px_rgba(245,158,11,0.08)] shrink-0 transition-all duration-150 group-hover/pill:scale-105 group-hover/pill:border-[#F59E0B]/50">
                   <BarChart3 className="w-4 h-4 text-[#D97706]" />
                 </div>
                 <div className="flex flex-col">
@@ -326,8 +326,8 @@ export const LandingPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="w-[40px] h-[40px] rounded-xl bg-[#F59E0B]/12 flex items-center justify-center border border-[#F59E0B]/25 shadow-[0_2px_6px_rgba(245,158,11,0.08)] shrink-0">
+              <div className="group/pill flex items-center gap-3 transition-transform duration-150 hover:-translate-y-0.5 cursor-default">
+                <div className="w-[40px] h-[40px] rounded-xl bg-[#F59E0B]/12 flex items-center justify-center border border-[#F59E0B]/25 shadow-[0_2px_6px_rgba(245,158,11,0.08)] shrink-0 transition-all duration-150 group-hover/pill:scale-105 group-hover/pill:border-[#F59E0B]/50">
                   <Lightbulb className="w-4 h-4 text-[#D97706]" />
                 </div>
                 <div className="flex flex-col">
@@ -337,7 +337,7 @@ export const LandingPage: React.FC = () => {
               </div>
             </div>
 
-            {/* CTAs */}
+            {/* CTAs with Restrained Interactions */}
             <div
               className={`flex items-center gap-4 mb-10 transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] delay-400 ${
                 isDocked ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none'
@@ -345,7 +345,7 @@ export const LandingPage: React.FC = () => {
             >
               <Link
                 to="/overview"
-                className="group font-brand text-[15px] font-medium text-white bg-[#181D24] hover:bg-[#111727] px-7 py-3.5 rounded-full shadow-[0_10px_22px_rgba(24,29,36,0.22)] hover:shadow-[0_14px_28px_rgba(24,29,36,0.3)] hover:-translate-y-0.5 transition-all inline-flex items-center gap-2.5"
+                className="group font-brand text-[15px] font-medium text-white bg-[#181D24] hover:bg-[#111727] active:scale-[0.985] active:translate-y-0 px-7 py-3.5 rounded-full shadow-[0_10px_22px_rgba(24,29,36,0.22)] hover:shadow-[0_14px_28px_rgba(24,29,36,0.3)] hover:-translate-y-0.5 transition-all inline-flex items-center gap-2.5"
               >
                 <span>Open Dashboard</span>
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -353,7 +353,7 @@ export const LandingPage: React.FC = () => {
 
               <Link
                 to="/emerging-trends"
-                className="font-brand text-[15px] font-medium text-[#111727] bg-white/85 hover:bg-white border border-[rgba(226,221,208,0.85)] px-7 py-3.5 rounded-full shadow-[0_4px_14px_rgba(112,128,176,0.06)] hover:-translate-y-0.5 transition-all"
+                className="font-brand text-[15px] font-medium text-[#111727] bg-white/85 hover:bg-white active:scale-[0.985] active:translate-y-0 border border-[rgba(226,221,208,0.85)] px-7 py-3.5 rounded-full shadow-[0_4px_14px_rgba(112,128,176,0.06)] hover:-translate-y-0.5 transition-all"
               >
                 Learn More
               </Link>

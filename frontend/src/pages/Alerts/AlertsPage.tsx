@@ -15,6 +15,8 @@ import { AnimatedNumber } from '../../components/ui/AnimatedNumber';
 import { alertService, ALERTS_CHANGED_EVENT } from '../../services/alertService';
 import { telemetryApi } from '../../services/telemetryApi';
 import { trendService } from '../../services/trendService';
+import { motion } from 'motion/react';
+import { staggerFast, kpiCardEnter } from '../../utils/motion';
 import type { AlertItem, AlertFilterState, AlertStatus } from '../../types/alerts';
 
 export const AlertsPage: React.FC = () => {
@@ -168,10 +170,18 @@ export const AlertsPage: React.FC = () => {
         }
       />
 
-      {/* 2. Key Metrics Summary Grid */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 2. Key Metrics Summary Grid with Staggered Entrance */}
+      <motion.section
+        variants={staggerFast}
+        initial="initial"
+        animate="animate"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+      >
         {/* Metric 1: Total Alerts */}
-        <div className="rounded-[26px] p-6 bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md border border-slate-200/80 dark:border-[#2B323D] shadow-xs hover:border-amber-400/70 dark:hover:border-amber-500/40 hover:shadow-xs transition-all duration-200 flex flex-col justify-between">
+        <motion.div
+          variants={kpiCardEnter}
+          className="card-interactive rounded-[26px] p-6 bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md border border-slate-200/80 dark:border-[#2B323D] shadow-xs hover:border-amber-400/70 dark:hover:border-amber-500/40 hover:shadow-md flex flex-col justify-between"
+        >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-[#8591A5] uppercase tracking-wider font-mono">
               Total Alerts
@@ -188,10 +198,13 @@ export const AlertsPage: React.FC = () => {
               Synthesized active triggers
             </span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Metric 2: Open Queue */}
-        <div className="rounded-[26px] p-6 bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md border border-slate-200/80 dark:border-[#2B323D] shadow-xs hover:border-amber-400/70 dark:hover:border-amber-500/40 hover:shadow-xs transition-all duration-200 flex flex-col justify-between">
+        <motion.div
+          variants={kpiCardEnter}
+          className="card-interactive rounded-[26px] p-6 bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md border border-slate-200/80 dark:border-[#2B323D] shadow-xs hover:border-amber-400/70 dark:hover:border-amber-500/40 hover:shadow-md flex flex-col justify-between"
+        >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-[#8591A5] uppercase tracking-wider font-mono">
               Open Queue
@@ -208,10 +221,13 @@ export const AlertsPage: React.FC = () => {
               Pending analyst attention
             </span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Metric 3: Critical Breaches */}
-        <div className="rounded-[26px] p-6 bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md border border-slate-200/80 dark:border-[#2B323D] shadow-xs hover:border-amber-400/70 dark:hover:border-amber-500/40 hover:shadow-xs transition-all duration-200 flex flex-col justify-between">
+        <motion.div
+          variants={kpiCardEnter}
+          className="card-interactive rounded-[26px] p-6 bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md border border-slate-200/80 dark:border-[#2B323D] shadow-xs hover:border-amber-400/70 dark:hover:border-amber-500/40 hover:shadow-md flex flex-col justify-between"
+        >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-[#8591A5] uppercase tracking-wider font-mono">
               Critical Breaches
@@ -228,10 +244,13 @@ export const AlertsPage: React.FC = () => {
               Priority Score &ge; 0.750
             </span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Metric 4: Acknowledged */}
-        <div className="rounded-[26px] p-6 bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md border border-slate-200/80 dark:border-[#2B323D] shadow-xs hover:border-amber-400/70 dark:hover:border-amber-500/40 hover:shadow-xs transition-all duration-200 flex flex-col justify-between">
+        <motion.div
+          variants={kpiCardEnter}
+          className="card-interactive rounded-[26px] p-6 bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md border border-slate-200/80 dark:border-[#2B323D] shadow-xs hover:border-amber-400/70 dark:hover:border-amber-500/40 hover:shadow-md flex flex-col justify-between"
+        >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-[#8591A5] uppercase tracking-wider font-mono">
               Acknowledged
@@ -248,8 +267,8 @@ export const AlertsPage: React.FC = () => {
               Reviewed by analysts
             </span>
           </div>
-        </div>
-      </section>
+        </motion.div>
+      </motion.section>
 
       {/* 3. Filter & Search Toolbar */}
       <AlertFilterBar

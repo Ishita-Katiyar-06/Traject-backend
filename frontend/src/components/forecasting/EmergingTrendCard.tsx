@@ -9,6 +9,7 @@ import {
   formatConfidence,
   formatTopicDisplayName,
 } from '../../utils/forecastingFormatters';
+import { AnimatedProgressBar } from '../ui/AnimatedProgressBar';
 
 interface EmergingTrendCardProps {
   forecast: EmergingTrendForecast;
@@ -31,7 +32,7 @@ export const EmergingTrendCard: React.FC<EmergingTrendCardProps> = ({ forecast }
   return (
     <div
       id={`forecast-card-${forecast.topic_id}`}
-      className="group rounded-[26px] sm:rounded-[30px] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md border border-slate-200/80 dark:border-[#2B323D] p-6 sm:p-7 shadow-xs hover:border-amber-400/80 dark:hover:border-amber-500/50 hover:shadow-md transition-all duration-300 flex flex-col justify-between font-sans"
+      className="group card-interactive rounded-[26px] sm:rounded-[30px] bg-white/95 dark:bg-[#181C22]/95 backdrop-blur-md border border-slate-200/80 dark:border-[#2B323D] p-6 sm:p-7 shadow-xs hover:border-amber-400/80 dark:hover:border-amber-500/50 hover:shadow-md flex flex-col justify-between font-sans"
     >
       <div>
         {/* Top Header Row: Rank, Emergence Tier, and Trajectory/Confidence */}
@@ -89,13 +90,12 @@ export const EmergingTrendCard: React.FC<EmergingTrendCardProps> = ({ forecast }
               {formatForecastScore(forecast.forecast_score)}
             </span>
           </div>
-          {/* Progress Bar (Visual pill representation of 0.00 to 1.00) */}
-          <div className="w-full bg-slate-100 dark:bg-[#252B32] rounded-full h-2.5 overflow-hidden p-0.5 border border-slate-200/60 dark:border-[#282F3A]">
-            <div
-              className="h-full rounded-full transition-all duration-500 bg-linear-to-r from-[#2F65F6] via-blue-500 to-emerald-500"
-              style={{ width: `${Math.min(Math.max(forecast.forecast_score * 100, 0), 100)}%` }}
-            />
-          </div>
+          {/* Animated Progress Bar */}
+          <AnimatedProgressBar
+            value={forecast.forecast_score}
+            max={1.0}
+            aria-label="Emerging Trend Score"
+          />
         </div>
 
         {/* Component Signals: 24h Volume & 6h Velocity */}

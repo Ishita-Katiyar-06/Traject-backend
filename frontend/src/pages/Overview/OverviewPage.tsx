@@ -36,6 +36,8 @@ import { AnimatedNumber } from '../../components/ui/AnimatedNumber';
 import { NarrativeClusterMap } from '../../components/trends/NarrativeClusterMap';
 import { useLiveStream } from '../../contexts/LiveStreamContext';
 import { getNarrativeDisplayName } from '../../utils/narrativeIdentity';
+import { motion } from 'motion/react';
+import { staggerFast, kpiCardEnter } from '../../utils/motion';
 
 export const OverviewPage: React.FC = () => {
   const navigate = useNavigate();
@@ -188,7 +190,7 @@ export const OverviewPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsMetricsOpen(true)}
-              className="inline-flex items-center gap-2 h-9 px-4 rounded-full border border-slate-300/80 dark:border-[#333C48] bg-white/90 dark:bg-[#181C22]/90 text-[12.5px] font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#20262E] transition-all shadow-xs cursor-pointer"
+              className="btn-interactive inline-flex items-center gap-2 h-9 px-4 rounded-full border border-slate-300/80 dark:border-[#333C48] bg-white/90 dark:bg-[#181C22]/90 text-[12.5px] font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#20262E] transition-all shadow-xs cursor-pointer"
             >
               <Server className="w-3.5 h-3.5 text-[#2F65F6] dark:text-[#5878C7]" />
               <span>Pipeline Telemetry</span>
@@ -198,7 +200,7 @@ export const OverviewPage: React.FC = () => {
               type="button"
               onClick={handleSyncAnalytics}
               disabled={isRefreshing || isLoading}
-              className="inline-flex items-center gap-2 h-9 px-4 rounded-full border border-slate-300/80 dark:border-[#333C48] bg-white/90 dark:bg-[#181C22]/90 text-[12.5px] font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#20262E] transition-all shadow-xs disabled:opacity-60 cursor-pointer"
+              className="btn-interactive inline-flex items-center gap-2 h-9 px-4 rounded-full border border-slate-300/80 dark:border-[#333C48] bg-white/90 dark:bg-[#181C22]/90 text-[12.5px] font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#20262E] transition-all shadow-xs disabled:opacity-60 cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
               <span>Sync Analytics</span>
@@ -218,7 +220,7 @@ export const OverviewPage: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/narratives?priority_tier=critical')}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-medium transition-all cursor-pointer ${(priorityDist?.critical ?? 0) > 0
+              className={`interactive-tap inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-medium transition-all cursor-pointer ${(priorityDist?.critical ?? 0) > 0
                   ? 'bg-rose-500 text-white font-bold shadow-xs'
                   : 'bg-[#181D24] text-white dark:bg-[#222832]'
                 }`}
@@ -232,7 +234,7 @@ export const OverviewPage: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/narratives')}
-              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-amber-400 dark:bg-amber-400 text-slate-950 font-bold text-[12px] shadow-xs hover:bg-amber-300 transition-colors cursor-pointer"
+              className="interactive-tap inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-amber-400 dark:bg-amber-400 text-slate-950 font-bold text-[12px] shadow-xs hover:bg-amber-300 transition-colors cursor-pointer"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-amber-950" />
               <span>Elevated / High</span>
@@ -245,7 +247,7 @@ export const OverviewPage: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/narratives?priority_tier=routine')}
-              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-slate-300/80 dark:border-[#333C48] bg-white/80 dark:bg-[#181C22]/80 text-slate-700 dark:text-slate-300 text-[12px] font-medium hover:border-slate-400 transition-colors cursor-pointer"
+              className="interactive-tap inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-slate-300/80 dark:border-[#333C48] bg-white/80 dark:bg-[#181C22]/80 text-slate-700 dark:text-slate-300 text-[12px] font-medium hover:border-slate-400 transition-colors cursor-pointer"
             >
               <span>Routine</span>
               <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">
@@ -261,10 +263,15 @@ export const OverviewPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Right: The 3 Executive KPIs, perfectly aligned on the same horizontal axis */}
-          <div className="flex items-center gap-7 sm:gap-9 shrink-0">
+          {/* Right: The 3 Executive KPIs with Staggered Entrance */}
+          <motion.div
+            variants={staggerFast}
+            initial="initial"
+            animate="animate"
+            className="flex items-center gap-7 sm:gap-9 shrink-0"
+          >
             {/* KPI 1: Corpus */}
-            <div className="flex items-center gap-3">
+            <motion.div variants={kpiCardEnter} className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-white/90 dark:bg-[#181C22]/90 border border-slate-200/80 dark:border-[#333C48] flex items-center justify-center text-slate-600 dark:text-slate-300 shadow-2xs">
                 <Layers className="w-4 h-4" />
               </div>
@@ -276,10 +283,10 @@ export const OverviewPage: React.FC = () => {
                   Corpus
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* KPI 2: Trends */}
-            <div className="flex items-center gap-3">
+            <motion.div variants={kpiCardEnter} className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-white/90 dark:bg-[#181C22]/90 border border-slate-200/80 dark:border-[#333C48] flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-2xs">
                 <Radio className="w-4 h-4" />
               </div>
@@ -291,10 +298,10 @@ export const OverviewPage: React.FC = () => {
                   Trends
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* KPI 3: Narratives */}
-            <div className="flex items-center gap-3">
+            <motion.div variants={kpiCardEnter} className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-amber-100/80 dark:bg-amber-950/50 border border-amber-300/60 dark:border-amber-900/50 flex items-center justify-center text-amber-700 dark:text-amber-300 shadow-2xs">
                 <Zap className="w-4 h-4" />
               </div>
@@ -306,8 +313,8 @@ export const OverviewPage: React.FC = () => {
                   Narratives
                 </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
@@ -336,7 +343,7 @@ export const OverviewPage: React.FC = () => {
           ========================================================================= */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         {/* Chart 1: Priority Signal Tier Breakdown (50% Width) */}
-        <div className="rounded-[26px] bg-white/95 dark:bg-[#181C22]/95 border border-slate-200/80 dark:border-[#2B323D] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col justify-between">
+        <div className="card-interactive rounded-[26px] bg-white/95 dark:bg-[#181C22]/95 border border-slate-200/80 dark:border-[#2B323D] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#2B323D] pb-3 mb-3">
               <div>
@@ -462,7 +469,7 @@ export const OverviewPage: React.FC = () => {
         </div>
 
         {/* Chart 2: Corpus Sentiment Overview & Multi-Track Donut (50% Width) */}
-        <div className="rounded-[26px] bg-white/95 dark:bg-[#181C22]/95 border border-slate-200/80 dark:border-[#2B323D] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col justify-between">
+        <div className="card-interactive rounded-[26px] bg-white/95 dark:bg-[#181C22]/95 border border-slate-200/80 dark:border-[#2B323D] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] flex flex-col justify-between">
           <div className="flex-1 flex flex-col justify-between">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#2B323D] pb-3 mb-2">
               <div>
@@ -579,7 +586,7 @@ export const OverviewPage: React.FC = () => {
               CONTAINER 1: EDITORIAL TREND ORBIT DOSSIER (Crextio Clean Card)
               Horizontal Split: Topics & Metrics on Left, Orbit Radar on Right
               ========================================================================= */
-          <div className="rounded-[30px] bg-white dark:bg-[#151922] border border-slate-200 dark:border-[#2D333F] p-7 sm:p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.2)] relative overflow-hidden w-full font-sans">
+          <div className="card-interactive rounded-[30px] bg-white dark:bg-[#151922] border border-slate-200 dark:border-[#2D333F] p-7 sm:p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.2)] relative overflow-hidden w-full font-sans">
             <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-7 lg:gap-8 items-center">
               {/* LEFT SIDE: Header, Headline, Summary, 4 Metrics Pods & Action Button */}
               <div className="lg:col-span-6 flex flex-col justify-between space-y-5">
@@ -849,7 +856,7 @@ export const OverviewPage: React.FC = () => {
           Matches Crextio roster reference: slim single-line rows, fine dotted line,
           headline-only focus, and exact warm golden-yellow hover/active highlight (#FECB49)
           ========================================================================= */}
-      <section className="rounded-[30px] bg-white/95 dark:bg-[#181C22]/95 border border-slate-200/80 dark:border-[#2B323D] p-6 sm:p-7 shadow-[0_4px_24px_rgba(0,0,0,0.03)] space-y-3">
+      <section className="card-interactive-subtle rounded-[30px] bg-white/95 dark:bg-[#181C22]/95 border border-slate-200/80 dark:border-[#2B323D] p-6 sm:p-7 shadow-[0_4px_24px_rgba(0,0,0,0.03)] space-y-3">
         <div className="flex items-center justify-between pb-1">
           <div>
             <h3 className="text-[17px] font-bold text-slate-900 dark:text-slate-100 tracking-tight">

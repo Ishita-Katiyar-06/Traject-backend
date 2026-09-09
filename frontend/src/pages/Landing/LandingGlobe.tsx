@@ -624,14 +624,16 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
     let clock = 0;
     const tempWorldPos = new THREE.Vector3();
 
-    // Constant slow rotation speed (~20s per full rotation)
-    const BASE_ROTATION_SPEED = 0.0022;
+    // Rotation speeds: fast spin on load, decelerates to steady cruise
+    const BASE_ROTATION_SPEED = 0.0022;      // Steady cruise (~20s per full rotation)
+    const FAST_SPIN_SPEED    = 0.020;        // Initial burst speed (~1.7s per full rotation)
+    const FAST_SPIN_DURATION_MS = 3000;      // 3s deceleration ramp
 
     const mountTime = performance.now();
     const ENTRANCE_DURATION_MS = 1400; // 1.4s smooth cinematic power-up entrance
 
     let currentActiveId: string = INTEL_LOCATIONS[0].id;
-    let activeSwitchTime = performance.now() + 1000; // Allow globe to boot up before first card pops out
+    let activeSwitchTime = performance.now() + 3200; // Wait for fast spin to settle before first card
     const DISPLAY_DURATION_MS = 3600; // Duration each location card stays prominent
     const shownHistory: string[] = [currentActiveId];
 
@@ -682,9 +684,12 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
           (m.pinStem.material as THREE.LineBasicMaterial).opacity = 0.6 * ease;
         });
 
-        // Progressive entrance rotation speed
+        // Progressive entrance rotation speed — during entrance still use fast-spin ramp
         if (!isDragging) {
-          globeGroup.rotation.y += BASE_ROTATION_SPEED * (0.5 + 0.5 * ease);
+          const spinProg = Math.min(1.0, elapsedSinceMount / FAST_SPIN_DURATION_MS);
+          const spinEase = 1 - Math.pow(1 - spinProg, 2); // ease-out quad
+          const currentSpeed = FAST_SPIN_SPEED - (FAST_SPIN_SPEED - BASE_ROTATION_SPEED) * spinEase;
+          globeGroup.rotation.y += currentSpeed;
         }
       } else {
         // Entrance settled state
@@ -698,9 +703,12 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
           (arc.pulseMesh.material as THREE.MeshBasicMaterial).opacity = 0.9;
         });
 
-        // Continuous Slow Vertical Rotation (60fps elegant cinematic motion)
+        // Continuous Rotation: fast spin then decelerate to cruise
         if (!isDragging) {
-          globeGroup.rotation.y += BASE_ROTATION_SPEED;
+          const spinProg = Math.min(1.0, elapsedSinceMount / FAST_SPIN_DURATION_MS);
+          const spinEase = 1 - Math.pow(1 - spinProg, 2); // ease-out quad
+          const currentSpeed = FAST_SPIN_SPEED - (FAST_SPIN_SPEED - BASE_ROTATION_SPEED) * spinEase;
+          globeGroup.rotation.y += currentSpeed;
           globeGroup.rotation.y += dragVelocity.x;
           globeGroup.rotation.x += dragVelocity.y;
           dragVelocity.x *= 0.94;
@@ -726,11 +734,14 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
 
       const visibleCandidates: Candidate[] = [];
 
+      // After fast-spin settles, allow card visibility
+      const spinSettled = elapsedSinceMount > FAST_SPIN_DURATION_MS * 0.9;
+
       markerObjects.forEach((m) => {
         m.coreDot.getWorldPosition(tempWorldPos);
 
-        // Z > 18 is front hemisphere facing viewer
-        if (tempWorldPos.z > 18 && entranceProg >= 0.7) {
+        // Only show on clearly front-facing hemisphere (z > 35 = ~75° from edge)
+        if (tempWorldPos.z > 35 && entranceProg >= 0.7 && spinSettled) {
           const proj = tempWorldPos.clone().project(camera);
           const screenX = ((proj.x + 1) / 2) * width;
           const screenY = ((-proj.y + 1) / 2) * height;
@@ -761,21 +772,22 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
         }
       });
 
-      // Dynamic Location Transition & Selection (Only after initial entrance settled)
-      if (entranceProg >= 1.0) {
+      // Dynamic Location Transition & Selection (Only after entrance AND fast-spin settled)
+      if (entranceProg >= 1.0 && spinSettled) {
         visibleCandidates.sort((a, b) => b.facingScore - a.facingScore);
 
         const activeCandidate = visibleCandidates.find((c) => c.marker.location.id === currentActiveId);
-        const isCurrentFacingWell = activeCandidate && activeCandidate.facingScore > 0.35;
+        // Require city to be clearly facing viewer (score > 0.5 = within ~60° of center)
+        const isCurrentFacingWell = activeCandidate && activeCandidate.facingScore > 0.5;
         const timeElapsed = now - activeSwitchTime;
 
-        // Switch to next location when duration expires OR current active rotates out of view
+        // Switch to next location when duration expires OR current active rotates out of clear view
         if ((timeElapsed >= DISPLAY_DURATION_MS || !isCurrentFacingWell) && visibleCandidates.length > 0) {
-          // Find best candidate not in recent history
-          let next = visibleCandidates.find((c) => !shownHistory.includes(c.marker.location.id) && c.facingScore > 0.45);
+          // Find best candidate not in recent history, clearly front-facing
+          let next = visibleCandidates.find((c) => !shownHistory.includes(c.marker.location.id) && c.facingScore > 0.5);
           if (!next) {
             shownHistory.length = 0;
-            next = visibleCandidates[0];
+            next = visibleCandidates.find((c) => c.facingScore > 0.5) || visibleCandidates[0];
           }
 
           if (next && next.marker.location.id !== currentActiveId) {
@@ -783,16 +795,20 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
             shownHistory.push(currentActiveId);
             if (shownHistory.length > 5) shownHistory.shift();
 
+            // Hide card briefly for clean swap animation
+            setIsLabelVisible(false);
             activeSwitchTime = now;
-            setActiveCity(next.marker.location);
-            setIsLabelVisible(true);
+            setTimeout(() => {
+              setActiveCity(next!.marker.location);
+              setIsLabelVisible(true);
+            }, 280);
           }
         }
 
         // Update projected 2D coordinates for the active floating label card
-        if (activeCandidate) {
+        if (activeCandidate && activeCandidate.facingScore > 0.5) {
           setActiveScreenPos({ x: activeCandidate.screenX, y: activeCandidate.screenY });
-          if (!isLabelVisible && activeCandidate.facingScore > 0.35) {
+          if (!isLabelVisible) {
             setIsLabelVisible(true);
           }
         } else {
@@ -872,8 +888,8 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
         }}
       >
         <div
-          className={`relative -translate-x-1/2 -translate-y-full mb-3.5 pointer-events-auto transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-            isLabelVisible ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-2'
+          className={`relative -translate-x-1/2 -translate-y-full mb-3.5 pointer-events-auto transition-all duration-[380ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            isLabelVisible ? 'scale-100 opacity-100 translate-y-0' : 'scale-90 opacity-0 translate-y-3'
           }`}
         >
           {/* Dark Navy Translucent Glass Card */}

@@ -813,6 +813,55 @@ html.dark ::-webkit-scrollbar-thumb:hover {
   display: inline-block !important;
 }
 
+/* ==========================================================================
+   MICRO-INTERACTIONS & HOVER MOTION SYSTEM
+   Restrained, subtle GPU-accelerated transforms for cards, buttons, and rows.
+   ========================================================================== */
+
+.card-interactive {
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 200ms ease;
+  will-change: transform;
+}
+
+.card-interactive:hover {
+  transform: translateY(-2px);
+}
+
+.card-interactive-subtle {
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 180ms ease,
+              border-color 180ms ease;
+}
+
+.card-interactive-subtle:hover {
+  transform: translateY(-1px);
+}
+
+.btn-interactive {
+  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 150ms ease,
+              background-color 150ms ease,
+              border-color 150ms ease;
+}
+
+.btn-interactive:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn-interactive:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+.interactive-tap {
+  transition: transform 120ms ease;
+}
+
+.interactive-tap:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
 /* Universal Reduced Motion Accessibility Support (retains essential feedback spinners) */
 @media (prefers-reduced-motion: reduce) {
   *:not(.animate-spin):not([class*="animate-spin"]):not([class*="animate-spin"] *),
@@ -822,6 +871,7 @@ html.dark ::-webkit-scrollbar-thumb:hover {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+    transform: none !important;
   }
 }
 

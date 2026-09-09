@@ -41,16 +41,16 @@ export const Button: React.FC<ButtonProps> = ({
   return (
     <button
       disabled={disabled || isLoading}
-      className={`inline-flex items-center justify-center font-sans transition-all duration-150 select-none cursor-pointer active:scale-[0.985] active:transition-transform duration-fast disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F65F6]/30 ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
+      className={`group inline-flex items-center justify-center font-sans transition-all duration-150 select-none cursor-pointer hover:-translate-y-[1px] active:translate-y-0 active:scale-[0.985] active:transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:hover:translate-y-0 disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F65F6]/30 ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
       {...props}
     >
       {isLoading ? (
         <span className="inline-block w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin shrink-0" />
       ) : (
-        leftIcon && <span className="inline-flex shrink-0 items-center justify-center">{leftIcon}</span>
+        leftIcon && <span className="inline-flex shrink-0 items-center justify-center transition-transform duration-150 group-hover:scale-105">{leftIcon}</span>
       )}
       {children}
-      {!isLoading && rightIcon && <span className="inline-flex shrink-0 items-center justify-center">{rightIcon}</span>}
+      {!isLoading && rightIcon && <span className="inline-flex shrink-0 items-center justify-center transition-transform duration-150 group-hover:translate-x-0.5">{rightIcon}</span>}
     </button>
   );
 };

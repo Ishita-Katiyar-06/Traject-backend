@@ -127,12 +127,12 @@ export function Table<T>({
                 <tr
                   key={id}
                   onClick={() => onRowClick?.(item)}
-                  className={`transition-colors duration-150 ${
+                  className={`transition-colors duration-150 group/row ${
                     onRowClick ? 'cursor-pointer' : ''
                   } ${
                     isSelected
                       ? 'bg-blue-50/60 dark:bg-[#2F65F6]/10 border-l-4 border-l-[#2F65F6]'
-                      : 'hover:bg-[#F8FAFD] dark:hover:bg-[#1D232A]'
+                      : 'hover:bg-slate-50/80 dark:hover:bg-[#1D232A]/80'
                   }`}
                 >
                   {columns.map((col) => {
