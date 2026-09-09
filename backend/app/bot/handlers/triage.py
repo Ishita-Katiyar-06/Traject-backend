@@ -1,5 +1,6 @@
 """Forward-to-Triage handler for automated single-message ML forensic evaluation."""
 
+import html
 import logging
 from aiogram import F, Router
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
@@ -50,6 +51,7 @@ async def handle_forwarded_post_triage(message: Message) -> None:
         tier_icon = "🔴" if tier == "CRITICAL" else "🟠" if tier == "HIGH" else "🟡" if tier == "ELEVATED" else "⚪"
         score = report.get("estimated_priority_score", 0.0)
         matched_title = report.get("matched_narrative_title")
+        matched_summary = report.get("matched_narrative_summary")
         matched_id = report.get("matched_narrative_id")
         sim_pct = report.get("similarity_percentage", 0.0)
         sent_label = report.get("sentiment_label", "NEUTRAL")
@@ -65,19 +67,23 @@ async def handle_forwarded_post_triage(message: Message) -> None:
             f"• <b>Text Sentiment:</b> <code>{sent_label}</code> (Negativity: {report.get('negative_ratio', 0):.0%})",
         ]
 
-        if matched_title:
-            lines.append(f"• <b>Matched Active Cluster:</b> <i>\"{matched_title}\"</i>")
-            lines.append(f"• <b>Cluster Similarity:</b> <code>{sim_pct:.1f}%</code> match")
+        if matched_title and sim_pct >= 25.0:
+            clean_title = html.escape(matched_title)
+            lines.append(f"• <b>Matched Narrative:</b> <b>{clean_title}</b>")
+            if matched_summary:
+                clean_context = html.escape(matched_summary[:160] + ("..." if len(matched_summary) > 160 else ""))
+                lines.append(f"• <b>Context:</b> <i>\"{clean_context}\"</i>")
+            lines.append(f"• <b>Narrative Alignment:</b> <code>{sim_pct:.1f}%</code> match")
         else:
-            lines.append("• <b>Cluster Match:</b> <i>Novel / Unclustered Claim</i>")
+            lines.append("• <b>Narrative Status:</b> <i>Novel Event / Emerging Transmission (No prior correlation)</i>")
 
         if syndicated:
-            lines.append(f"• ⚠️ <b>Anomalous Syndication:</b> <i>Verbatim uncredited matches detected across multiple channels!</i>")
+            lines.append("• ⚠️ <b>Anomalous Syndication:</b> <i>Verbatim uncredited matches detected across multiple channels!</i>")
 
         if indicators:
             lines.append("\n<b>Key Forensic Indicators:</b>")
             for ind in indicators[:3]:
-                lines.append(f"  ✓ {ind}")
+                lines.append(f"  ✓ {html.escape(str(ind))}")
 
         lines.append("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         lines.append("<i>On-demand forensic evaluation powered by TRAJECT ML</i>")

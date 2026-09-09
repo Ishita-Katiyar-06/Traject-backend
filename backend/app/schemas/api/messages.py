@@ -68,6 +68,7 @@ class TriageReportResponse(BaseModel):
     negative_ratio: float
     matched_narrative_id: str | None = None
     matched_narrative_title: str | None = None
+    matched_narrative_summary: str | None = None
     similarity_percentage: float = 0.0
     estimated_priority_tier: str
     estimated_priority_score: float

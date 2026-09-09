@@ -74,44 +74,98 @@ async def triage_message(
         sentiment_conf = round(min(0.60 + 0.10 * pos_count, 0.90), 3)
         neg_ratio = round(neg_count / max(total_sentiment_hits, 1), 3)
 
-    # 4. Active Narrative Matching via Lexical & Centroid Keyword Overlap
+    # 4. Active Narrative Matching via Content-Aware Semantic Overlap
     best_narrative_id = None
     best_narrative_title = None
+    best_narrative_summary = None
     best_similarity = 0.0
     matched_topic_id = None
 
-    if repo.artifacts_loaded and repo._narratives_by_id:
+    TEMPORAL_GENERIC_STOPWORDS = {
+        "january", "february", "march", "april", "may", "june", "july", "august", "september",
+        "october", "november", "december", "monday", "tuesday", "wednesday", "thursday", "friday",
+        "saturday", "sunday", "mon", "tue", "wed", "thu", "fri", "sat", "sun", "stats", "today",
+        "yesterday", "breaking", "update", "time", "first", "since", "early", "roughly", "between",
+        "amid", "above", "below", "week", "month", "year", "days", "hours", "news", "report",
+    }
+    content_tokens = tokens - TEMPORAL_GENERIC_STOPWORDS
+
+    def synthesize_clean_title(raw_name: str, summary: str | None, topic_obj: Any | None) -> str:
+        # Strip topic brackets like [topic_060] or [#tags]
+        cleaned = re.sub(r"\[.*?\]", "", raw_name).strip()
+        cleaned = re.sub(r"[\u2010-\u2015\u2212\uff0d—–]", "-", cleaned)
+        cleaned = re.sub(r"^(rainbetcom|venotify|pwatch|osintdefender|geopwatch|moscow|bloomberg|reuters)[-_ ]*", "", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"[-_ ]*(Discourse|Coverage|Developments)$", "", cleaned, flags=re.IGNORECASE).strip(" -:,")
+
+        # If title looks like raw comma-separated keywords or is too obscure/short, extract concise headline from summary
+        if summary and (not cleaned or "," in cleaned or len(cleaned.split()) <= 2 or any(t in cleaned.lower() for t in ["stats", "topic_"])):
+            first_clause = summary.split(".")[0].strip()
+            first_clause = re.sub(r"^(according to|reports indicate|sources say|earlier today|reuters|bloomberg|official|spokesperson)\s*[:-]?\s*", "", first_clause, flags=re.IGNORECASE)
+            words = [w for w in first_clause.split() if not w.startswith("http") and not w.startswith("@")]
+            if 3 <= len(words) <= 9:
+                return " ".join(words).strip(" -:,.").title()
+            elif len(words) > 9:
+                return " ".join(words[:8]).strip(" -:,.").title()
+
+        if cleaned and "," not in cleaned and len(cleaned.split()) >= 2:
+            return cleaned.strip(" -:,").title()
+
+        if summary:
+            first_clause = summary.split(".")[0].strip()
+            words = [w for w in first_clause.split() if not w.startswith("http") and not w.startswith("@")][:8]
+            if len(words) >= 3:
+                return " ".join(words).strip(" -:,.").title()
+
+        if topic_obj and hasattr(topic_obj, "representative_keywords"):
+            kws = [k.keyword for k in topic_obj.representative_keywords if len(k.keyword) >= 3 and k.keyword.lower() not in TEMPORAL_GENERIC_STOPWORDS][:3]
+            if kws:
+                return (" ".join(k.title() for k in kws) + " Dynamics").strip()
+
+        return cleaned.strip(" -:,").title() or "Strategic Narrative Track"
+
+    if repo.artifacts_loaded and repo._narratives_by_id and len(content_tokens) >= 1:
         for nid, narr in repo._narratives_by_id.items():
-            claim_tokens = set(re.findall(r"\b[a-zA-Zа-яА-Я0-9_-]{4,}\b", narr.headline_claim.lower()))
+            claim_tokens = set(re.findall(r"\b[a-zA-Zа-яА-Я0-9_-]{4,}\b", (narr.headline_claim or "").lower())) - TEMPORAL_GENERIC_STOPWORDS
+            name_tokens = set(re.findall(r"\b[a-zA-Zа-яА-Я0-9_-]{4,}\b", (getattr(narr, "narrative_name", "") or "").lower())) - TEMPORAL_GENERIC_STOPWORDS
+            summary_tokens = set(re.findall(r"\b[a-zA-Zа-яА-Я0-9_-]{4,}\b", (getattr(narr, "narrative_summary", "") or "").lower())) - TEMPORAL_GENERIC_STOPWORDS
+
             topic = repo._topics_by_id.get(narr.promoted_from_topic_id)
             keyword_tokens = set()
             if topic:
                 for kw in topic.representative_keywords:
-                    keyword_tokens.update(re.findall(r"\b[a-zA-Zа-яА-Я0-9_-]{4,}\b", kw.keyword.lower()))
+                    keyword_tokens.update(set(re.findall(r"\b[a-zA-Zа-яА-Я0-9_-]{4,}\b", kw.keyword.lower())) - TEMPORAL_GENERIC_STOPWORDS)
 
-            all_target_tokens = claim_tokens | keyword_tokens
+            all_target_tokens = claim_tokens | keyword_tokens | name_tokens | summary_tokens
             if not all_target_tokens:
                 continue
 
-            intersection = tokens & all_target_tokens
-            union = tokens | all_target_tokens
-            jaccard = len(intersection) / max(len(union), 1)
+            overlap = content_tokens & all_target_tokens
+            # Require at least 2 distinct topical content tokens to avoid accidental single-word noise
+            if len(overlap) < 2:
+                continue
 
-            # Weight claim title hits higher
-            claim_hits = len(tokens & claim_tokens)
-            score = jaccard + (0.15 * claim_hits)
+            summary_hits = len(content_tokens & summary_tokens)
+            claim_hits = len(content_tokens & claim_tokens)
+            kw_hits = len(content_tokens & keyword_tokens)
+
+            jaccard = len(overlap) / max(len(content_tokens | all_target_tokens), 1)
+            score = (len(overlap) * 0.25) + (summary_hits * 0.20) + (claim_hits * 0.15) + (kw_hits * 0.10) + jaccard
 
             if score > best_similarity:
                 best_similarity = score
                 best_narrative_id = narr.narrative_id
-                best_narrative_title = narr.headline_claim
+                raw_name = getattr(narr, "narrative_name", None) or narr.headline_claim
+                narr_summary = getattr(narr, "narrative_summary", None)
+                best_narrative_title = synthesize_clean_title(raw_name, narr_summary, topic)
+                best_narrative_summary = narr_summary
                 matched_topic_id = narr.promoted_from_topic_id
 
     # Normalized similarity percentage [0.0, 100.0]
-    sim_pct = round(min(best_similarity * 140.0, 98.5), 1) if best_similarity > 0.08 else 0.0
+    sim_pct = round(min(best_similarity * 28.0, 96.0), 1) if best_similarity >= 0.40 else 0.0
     if sim_pct < 25.0:
         best_narrative_id = None
         best_narrative_title = None
+        best_narrative_summary = None
         sim_pct = 0.0
 
     # 5. Uncredited Syndication Detection across Existing Corpus
@@ -144,7 +198,7 @@ async def triage_message(
     if best_narrative_id and repo._narratives_by_id.get(best_narrative_id):
         parent_narr = repo._narratives_by_id[best_narrative_id]
         base_score = max(base_score, parent_narr.priority_signal_score * (sim_pct / 100.0))
-        indicators.append(f"Matched active cluster '{best_narrative_title[:45]}...' ({sim_pct:.1f}% similarity)")
+        indicators.append(f"Correlated with narrative: {best_narrative_title} ({sim_pct:.1f}% alignment)")
 
     if syndicated:
         base_score += 0.22
@@ -185,6 +239,7 @@ async def triage_message(
         negative_ratio=neg_ratio,
         matched_narrative_id=best_narrative_id,
         matched_narrative_title=best_narrative_title,
+        matched_narrative_summary=best_narrative_summary,
         similarity_percentage=sim_pct,
         estimated_priority_tier=tier,
         estimated_priority_score=est_score,
