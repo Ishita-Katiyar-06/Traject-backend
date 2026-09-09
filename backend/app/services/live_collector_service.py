@@ -262,6 +262,43 @@ class LiveCollectorService:
             "channels": self._channel_join_status,
         }
 
+    async def refresh_message_views(self, channel_username: str, native_id: int) -> int | None:
+        """Query live Telethon MTProto client for fresh message views and update in-memory repo."""
+        if not self.client or not self.is_running or not self.client.is_connected():
+            return None
+
+        clean_user = channel_username.lstrip("@").strip().lower()
+        try:
+            entity = self._channel_entities.get(clean_user)
+            if not entity:
+                entity = await self.client.get_entity(clean_user)
+                self._channel_entities[clean_user] = entity
+
+            msgs = await self.client.get_messages(entity, ids=[int(native_id)])
+            if msgs and msgs[0]:
+                msg = msgs[0]
+                views = getattr(msg, "views", None)
+                forwards = getattr(msg, "forwards", None)
+                if views is not None:
+                    # Update in repository in-memory index
+                    for m in self.repo._messages:
+                        if m.native_id == str(native_id) and (
+                            (m.author_username and m.author_username.lstrip("@").lower() == clean_user) or
+                            (clean_user in (m.channel_title or "").lower().replace(" ", ""))
+                        ):
+                            m.views_count = views
+                            if forwards is not None:
+                                m.forwards_count = forwards
+                            cid = m.canonical_id
+                            if cid in self.repo._messages_by_id:
+                                self.repo._messages_by_id[cid].views_count = views
+                                if forwards is not None:
+                                    self.repo._messages_by_id[cid].forwards_count = forwards
+                    return views
+        except Exception as exc:
+            logger.debug("Could not refresh live views for @%s/%s: %s", clean_user, native_id, exc)
+        return None
+
     async def stop(self) -> None:
         """Gracefully stop live collection, cancel join/poll tasks, and disconnect Telethon client."""
         self.is_running = False
@@ -304,12 +341,11 @@ class LiveCollectorService:
                             continue
 
                         last_id = self._last_seen_ids.get(username, 0)
-                        # Fetch up to 3 recent messages
-                        messages = await self.client.get_messages(entity, limit=3)
+                        # Fetch up to 5 recent messages to ingest new ones and refresh views on existing ones
+                        messages = await self.client.get_messages(entity, limit=5)
                         for msg in reversed(messages):
-                            if msg.id > last_id:
-                                await self.process_telethon_message(msg, entity)
-                                self._last_seen_ids[username] = max(self._last_seen_ids.get(username, 0), msg.id)
+                            await self.process_telethon_message(msg, entity)
+                            self._last_seen_ids[username] = max(self._last_seen_ids.get(username, 0), msg.id)
                     except Exception as poll_err:
                         logger.debug("Poll error for %s: %s", username, poll_err)
             except asyncio.CancelledError:

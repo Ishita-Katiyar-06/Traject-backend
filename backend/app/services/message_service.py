@@ -16,6 +16,7 @@ class MessageService:
         self,
         page: int = 1,
         page_size: int = 20,
+        query: str | None = None,
         platform: str | None = None,
         channel_id: str | None = None,
         topic_id: str | None = None,
@@ -28,6 +29,7 @@ class MessageService:
         return self.repository.get_messages(
             page=page,
             page_size=page_size,
+            query=query,
             platform=platform,
             channel_id=channel_id,
             topic_id=topic_id,

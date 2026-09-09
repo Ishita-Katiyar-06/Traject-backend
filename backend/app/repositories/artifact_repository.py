@@ -90,6 +90,27 @@ class ArtifactRepository:
         self._narrative_report: NarrativeAssessmentReport | None = None
         self._trend_identities: dict[str, tuple[str, str]] = {}
 
+        # Channel source to username mapping
+        self._title_to_username: dict[str, str] = {}
+        self._load_source_registry()
+
+    def _load_source_registry(self) -> None:
+        cfg = self.repo_root / "backend" / "config" / "telegram_sources.json"
+        if not cfg.is_file():
+            cfg = self.repo_root / "config" / "telegram_sources.json"
+        if cfg.is_file():
+            try:
+                import json
+                with open(cfg, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                for s in data.get("sources", []):
+                    u = (s.get("username") or "").lstrip("@").strip()
+                    title = (s.get("display_name") or "").strip().lower()
+                    if u and title:
+                        self._title_to_username[title] = u
+            except Exception as e:
+                logger.debug("Could not load sources registry in artifact repo: %s", e)
+
     def load_artifacts(
         self,
         parquet_path: Path | str | None = None,
@@ -284,7 +305,15 @@ class ArtifactRepository:
         """Thread-safe append of a new canonical message into active in-memory repository indices."""
         cid = message.canonical_id
         if cid in self._messages_by_id:
-            return False
+            existing = self._messages_by_id[cid]
+            updated = False
+            if message.views_count is not None and (existing.views_count is None or message.views_count > existing.views_count):
+                existing.views_count = message.views_count
+                updated = True
+            if message.forwards_count is not None and (existing.forwards_count is None or message.forwards_count > existing.forwards_count):
+                existing.forwards_count = message.forwards_count
+                updated = True
+            return updated
         self._messages_by_id[cid] = message
         self._messages.append(message)
         self._live_messages_count += 1
@@ -1275,6 +1304,7 @@ class ArtifactRepository:
         self,
         page: int = 1,
         page_size: int = 20,
+        query: str | None = None,
         platform: str | None = None,
         channel_id: str | None = None,
         topic_id: str | None = None,
@@ -1289,6 +1319,14 @@ class ArtifactRepository:
 
         filtered = list(self._messages)
 
+        if query:
+            q = query.lower().strip()
+            filtered = [
+                m for m in filtered
+                if q in (m.text_content or "").lower()
+                or q in (m.channel_title or "").lower()
+                or q in (m.author_username or "").lower()
+            ]
         if platform:
             filtered = [m for m in filtered if m.platform.value.lower() == platform.lower()]
         if channel_id:
@@ -1321,23 +1359,38 @@ class ArtifactRepository:
         end = start + page_size
         sliced = filtered[start:end]
 
-        items = [
-            MessageSummaryResponse(
-                canonical_id=m.canonical_id,
-                platform=m.platform,
-                native_id=m.native_id,
-                author_id=m.author_id,
-                channel_title=m.channel_title,
-                published_at=m.published_at,
-                text_content=m.text_content,
-                language=m.language,
-                views_count=m.views_count,
-                forwards_count=m.forwards_count,
-                has_media=m.has_media,
-                is_forward=m.is_forward,
+        items = []
+        for m in sliced:
+            username = m.author_username
+            if not username and m.channel_title:
+                username = self._title_to_username.get(m.channel_title.lower())
+
+            url = None
+            if username:
+                clean_user = username.lstrip("@").strip()
+                url = f"https://t.me/{clean_user}/{m.native_id}"
+            elif m.platform.value.lower() == "telegram" and m.channel_title:
+                clean_title = m.channel_title.lower().replace(" ", "")
+                url = f"https://t.me/{clean_title}/{m.native_id}"
+
+            items.append(
+                MessageSummaryResponse(
+                    canonical_id=m.canonical_id,
+                    platform=m.platform,
+                    native_id=m.native_id,
+                    author_id=m.author_id,
+                    channel_title=m.channel_title,
+                    author_username=username or m.author_username,
+                    url=url,
+                    published_at=m.published_at,
+                    text_content=m.text_content,
+                    language=m.language,
+                    views_count=m.views_count,
+                    forwards_count=m.forwards_count,
+                    has_media=m.has_media,
+                    is_forward=m.is_forward,
+                )
             )
-            for m in sliced
-        ]
 
         meta = PaginationMeta(
             total=total,

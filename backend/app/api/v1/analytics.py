@@ -12,6 +12,13 @@ router = APIRouter(dependencies=[Depends(require_ntro_analyst)])
     summary="Retrieve high-level dashboard analytics summary",
     tags=["Analytics"],
 )
+@router.get(
+    "/analytics/overview",
+    response_model=AnalyticsOverviewResponse,
+    summary="Retrieve high-level dashboard analytics summary (alias)",
+    tags=["Analytics"],
+    include_in_schema=False,
+)
 async def get_analytics(
     service: AnalyticsService = Depends(get_analytics_service),
 ) -> AnalyticsOverviewResponse:
