@@ -23,14 +23,14 @@ interface NavItemDef {
 }
 
 const PRIMARY_NAV_ITEMS: NavItemDef[] = [
-  { name: 'Overview', path: '/overview' },
-  { name: 'Trends', path: '/trends' },
-  { name: 'Emerging Trends', path: '/emerging-trends' },
-  { name: 'Narratives', path: '/narratives' },
-  { name: 'Communities', path: '/communities' },
-  { name: 'Propagation', path: '/propagation' },
-  { name: 'Alerts', path: '/alerts', showBadge: true },
-  { name: 'Data Explorer', path: '/explorer' },
+  { name: 'Overview', path: '/console/overview' },
+  { name: 'Trends', path: '/console/trends' },
+  { name: 'Emerging Trends', path: '/console/emerging-trends' },
+  { name: 'Narratives', path: '/console/narratives' },
+  { name: 'Communities', path: '/console/communities' },
+  { name: 'Propagation', path: '/console/propagation' },
+  { name: 'Alerts', path: '/console/alerts', showBadge: true },
+  { name: 'Data Explorer', path: '/console/explorer' },
 ];
 
 export const TopNavigation: React.FC = () => {
@@ -54,8 +54,8 @@ export const TopNavigation: React.FC = () => {
     const currentPath = targetPath || location.pathname;
     const activeItem =
       PRIMARY_NAV_ITEMS.find((item) =>
-        item.path === '/overview'
-          ? currentPath === '/' || currentPath === '/overview'
+        item.path === '/console/overview'
+          ? currentPath === '/console' || currentPath === '/console/overview' || currentPath === '/' || currentPath === '/overview'
           : currentPath === item.path || currentPath.startsWith(`${item.path}/`)
       ) || PRIMARY_NAV_ITEMS[0];
 
@@ -117,12 +117,12 @@ export const TopNavigation: React.FC = () => {
       }`}
     >
       {/* =========================================================================
-          LEFT: Brand Capsule (Exact Crextio Style Pill)
+          LEFT: Brand Capsule
           ========================================================================= */}
       <div className="flex items-center shrink-0">
         <Link
-          to="/overview"
-          aria-label="TRAJECT Home"
+          to="/console/overview"
+          aria-label="TRAJECT Console Home"
           onClick={() => scrollToTop(true)}
           className="rounded-full border border-black/25 dark:border-white/25 bg-white/60 dark:bg-[#181C22]/60 backdrop-blur-md px-5 sm:px-6 h-10 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-black/40 dark:hover:border-white/40 transition-colors flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-slate-400 group"
         >
@@ -186,7 +186,7 @@ export const TopNavigation: React.FC = () => {
                   updateIndicator(item.path);
                   scrollToTop(true);
                 }}
-                className={`relative px-4 py-2 rounded-full text-[13.5px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-slate-400 whitespace-nowrap flex items-center gap-1.5 select-none transition-colors duration-200 z-10 ${
+                className={`relative px-2.5 2xl:px-3.5 py-1.5 rounded-full text-[12px] 2xl:text-[13px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-slate-400 whitespace-nowrap flex items-center gap-1 select-none transition-colors duration-200 z-10 ${
                   isActive
                     ? 'text-white'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
@@ -197,7 +197,7 @@ export const TopNavigation: React.FC = () => {
                 {/* Subtle badge for alerts if count exists */}
                 {item.showBadge && openAlertsCount > 0 && (
                   <span
-                    className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full leading-tight transition-colors duration-200 ${
+                    className={`text-[9.5px] font-mono font-bold px-1.5 py-0.2 rounded-full leading-tight transition-colors duration-200 ${
                       isActive
                         ? 'bg-white/20 text-white'
                         : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300'
@@ -212,33 +212,42 @@ export const TopNavigation: React.FC = () => {
         </nav>
 
         {/* Utilities Dock (Right alongside Navigation Pill) */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-        {/* Real-time WebSocket Stream Beacon */}
-        <div className="hidden xl:flex items-center">
-          <LiveStreamBadge />
-        </div>
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Real-time WebSocket Stream Beacon */}
+          <div className="hidden 2xl:flex items-center">
+            <LiveStreamBadge />
+          </div>
 
-        {/* Live Alert Toast Banner */}
-        <LiveAlertToast />
+          {/* Live Alert Toast Banner */}
+          <LiveAlertToast />
 
-        {/* Command Search Pill */}
-        <button
-          type="button"
-          aria-label="Open command search (/)"
-          onClick={openSearch}
-          className="flex items-center gap-2 h-10 px-3 sm:px-3.5 rounded-full bg-white/80 dark:bg-[#181C22]/80 backdrop-blur-md border border-slate-300/80 dark:border-[#333C48] hover:border-slate-400 dark:hover:border-slate-500 shadow-[0_1px_3px_rgba(0,0,0,0.05)] text-slate-500 dark:text-slate-400 transition-all outline-none focus-visible:ring-2 focus-visible:ring-slate-400 cursor-pointer"
-        >
-          <Search className="w-3.5 h-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
-          <span className="hidden md:inline text-[12.5px] font-medium text-slate-600 dark:text-slate-300">
-            Search...
-          </span>
-          <kbd className="hidden lg:inline-flex items-center justify-center px-1.5 py-0.2 text-[10px] font-mono bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-full">
-            /
-          </kbd>
-        </button>
+          {/* Command Search Pill */}
+          <button
+            type="button"
+            aria-label="Open command search (/)"
+            onClick={openSearch}
+            className="flex items-center gap-1.5 h-9 sm:h-10 px-2.5 2xl:px-3.5 rounded-full bg-white/80 dark:bg-[#181C22]/80 backdrop-blur-md border border-slate-300/80 dark:border-[#333C48] hover:border-slate-400 dark:hover:border-slate-500 shadow-[0_1px_3px_rgba(0,0,0,0.05)] text-slate-500 dark:text-slate-400 transition-all outline-none focus-visible:ring-2 focus-visible:ring-slate-400 cursor-pointer"
+          >
+            <Search className="w-3.5 h-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
+            <span className="hidden 2xl:inline text-[12px] font-medium text-slate-600 dark:text-slate-300">
+              Search...
+            </span>
+            <kbd className="hidden 2xl:inline-flex items-center justify-center px-1.5 py-0.2 text-[10px] font-mono bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-full">
+              /
+            </kbd>
+          </button>
 
-        {/* User Profile Avatar (Circular capsule matching reference image) */}
-        <UserMenu triggerStyle="circle" />
+          {/* Switch to Public View */}
+          <Link
+            to="/trends"
+            aria-label="Switch to Public View"
+            className="hidden 2xl:inline-flex items-center gap-1 h-9 px-2.5 rounded-full text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100/80 dark:bg-[#181C22]/80 border border-slate-200/90 dark:border-[#333C48] transition-colors whitespace-nowrap"
+          >
+            <span>Public View ↗</span>
+          </Link>
+
+          {/* User Profile Avatar (Circular capsule matching reference image) */}
+          <UserMenu triggerStyle="circle" />
 
         {/* Theme Toggle (Circular capsule) */}
         <button

@@ -3,8 +3,13 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.deps import get_artifact_repository
+from app.api.deps import (
+    get_artifact_repository,
+    require_authenticated_user,
+    require_ntro_analyst,
+)
 from app.main import create_app
+from app.schemas.auth import AuthenticatedUser, UserRole
 from app.ml.features.models import (
     EnrichedTopicCandidate,
     SocialEntityCategory,
@@ -452,6 +457,13 @@ def populated_repository(session_pipeline_result):
 @pytest.fixture
 def client(populated_repository):
     app = create_app()
+    mock_ntro_user = AuthenticatedUser(
+        user_id="test-ntro-analyst-uuid",
+        email="analyst@ntro.gov.in",
+        role=UserRole.NTRO_ANALYST,
+    )
     app.dependency_overrides[get_artifact_repository] = lambda: populated_repository
+    app.dependency_overrides[require_ntro_analyst] = lambda: mock_ntro_user
+    app.dependency_overrides[require_authenticated_user] = lambda: mock_ntro_user
     with TestClient(app) as test_client:
         yield test_client

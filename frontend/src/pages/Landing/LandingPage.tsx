@@ -258,27 +258,24 @@ export const LandingPage: React.FC = () => {
 
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-10">
-            <Link to="/overview" className="text-[14.5px] font-medium text-slate-700 hover:text-[#D97706] transition-colors">
-              Product
-            </Link>
             <Link to="/trends" className="text-[14.5px] font-medium text-slate-700 hover:text-[#D97706] transition-colors">
-              Intelligence
+              Trends
             </Link>
-            <Link to="/explorer" className="text-[14.5px] font-medium text-slate-700 hover:text-[#D97706] transition-colors">
-              Sources
+            <Link to="/emerging-trends" className="text-[14.5px] font-medium text-slate-700 hover:text-[#D97706] transition-colors">
+              Emerging Forecasts
             </Link>
-            <Link to="/overview" className="text-[14.5px] font-medium text-slate-700 hover:text-[#D97706] transition-colors">
-              About
+            <Link to="/login" className="text-[14.5px] font-medium text-slate-700 hover:text-[#D97706] transition-colors">
+              NTRO Portal
             </Link>
           </nav>
 
           {/* Action CTA */}
           <div className="flex items-center">
             <Link
-              to="/overview"
+              to="/trends"
               className="font-brand text-[14px] font-medium text-white bg-[#181D24] hover:bg-[#111727] px-6 py-2.5 rounded-full shadow-[0_4px_14px_rgba(24,29,36,0.22)] hover:shadow-[0_6px_18px_rgba(24,29,36,0.3)] hover:-translate-y-0.5 transition-all"
             >
-              Get Started
+              Explore Trends
             </Link>
           </div>
 
@@ -359,10 +356,10 @@ export const LandingPage: React.FC = () => {
               }`}
             >
               <Link
-                to="/overview"
+                to="/trends"
                 className="group font-brand text-[15px] font-medium text-white bg-[#181D24] hover:bg-[#111727] active:scale-[0.985] active:translate-y-0 px-7 py-3.5 rounded-full shadow-[0_10px_22px_rgba(24,29,36,0.22)] hover:shadow-[0_14px_28px_rgba(24,29,36,0.3)] hover:-translate-y-0.5 transition-all inline-flex items-center gap-2.5"
               >
-                <span>Open Dashboard</span>
+                <span>Explore Trends</span>
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </Link>
 
@@ -370,7 +367,7 @@ export const LandingPage: React.FC = () => {
                 to="/emerging-trends"
                 className="font-brand text-[15px] font-medium text-[#111727] bg-white/85 hover:bg-white active:scale-[0.985] active:translate-y-0 border border-[rgba(226,221,208,0.85)] px-7 py-3.5 rounded-full shadow-[0_4px_14px_rgba(112,128,176,0.06)] hover:-translate-y-0.5 transition-all"
               >
-                Learn More
+                Emerging Forecasts
               </Link>
             </div>
 

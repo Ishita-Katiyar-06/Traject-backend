@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { MotionConfig } from 'motion/react';
+import { AuthProvider } from '../auth';
+import { RoleProvider } from '../contexts/RoleContext';
 import { AppProvider } from '../contexts/AppContext';
 import { NavigationProvider } from '../contexts/NavigationContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
@@ -12,11 +14,15 @@ export const AppProviders: React.FC<{ children: React.ReactNode }> = ({ children
       <ThemeProvider>
         <MotionConfig reducedMotion="never">
           <BrowserRouter>
-            <AppProvider>
-              <NavigationProvider>
-                {children}
-              </NavigationProvider>
-            </AppProvider>
+            <AuthProvider>
+              <RoleProvider>
+                <AppProvider>
+                  <NavigationProvider>
+                    {children}
+                  </NavigationProvider>
+                </AppProvider>
+              </RoleProvider>
+            </AuthProvider>
           </BrowserRouter>
         </MotionConfig>
       </ThemeProvider>

@@ -1,10 +1,10 @@
 from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from app.api.deps import MessageService, get_message_service
+from app.api.deps import MessageService, get_message_service, require_ntro_analyst
 from app.schemas.api.messages import MessageDetailResponse, MessageListResponse
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_ntro_analyst)])
 
 
 @router.get(

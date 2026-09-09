@@ -10,6 +10,7 @@
  */
 
 import type { ErrorEnvelope } from '../types/api.ts';
+import { isSupabaseConfigured, supabase } from '../auth/supabaseClient.ts';
 
 const env = (import.meta as unknown as { env?: Record<string, string> }).env;
 
@@ -142,6 +143,18 @@ export const apiClient = {
       }
     }
 
+    let authHeader: Record<string, string> = {};
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data?.session?.access_token) {
+          authHeader['Authorization'] = `Bearer ${data.session.access_token}`;
+        }
+      } catch {
+        // Fallback silently if session retrieval fails
+      }
+    }
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -156,6 +169,7 @@ export const apiClient = {
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          ...authHeader,
           ...headers,
         },
       });

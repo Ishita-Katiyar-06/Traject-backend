@@ -532,12 +532,34 @@ The application will launch on **[http://localhost:3000](http://localhost:3000)*
 
 #### 4. Dashboard Capabilities & Navigation
 - **Overview (`/overview`)**: High-level platform health, live incoming message counter (`TOTAL INGESTED +N new`), Priority Signal Tier breakdown, and corpus sentiment distribution.
-- **Topics (`/topics`)**: Semantic clusters discovered via HDBSCAN with top c-TF-IDF keywords, temporal velocity, and cluster centroid inspection.
+- **Trends (`/trends`)**: Central trend anchors, topic volume curves, and semantic c-TF-IDF keyword distribution.
+- **Emerging Trends (`/emerging-trends`)**: Forward-looking emerging topic forecasts with 24h & 6h horizons, trajectory velocity, and confidence tiers.
 - **Narratives (`/narratives`)**: Prioritized candidate narratives scored via the 4G composite formula (Spread, Coordination, Reach, Friction) with evidence-density indicators.
 - **Communities (`/communities`)**: Channel domain clustering, source co-occurrence, and cross-channel syndication networks.
 - **Propagation (`/propagation`)**: Interactive forward cascade trees and amplifier tracking.
 - **Alerts Triage Queue (`/alerts`)**: Analyst triage queue for elevated/critical narratives with live toast notifications.
 - **Data Explorer (`/explorer`)**: Infinite scrolling table of canonical messages with text search, channel filters, and raw payload modals.
+- **Authentication Routes (`/login`, `/signup`)**: Supabase email and password authentication foundation.
+
+#### 5. Supabase Authentication Foundation (Milestone 9A)
+
+TRAJECT incorporates the official **Supabase Auth** browser client (`@supabase/supabase-js`) providing session management and authentication state tracking:
+
+##### Environment Configuration
+Set public credentials in your `.env` file at the repository root:
+```env
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_publishable_key_here
+```
+> [!IMPORTANT]
+> - Use **ONLY** the public Anon key (`VITE_SUPABASE_ANON_KEY`).
+> - **NEVER** place a Supabase `service_role` key in frontend code or client environment variables.
+> - If credentials are omitted, the application runs in unauthenticated preview mode without fabricating sessions or roles.
+
+##### Security & Authorization Boundary Disclosure
+* **Authentication vs. Authorization**: Milestone 9A establishes **authentication only** (who the user is via Supabase sessions). Authorization (what the user is permitted to do) is **NOT** implemented in this milestone.
+* **No Client-Controlled Roles**: The `role` property in `AuthContext` is strictly `null`. Users cannot self-assign or claim the NTRO Analyst role through frontend state, signup payloads, localStorage, or URL parameters.
+* **Upcoming Milestone 9B**: Milestone 9B will establish the authoritative security boundary via FastAPI backend JWT verification, trusted role extraction, and endpoint-level authorization guards.
 
 ---
 
@@ -627,11 +649,14 @@ npm run test
 - [x] **Milestone 5B**: Interactive Analyst Web Dashboard (Vite + React frontend with live telemetry & telemetry charts)
 - [x] **Milestone 6A–6F**: Multi-channel corpus expansion (14 channels), narrative quality audit, incremental dynamic watermarking, and temporal narrative lineage tracking ($A \rightarrow B$)
 - [x] **Milestone 7A**: Real-Time MTProto streaming, Staggered Auto-Join Worker, WebSocket live pub/sub gateway (`/api/v1/ws/live`), and reactive UI counter synchronization
+- [x] **Milestone 8A–8F**: Emerging Trend Forecasting engine, `volume_velocity_hybrid` strategy, 24h/6h horizons, and production API & UI integration
+- [x] **Milestone 9A**: Supabase Authentication Foundation (`@supabase/supabase-js`, `AuthContext`, session hydration, login/signup routes, unauthenticated preview fallback)
+- [x] **Milestone 9B**: Backend JWT Verification & Role Authorization (`PyJWT[crypto]`, JWKS / HMAC cryptographic token verification, trusted `app_metadata` role extraction, `public_user` vs `ntro_analyst` endpoint guards, attack regression testing)
 
 ### Future Scope
-- [ ] **Milestone 8**: Cross-platform collectors: **X (Twitter)**, Reddit, and YouTube
-- [ ] **Milestone 9**: Distributed inference caching (Redis/PostgreSQL) and multi-node worker pools
-- [ ] **Milestone 10**: Information cascade graph and influence propagation analysis (NetworkX / Neo4j)
+- [ ] **Milestone 9C**: Public vs NTRO Data Segregation & Dual-Shell Architecture (`/console/*` NTRO Analyst vs. `/public/*` Trends & Forecasting Consumer)
+- [ ] **Milestone 10**: Cross-platform collectors: **X (Twitter)**, Reddit, and YouTube
+- [ ] **Milestone 11**: Cross-platform information cascade graph and influence propagation analysis (NetworkX / Neo4j)
 
 ---
 

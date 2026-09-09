@@ -5,7 +5,8 @@ import json
 import logging
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 
-from app.api.deps import get_artifact_repository
+from app.api.deps import get_artifact_repository, require_ntro_analyst
+from app.core.auth import get_jwt_verifier
 from app.repositories.artifact_repository import ArtifactRepository
 from app.services.streaming_manager import StreamingManager, get_streaming_manager
 
@@ -20,36 +21,62 @@ async def websocket_live_stream(
     manager: StreamingManager = Depends(get_streaming_manager),
     repo: ArtifactRepository = Depends(get_artifact_repository),
 ) -> None:
-    """Duplex WebSocket connection endpoint for real-time live messages and alerts."""
-    await manager.connect(websocket)
+    """Duplex WebSocket connection endpoint for real-time live messages and alerts.
+    
+    Supports role segregation: authenticated NTRO analysts receive operational channels
+    and live alerts; public users receive aggregated trend statistics.
+    """
+    # Extract optional token from query parameters
+    token = websocket.query_params.get("token")
+    role = "public_user"
+    if token:
+        try:
+            verifier = get_jwt_verifier()
+            user = verifier.authenticate(token)
+            if user.is_ntro_analyst:
+                role = "ntro_analyst"
+        except Exception:
+            role = "public_user"
+
+    await manager.connect(websocket, role=role)
 
     try:
-        # Check channel join status if collector service is active
-        channels_monitored = 0
-        channels_joined = 0
-        try:
-            from app.services.live_collector_service import get_live_collector_service
-            col = get_live_collector_service()
-            if col:
-                summary = col.get_channel_join_summary()
-                channels_monitored = summary.get("total_sources", 0)
-                channels_joined = summary.get("joined_count", 0)
-        except Exception:
-            pass
+        if role == "ntro_analyst":
+            channels_monitored = 0
+            channels_joined = 0
+            try:
+                from app.services.live_collector_service import get_live_collector_service
+                col = get_live_collector_service()
+                if col:
+                    summary = col.get_channel_join_summary()
+                    channels_monitored = summary.get("total_sources", 0)
+                    channels_joined = summary.get("joined_count", 0)
+            except Exception:
+                pass
 
-        # Send initial handshake with recent events buffer and current corpus state
-        initial_payload = {
-            "type": "connection_ack",
-            "data": {
+            data = {
                 "status": "connected",
+                "role": "ntro_analyst",
                 "active_corpus_records": len(repo._messages),
                 "artifacts_loaded": repo.artifacts_loaded,
                 "dataset_source": repo.dataset_source,
                 "channels_monitored": channels_monitored,
                 "channels_joined": channels_joined,
-                "recent_history": manager.get_recent_history(),
+                "recent_history": manager.get_recent_history(role="ntro_analyst"),
                 "server_time_utc": datetime.now(timezone.utc).isoformat(),
-            },
+            }
+        else:
+            data = {
+                "status": "connected",
+                "role": "public_user",
+                "active_corpus_records": len(repo._messages),
+                "recent_history": manager.get_recent_history(role="public_user"),
+                "server_time_utc": datetime.now(timezone.utc).isoformat(),
+            }
+
+        initial_payload = {
+            "type": "connection_ack",
+            "data": data,
             "timestamp_utc": datetime.now(timezone.utc).isoformat(),
         }
         await websocket.send_json(initial_payload)
@@ -84,7 +111,11 @@ async def websocket_live_stream(
         logger.warning("Error in /ws/live stream: %s", exc)
 
 
-@router.post("/stream/simulate", summary="Simulate a real-time live Telegram event or alert")
+@router.post(
+    "/stream/simulate",
+    summary="Simulate a real-time live Telegram event or alert",
+    dependencies=[Depends(require_ntro_analyst)],
+)
 async def simulate_event(
     event_type: str = "alert",
     manager: StreamingManager = Depends(get_streaming_manager),
@@ -108,7 +139,7 @@ async def simulate_event(
             "domains": ["conflict", "geopolitics"],
             "detected_at": now_iso,
         }
-        await manager.broadcast("alert_triggered", alert_payload)
+        await manager.broadcast("alert_triggered", alert_payload, ntro_only=True)
         return {"status": "broadcast_sent", "event": "alert_triggered", "payload": alert_payload}
     else:
         msg_payload = {
@@ -124,7 +155,7 @@ async def simulate_event(
             "has_media": False,
             "total_corpus_count": len(repo._messages) + 1,
         }
-        await manager.broadcast("message_ingested", msg_payload)
+        await manager.broadcast("message_ingested", msg_payload, ntro_only=True)
         return {"status": "broadcast_sent", "event": "message_ingested", "payload": msg_payload}
 
 
@@ -132,6 +163,7 @@ async def simulate_event(
     "/stream/channels",
     summary="Retrieve live Telegram channel join and monitoring status",
     tags=["Real-Time WebSocket Stream"],
+    dependencies=[Depends(require_ntro_analyst)],
 )
 async def get_stream_channels() -> dict:
     """Returns real-time status of all monitored channels and background auto-join progress."""

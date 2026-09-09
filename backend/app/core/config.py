@@ -73,6 +73,23 @@ class APISettings:
         self.ml_cache_path: str = os.getenv("ML_CACHE_PATH", "./data/cache/ml_inference_cache.db")
         self.active_dataset_name: str = os.getenv("ACTIVE_DATASET_NAME", "telegram_messages")
 
+        # Milestone 9B — Supabase Auth & JWT Verification
+        self.supabase_url: str = os.getenv("SUPABASE_URL") or os.getenv("VITE_SUPABASE_URL", "")
+        self.supabase_jwt_secret: str = os.getenv("SUPABASE_JWT_SECRET", "")
+        
+        default_jwks = f"{self.supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json" if self.supabase_url else ""
+        self.supabase_jwks_url: str = os.getenv("SUPABASE_JWKS_URL", default_jwks)
+        
+        default_issuer = f"{self.supabase_url.rstrip('/')}/auth/v1" if self.supabase_url else ""
+        self.supabase_issuer: str = os.getenv("SUPABASE_ISSUER", default_issuer)
+        
+        self.supabase_audience: str = os.getenv("SUPABASE_AUDIENCE", "authenticated")
+        
+        raw_ntro_emails = os.getenv("NTRO_ANALYST_EMAILS", "")
+        self.ntro_analyst_emails: set[str] = {
+            e.strip().lower() for e in raw_ntro_emails.split(",") if e.strip()
+        }
+
 
 _cached_settings: APISettings | None = None
 

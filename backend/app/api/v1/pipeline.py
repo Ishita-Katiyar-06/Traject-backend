@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.api.deps import ArtifactRepository, get_artifact_repository
+from app.api.deps import ArtifactRepository, get_artifact_repository, require_ntro_analyst
 from app.schemas.api.pipeline import PipelineMetricsResponse, PipelineStatusResponse
 
 router = APIRouter()
@@ -32,6 +32,7 @@ async def get_pipeline_status(
     response_model=PipelineMetricsResponse,
     summary="Retrieve audit-ready performance, latency, and memory metrics",
     tags=["Pipeline"],
+    dependencies=[Depends(require_ntro_analyst)],
 )
 async def get_pipeline_metrics(
     repository: ArtifactRepository = Depends(get_artifact_repository),

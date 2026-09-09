@@ -1,13 +1,13 @@
 from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from app.api.deps import AnalyticsService, get_analytics_service
+from app.api.deps import AnalyticsService, get_analytics_service, require_ntro_analyst
 from app.schemas.api.narratives import (
     NarrativeDetailResponse,
     NarrativeListResponse,
 )
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_ntro_analyst)])
 
 
 @router.get(

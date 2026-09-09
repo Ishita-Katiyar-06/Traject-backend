@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from app.api.deps import ArtifactRepository, get_artifact_repository
+from app.api.deps import ArtifactRepository, get_artifact_repository, require_ntro_analyst
 from app.core.config import find_repo_root
 from app.schemas.api.common import PaginationMeta
 from app.schemas.api.temporal import (
@@ -104,6 +104,7 @@ async def get_temporal_status(
     "/snapshots",
     response_model=TemporalSnapshotListResponse,
     summary="List immutable analytics snapshots and corpus linkage",
+    dependencies=[Depends(require_ntro_analyst)],
 )
 async def list_temporal_snapshots() -> TemporalSnapshotListResponse:
     """Discover and list known analytics artifacts with corpus and generation metadata."""
@@ -151,6 +152,7 @@ async def list_temporal_snapshots() -> TemporalSnapshotListResponse:
     "/narratives",
     response_model=LineageListResponse,
     summary="Paginated list of temporal narrative lineages",
+    dependencies=[Depends(require_ntro_analyst)],
 )
 async def list_lineages(
     state: LineageState | None = Query(default=None, description="Optional state filter (e.g. 'persisting', 'new')"),
@@ -211,6 +213,7 @@ async def list_lineages(
     "/narratives/{lineage_id}",
     response_model=NarrativeLineageDetailResponse,
     summary="Retrieve lineage details and lifecycle event history",
+    dependencies=[Depends(require_ntro_analyst)],
 )
 async def get_lineage_detail(
     lineage_id: str,
@@ -235,6 +238,7 @@ async def get_lineage_detail(
     "/narratives/by-narrative/{narrative_id}",
     response_model=NarrativeLineageDetailResponse,
     summary="Resolve lineage using snapshot-local narrative identifier",
+    dependencies=[Depends(require_ntro_analyst)],
 )
 async def get_lineage_by_narrative(
     narrative_id: str,

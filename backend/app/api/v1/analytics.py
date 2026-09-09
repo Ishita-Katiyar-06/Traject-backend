@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.api.deps import AnalyticsService, get_analytics_service
+from app.api.deps import AnalyticsService, get_analytics_service, require_ntro_analyst
 from app.schemas.api.analytics import AnalyticsOverviewResponse
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_ntro_analyst)])
 
 
 @router.get(
