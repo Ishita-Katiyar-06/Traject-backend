@@ -62,3 +62,35 @@ def test_get_message_by_id_not_found(client):
     body = resp.json()
     assert "error" in body
     assert body["error"]["code"] == "RESOURCE_NOT_FOUND"
+
+
+def test_post_message_triage(client):
+    """Verify POST /api/v1/messages/triage performs forensic evaluation and returns typed report."""
+    payload = {
+        "text": "Breaking: Massive drone attack reported near major power substation. Severe casualties and damage.",
+        "author": "intel_wire",
+        "forward_origin": "warmonitors",
+        "views": 15000,
+        "forwards": 45,
+    }
+    resp = client.post("/api/v1/messages/triage", json=payload)
+    assert resp.status_code == 200
+    report = resp.json()
+
+    assert "processed_text" in report
+    assert "detected_language" in report
+    assert "sentiment_label" in report
+    assert report["sentiment_label"] == "NEGATIVE"
+    assert "estimated_priority_tier" in report
+    assert report["estimated_priority_tier"] in ("CRITICAL", "HIGH", "ELEVATED", "ROUTINE")
+    assert "estimated_priority_score" in report
+    assert 0.0 <= report["estimated_priority_score"] <= 1.0
+    assert "indicators" in report
+    assert len(report["indicators"]) > 0
+
+
+def test_post_message_triage_validation_error(client):
+    """Verify POST /api/v1/messages/triage rejects empty or invalid payload."""
+    resp = client.post("/api/v1/messages/triage", json={"text": ""})
+    assert resp.status_code == 400
+
