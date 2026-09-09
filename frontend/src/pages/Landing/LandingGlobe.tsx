@@ -1,234 +1,120 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { WORLD_POLYGONS } from './world_polygons';
 
+export type IntroPhase = 'space_spin' | 'points_pop' | 'trend_pop' | 'transitioning' | 'settled';
 
+interface LandingGlobeProps {
+  introPhase?: IntroPhase;
+}
 
-export interface Hotspot {
+export interface IntelLocation {
   id: string;
   name: string;
   country: string;
+  countryCode: string;
   lat: number;
   lon: number;
-  trend: string;
-  category: string;
-  velocity: string;
-  volume: string;
-  badgeBg: string;
-  badgeText: string;
+  trend: string; // Real, concise 1-3 word topic detected at location
+  indicatorColor: string;
 }
 
-const HOTSPOTS: Hotspot[] = [
+// 8 Canonical Intelligence Hubs with concise, real location-specific trends
+const INTEL_LOCATIONS: IntelLocation[] = [
   {
-    id: 'tokyo',
-    name: 'Tokyo',
-    country: 'Japan',
-    lat: 35.6762,
-    lon: 139.6503,
-    trend: 'Quantum Sensor Fabrication Bottleneck',
-    category: 'Hardware Signal',
-    velocity: '+225%',
-    volume: '42.8K posts',
-    badgeBg: 'bg-rose-500/10 border-rose-500/25',
-    badgeText: 'text-rose-700',
-  },
-  {
-    id: 'singapore',
-    name: 'Singapore',
-    country: 'Singapore',
-    lat: 1.3521,
-    lon: 103.8198,
-    trend: 'Subsea Cable Routing Divergence',
-    category: 'Connectivity',
-    velocity: '+360%',
-    volume: '28.4K posts',
-    badgeBg: 'bg-sky-500/10 border-sky-500/25',
-    badgeText: 'text-sky-700',
+    id: 'new_york',
+    name: 'New York',
+    country: 'United States',
+    countryCode: 'USA',
+    lat: 40.7128,
+    lon: -74.0060,
+    trend: 'Fed Rate Cut',
+    indicatorColor: '#f43f5e', // Rose
   },
   {
     id: 'london',
     name: 'London',
     country: 'United Kingdom',
+    countryCode: 'GBR',
     lat: 51.5074,
     lon: -0.1278,
-    trend: 'Cross-Border Regulatory Arbitrage',
-    category: 'Governance',
-    velocity: '+190%',
-    volume: '36.2K posts',
-    badgeBg: 'bg-amber-500/10 border-amber-500/25',
-    badgeText: 'text-amber-800',
-  },
-  {
-    id: 'frankfurt',
-    name: 'Frankfurt',
-    country: 'Germany',
-    lat: 50.1109,
-    lon: 8.6821,
-    trend: 'Wholesale Digital Settlement Standard',
-    category: 'Fintech',
-    velocity: '+215%',
-    volume: '19.5K posts',
-    badgeBg: 'bg-emerald-500/10 border-emerald-500/25',
-    badgeText: 'text-emerald-700',
-  },
-  {
-    id: 'new_york',
-    name: 'New York',
-    country: 'United States',
-    lat: 40.7128,
-    lon: -74.0060,
-    trend: 'Real-time AI Sentiment Divergence',
-    category: 'Market Intelligence',
-    velocity: '+240%',
-    volume: '58.1K posts',
-    badgeBg: 'bg-amber-500/10 border-amber-500/25',
-    badgeText: 'text-amber-800',
-  },
-  {
-    id: 'san_francisco',
-    name: 'San Francisco',
-    country: 'United States',
-    lat: 37.7749,
-    lon: -122.4194,
-    trend: 'Frontier Autonomous Agents Influx',
-    category: 'Deep Tech',
-    velocity: '+380%',
-    volume: '74.6K posts',
-    badgeBg: 'bg-purple-500/10 border-purple-500/25',
-    badgeText: 'text-purple-700',
+    trend: 'Election Debate',
+    indicatorColor: '#38bdf8', // Sky Blue
   },
   {
     id: 'dubai',
     name: 'Dubai',
     country: 'United Arab Emirates',
+    countryCode: 'ARE',
     lat: 25.2048,
     lon: 55.2708,
-    trend: 'Sovereign AI Compute Reserves',
-    category: 'Infrastructure',
-    velocity: '+440%',
-    volume: '31.9K posts',
-    badgeBg: 'bg-amber-500/10 border-amber-500/25',
-    badgeText: 'text-amber-800',
+    trend: 'Oil Prices',
+    indicatorColor: '#f59e0b', // Amber
   },
   {
-    id: 'mumbai',
-    name: 'Mumbai',
+    id: 'delhi',
+    name: 'Delhi',
     country: 'India',
-    lat: 19.0760,
-    lon: 72.8777,
-    trend: 'High-Volume UPI Settlement Spike',
-    category: 'Fintech Velocity',
-    velocity: '+410%',
-    volume: '82.3K posts',
-    badgeBg: 'bg-rose-500/10 border-rose-500/25',
-    badgeText: 'text-rose-700',
+    countryCode: 'IND',
+    lat: 28.6139,
+    lon: 77.2090,
+    trend: 'Monsoon Alerts',
+    indicatorColor: '#2dd4bf', // Teal
   },
   {
-    id: 'nairobi',
-    name: 'Nairobi',
-    country: 'Kenya',
-    lat: -1.2921,
-    lon: 36.8219,
-    trend: 'Pan-African Micro-Remittance Spike',
-    category: 'Emerging Markets',
-    velocity: '+295%',
-    volume: '16.7K posts',
-    badgeBg: 'bg-emerald-500/10 border-emerald-500/25',
-    badgeText: 'text-emerald-700',
+    id: 'singapore',
+    name: 'Singapore',
+    country: 'Singapore',
+    countryCode: 'SGP',
+    lat: 1.3521,
+    lon: 103.8198,
+    trend: 'Crypto Markets',
+    indicatorColor: '#34d399', // Emerald
   },
   {
-    id: 'sao_paulo',
-    name: 'São Paulo',
-    country: 'Brazil',
-    lat: -23.5505,
-    lon: -46.6333,
-    trend: 'Agri-Satellite Yield Correlation',
-    category: 'Commodities',
-    velocity: '+195%',
-    volume: '22.1K posts',
-    badgeBg: 'bg-sky-500/10 border-sky-500/25',
-    badgeText: 'text-sky-700',
+    id: 'tokyo',
+    name: 'Tokyo',
+    country: 'Japan',
+    countryCode: 'JPN',
+    lat: 35.6762,
+    lon: 139.6503,
+    trend: 'AI Regulation',
+    indicatorColor: '#a855f7', // Purple
   },
   {
-    id: 'sydney',
-    name: 'Sydney',
-    country: 'Australia',
-    lat: -33.8688,
-    lon: 151.2093,
-    trend: 'Critical Mineral Logistics Index Surge',
-    category: 'Supply Chain',
-    velocity: '+155%',
-    volume: '14.3K posts',
-    badgeBg: 'bg-amber-500/10 border-amber-500/25',
-    badgeText: 'text-amber-800',
+    id: 'san_francisco',
+    name: 'San Francisco',
+    country: 'United States',
+    countryCode: 'USA',
+    lat: 37.7749,
+    lon: -122.4194,
+    trend: 'AI Startups',
+    indicatorColor: '#fbbf24', // Warm Gold
   },
   {
-    id: 'cairo',
-    name: 'Cairo',
-    country: 'Egypt',
-    lat: 30.0444,
-    lon: 31.2357,
-    trend: 'Red Sea Commercial Routing Shifts',
-    category: 'Geopolitics',
-    velocity: '+280%',
-    volume: '29.0K posts',
-    badgeBg: 'bg-rose-500/10 border-rose-500/25',
-    badgeText: 'text-rose-700',
-  },
-  {
-    id: 'seoul',
-    name: 'Seoul',
-    country: 'South Korea',
-    lat: 37.5665,
-    lon: 126.9780,
-    trend: 'Neuromorphic HBM Silicon Spike',
-    category: 'Semiconductors',
-    velocity: '+330%',
-    volume: '45.1K posts',
-    badgeBg: 'bg-purple-500/10 border-purple-500/25',
-    badgeText: 'text-purple-700',
-  },
-  {
-    id: 'paris',
-    name: 'Paris',
-    country: 'France',
-    lat: 48.8566,
-    lon: 2.3522,
-    trend: 'Autonomous Aerial Defense Networks',
-    category: 'Defense Tech',
-    velocity: '+175%',
-    volume: '21.4K posts',
-    badgeBg: 'bg-sky-500/10 border-sky-500/25',
-    badgeText: 'text-sky-700',
-  },
-  {
-    id: 'lagos',
-    name: 'Lagos',
-    country: 'Nigeria',
-    lat: 6.5244,
-    lon: 3.3792,
-    trend: 'Decentralized FX Inflow Rally',
-    category: 'Crypto Flows',
-    velocity: '+310%',
-    volume: '27.5K posts',
-    badgeBg: 'bg-emerald-500/10 border-emerald-500/25',
-    badgeText: 'text-emerald-700',
-  },
-  {
-    id: 'toronto',
-    name: 'Toronto',
-    country: 'Canada',
-    lat: 43.6532,
-    lon: -79.3832,
-    trend: 'Hydro-Powered Data Center Corridor',
-    category: 'Infrastructure',
-    velocity: '+145%',
-    volume: '15.2K posts',
-    badgeBg: 'bg-sky-500/10 border-sky-500/25',
-    badgeText: 'text-sky-700',
+    id: 'washington',
+    name: 'Washington',
+    country: 'United States',
+    countryCode: 'USA',
+    lat: 38.9072,
+    lon: -77.0369,
+    trend: 'Trade Policy',
+    indicatorColor: '#60a5fa', // Blue
   },
 ];
 
+// Strategic information flow arc pairs (Curved connection lines)
+const SIGNAL_ARCS: [string, string][] = [
+  ['new_york', 'london'],
+  ['london', 'dubai'],
+  ['dubai', 'delhi'],
+  ['delhi', 'singapore'],
+  ['singapore', 'tokyo'],
+  ['tokyo', 'san_francisco'],
+  ['washington', 'london'],
+];
+
+// Geographic Lat/Lon to 3D Cartesian coordinates
 function latLonToVector3(lat: number, lon: number, radius: number): THREE.Vector3 {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lon + 180) * (Math.PI / 180);
@@ -238,48 +124,77 @@ function latLonToVector3(lat: number, lon: number, radius: number): THREE.Vector
   return new THREE.Vector3(x, y, z);
 }
 
-export type IntroPhase = 'space_spin' | 'points_pop' | 'trend_pop' | 'transitioning' | 'settled';
+// Generate smooth elevated great-circle arc points
+function getGreatCircleArc(
+  p1: THREE.Vector3,
+  p2: THREE.Vector3,
+  radius: number,
+  maxAltitude: number,
+  segments = 40
+): THREE.Vector3[] {
+  const points: THREE.Vector3[] = [];
+  const v1 = p1.clone().normalize();
+  const v2 = p2.clone().normalize();
+  const angle = v1.angleTo(v2);
 
-interface LandingGlobeProps {
-  introPhase?: IntroPhase;
+  // Orthogonal basis vector in the plane of the two vectors
+  const normal = new THREE.Vector3().crossVectors(v1, v2).normalize();
+  const vOrth = new THREE.Vector3().crossVectors(normal, v1).normalize();
+
+  for (let i = 0; i <= segments; i++) {
+    const t = i / segments;
+    const theta = t * angle;
+    const surfaceDir = new THREE.Vector3()
+      .copy(v1)
+      .multiplyScalar(Math.cos(theta))
+      .addScaledVector(vOrth, Math.sin(theta))
+      .normalize();
+
+    const alt = Math.sin(t * Math.PI) * maxAltitude;
+    points.push(surfaceDir.multiplyScalar(radius + alt));
+  }
+  return points;
 }
 
 export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settled' }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  // Slot 1 Popup
-  const popup1Ref = useRef<HTMLDivElement>(null);
-  const activeSpot1IdRef = useRef<string | null>(null);
-  const [slot1Hotspot, setSlot1Hotspot] = React.useState<Hotspot | null>(null);
-  const [slot1Visible, setSlot1Visible] = React.useState<boolean>(false);
+  const labelCardRef = useRef<HTMLDivElement>(null);
 
-  // Slot 2 Popup (Second non-overlapping popup)
-  const popup2Ref = useRef<HTMLDivElement>(null);
-  const activeSpot2IdRef = useRef<string | null>(null);
-  const [slot2Hotspot, setSlot2Hotspot] = React.useState<Hotspot | null>(null);
-  const [slot2Visible, setSlot2Visible] = React.useState<boolean>(false);
+  // Active highlighted location state
+  const [activeCity, setActiveCity] = useState<IntelLocation | null>(INTEL_LOCATIONS[0]);
+  const [isLabelVisible, setIsLabelVisible] = useState<boolean>(false);
+  const [activeScreenPos, setActiveScreenPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  // CSS Entrance state for initial blur & fade-in wrapper
+  const [isSystemOnline, setIsSystemOnline] = useState<boolean>(false);
 
   const phaseRef = useRef<IntroPhase>(introPhase);
   useEffect(() => {
     phaseRef.current = introPhase;
   }, [introPhase]);
 
-  const spinSpeedRef = useRef<number>(introPhase === 'settled' ? 0.003 : 0.155);
-  const scaleProgRef = useRef<number>(introPhase === 'settled' ? 1 : 0.2);
-
   useEffect(() => {
+    // Trigger CSS blur-to-clear entrance
+    const timer = setTimeout(() => {
+      setIsSystemOnline(true);
+    }, 60);
+
     const container = containerRef.current;
     if (!container) return;
 
     let width = container.clientWidth || 500;
     let height = container.clientHeight || 500;
 
-    // Scene, Camera, Renderer
+    // 1. Scene, Perspective Camera & Antialiased Renderer
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 2000);
     camera.position.set(0, 0, 480);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: 'high-performance',
+    });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setClearColor(0x000000, 0);
@@ -288,38 +203,101 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
     const globeGroup = new THREE.Group();
     scene.add(globeGroup);
 
-    const GLOBE_RADIUS = 118;
+    const GLOBE_RADIUS = 120;
 
-    // 1. Offscreen Canvas for Earth Texture (Vibrant Realistic Ocean Blue + Solid Green Continents)
+    // 2. High-Precision Equirectangular Texture:
+    // Dark translucent navy ocean + Muted emerald/slate landmass + Fine graticule grid
     const texCanvas = document.createElement('canvas');
     texCanvas.width = 2048;
     texCanvas.height = 1024;
     const ctx = texCanvas.getContext('2d');
+
     if (ctx) {
-      // Vibrant, visibly pleasing realistic ocean blue gradient
-      const oceanGrad = ctx.createRadialGradient(
-        texCanvas.width * 0.52, texCanvas.height * 0.42, 60,
-        texCanvas.width * 0.5, texCanvas.height * 0.5, texCanvas.width * 0.65
-      );
-      oceanGrad.addColorStop(0, '#38BDF8');     // Brilliant sunlit azure
-      oceanGrad.addColorStop(0.22, '#0284C7');  // Bright radiant ocean blue
-      oceanGrad.addColorStop(0.55, '#0369A1');  // Rich royal maritime blue
-      oceanGrad.addColorStop(0.82, '#075985');  // Deep ocean blue
-      oceanGrad.addColorStop(1, '#0C4A6E');     // Deep abyss horizon rim
-
-      ctx.fillStyle = oceanGrad;
-      ctx.fillRect(0, 0, texCanvas.width, texCanvas.height);
-
-
-
-      // Draw Continents: Vibrant Real Globe Green without country partitions
       const W = texCanvas.width;
       const H = texCanvas.height;
 
-      ctx.fillStyle = '#22863A'; // Rich lush continental green
-      ctx.strokeStyle = '#22863A';
-      ctx.lineWidth = 1.4;
+      // Base Deep Marine Teal-Blue Ocean with subtle latitudinal gradient
+      const oceanGrad = ctx.createLinearGradient(0, 0, 0, H);
+      oceanGrad.addColorStop(0, '#061424');     // Arctic polar deep
+      oceanGrad.addColorStop(0.18, '#081d33');  // Sub-arctic marine
+      oceanGrad.addColorStop(0.5, '#0c2946');   // Temperate/Equatorial rich marine teal
+      oceanGrad.addColorStop(0.82, '#081d33');  // Southern ocean
+      oceanGrad.addColorStop(1, '#061424');     // Antarctic abyss
+      ctx.fillStyle = oceanGrad;
+      ctx.fillRect(0, 0, W, H);
 
+      // Subtle Longitude & Latitude Graticule Grid
+      // Latitude Parallels
+      for (let lat = -75; lat <= 75; lat += 15) {
+        const y = ((90 - lat) / 180) * H;
+        ctx.beginPath();
+        if (lat === 0) {
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.18)';
+          ctx.lineWidth = 1.0;
+        } else if (Math.abs(lat) === 30 || Math.abs(lat) === 60) {
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
+          ctx.lineWidth = 0.7;
+        } else {
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.04)';
+          ctx.lineWidth = 0.5;
+        }
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+      }
+
+      // Longitude Meridians
+      for (let lon = -180; lon <= 180; lon += 15) {
+        const x = ((lon + 180) / 360) * W;
+        ctx.beginPath();
+        if (lon === 0) {
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.18)';
+          ctx.lineWidth = 1.0;
+        } else if (lon % 30 === 0) {
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
+          ctx.lineWidth = 0.7;
+        } else {
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.04)';
+          ctx.lineWidth = 0.5;
+        }
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H);
+        ctx.stroke();
+      }
+
+      // Coastal Continental Shelf Glow
+      ctx.strokeStyle = 'rgba(14, 165, 233, 0.15)';
+      ctx.lineWidth = 6;
+      ctx.lineJoin = 'round';
+      WORLD_POLYGONS.forEach((ring) => {
+        ctx.beginPath();
+        for (let i = 0; i < ring.length; i++) {
+          const x = ((ring[i][0] + 180) / 360) * W;
+          const y = ((90 - ring[i][1]) / 180) * H;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      });
+
+      // Secondary Delicate Shelf Rim
+      ctx.strokeStyle = 'rgba(45, 212, 191, 0.22)';
+      ctx.lineWidth = 2.2;
+      WORLD_POLYGONS.forEach((ring) => {
+        ctx.beginPath();
+        for (let i = 0; i < ring.length; i++) {
+          const x = ((ring[i][0] + 180) / 360) * W;
+          const y = ((90 - ring[i][1]) / 180) * H;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      });
+
+      // Continents Fill: Refined Dark Emerald / Slate-Green
+      ctx.fillStyle = '#17362d';
       WORLD_POLYGONS.forEach((ring) => {
         ctx.beginPath();
         for (let i = 0; i < ring.length; i++) {
@@ -330,7 +308,36 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
         }
         ctx.closePath();
         ctx.fill();
+      });
+
+      // Crisp Coastline Boundary
+      ctx.strokeStyle = 'rgba(52, 211, 153, 0.42)';
+      ctx.lineWidth = 0.9;
+      WORLD_POLYGONS.forEach((ring) => {
+        ctx.beginPath();
+        for (let i = 0; i < ring.length; i++) {
+          const x = ((ring[i][0] + 180) / 360) * W;
+          const y = ((90 - ring[i][1]) / 180) * H;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
         ctx.stroke();
+      });
+
+      // Micro digital intelligence telemetry nodes
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.32)';
+      const TELEMETRY_NODES = [
+        [30, 20], [25, 45], [45, 30], [55, 25], [10, 50],
+        [-95, 38], [-105, 42], [-80, 35], [-60, -15], [-50, -20],
+        [100, 35], [115, 30], [80, 22], [135, -25]
+      ];
+      TELEMETRY_NODES.forEach(([lon, lat]) => {
+        const x = ((lon + 180) / 360) * W;
+        const y = ((90 - lat) / 180) * H;
+        ctx.beginPath();
+        ctx.arc(x, y, 1.4, 0, Math.PI * 2);
+        ctx.fill();
       });
     }
 
@@ -338,16 +345,16 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
     globeTexture.wrapS = THREE.RepeatWrapping;
     globeTexture.wrapT = THREE.ClampToEdgeWrapping;
 
-    // Specular Map: Glossy Ocean (White) vs Matte Continents (Dark)
+    // Specular Map: Glossy Ocean vs Matte Continents
     const specCanvas = document.createElement('canvas');
     specCanvas.width = 1024;
     specCanvas.height = 512;
     const sCtx = specCanvas.getContext('2d');
     if (sCtx) {
-      sCtx.fillStyle = '#ffffff'; // Ocean water has bright specular sheen
+      sCtx.fillStyle = '#bae6fd'; // Oceans reflect daylight glint
       sCtx.fillRect(0, 0, specCanvas.width, specCanvas.height);
 
-      sCtx.fillStyle = '#1c1c1c'; // Continents have subtle diffuse reflection
+      sCtx.fillStyle = '#080c10'; // Landmasses are matte diffuse
       const sW = specCanvas.width;
       const sH = specCanvas.height;
       WORLD_POLYGONS.forEach((ring) => {
@@ -358,7 +365,7 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
           if (i === 0) sCtx.moveTo(x, y);
           else sCtx.lineTo(x, y);
         }
-        sCtx.closePath();
+        ctx?.closePath();
         sCtx.fill();
       });
     }
@@ -366,21 +373,23 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
     specularMap.wrapS = THREE.RepeatWrapping;
     specularMap.wrapT = THREE.ClampToEdgeWrapping;
 
-    // 2. Earth Sphere Mesh: Glossy Blue Ocean + Lush Green Continents
+    // 3. Earth Sphere Mesh
     const sphereGeo = new THREE.SphereGeometry(GLOBE_RADIUS, 64, 64);
     const sphereMat = new THREE.MeshPhongMaterial({
       map: globeTexture,
       specularMap: specularMap,
-      specular: 0x93c5fd,
-      shininess: 34,
-      emissive: 0x02172b,
-      emissiveIntensity: 0.12,
+      specular: 0x38bdf8,
+      shininess: 26,
+      emissive: 0x031728,
+      emissiveIntensity: 0.16,
+      transparent: true,
+      opacity: 0.2, // Will smoothly illuminate up during entrance
     });
     const earthMesh = new THREE.Mesh(sphereGeo, sphereMat);
     globeGroup.add(earthMesh);
 
-    // 3. Atmosphere Halo (Radiant Vibrant Earth Blue Rayleigh Glow)
-    const atmosGeo = new THREE.SphereGeometry(GLOBE_RADIUS + 3.6, 64, 64);
+    // 4. Subtle Atmospheric Rim Halo Shader
+    const atmosGeo = new THREE.SphereGeometry(GLOBE_RADIUS + 3.2, 64, 64);
     const atmosMat = new THREE.ShaderMaterial({
       vertexShader: `
         varying vec3 vNormal;
@@ -391,86 +400,174 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
       `,
       fragmentShader: `
         varying vec3 vNormal;
+        uniform float uOpacity;
         void main() {
-          float intensity = pow(0.68 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.2);
-          vec3 glowColor = vec3(0.28, 0.68, 1.0); // Vibrant Real Earth Blue
-          gl_FragColor = vec4(glowColor, 1.0) * intensity * 0.98;
+          // Soft radial falloff along perimeter
+          float intensity = pow(0.62 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.4);
+          intensity = clamp(intensity, 0.0, 1.0);
+          vec3 glowColor = vec3(0.18, 0.68, 0.94);
+          gl_FragColor = vec4(glowColor, intensity * uOpacity);
         }
       `,
+      uniforms: {
+        uOpacity: { value: 0.0 }, // Illuminates smoothly during entrance
+      },
       blending: THREE.AdditiveBlending,
       side: THREE.BackSide,
       transparent: true,
+      depthWrite: false,
     });
     const atmosMesh = new THREE.Mesh(atmosGeo, atmosMat);
     scene.add(atmosMesh);
 
+    // 5. Signal Connection Arcs (Curved Information Flow Lines)
+    const arcGroup = new THREE.Group();
+    globeGroup.add(arcGroup);
 
-
-    // 5. Global Hotspot Trend Points Across Continents
-    const hotspotGroup = new THREE.Group();
-    globeGroup.add(hotspotGroup);
-
-    interface HotspotMarker {
-      hotspot: Hotspot;
-      dot: THREE.Mesh;
-      ring: THREE.Mesh;
+    interface SignalArcData {
+      curve: THREE.CatmullRomCurve3;
+      tubeMesh: THREE.Mesh;
+      pulseMesh: THREE.Mesh;
+      pulseProgress: number;
+      pulseSpeed: number;
     }
 
-    const hotspotMarkers: HotspotMarker[] = [];
+    const arcDataList: SignalArcData[] = [];
 
-    HOTSPOTS.forEach((spot) => {
-      const pos = latLonToVector3(spot.lat, spot.lon, GLOBE_RADIUS + 0.6);
+    const locPosMap = new Map<string, THREE.Vector3>();
+    INTEL_LOCATIONS.forEach((loc) => {
+      locPosMap.set(loc.id, latLonToVector3(loc.lat, loc.lon, GLOBE_RADIUS));
+    });
 
-      // Core beacon dot
-      const dotGeo = new THREE.SphereGeometry(2.0, 16, 16);
-      const dotMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-      const dotMesh = new THREE.Mesh(dotGeo, dotMat);
-      dotMesh.position.copy(pos);
-      hotspotGroup.add(dotMesh);
+    SIGNAL_ARCS.forEach(([fromId, toId], i) => {
+      const p1 = locPosMap.get(fromId);
+      const p2 = locPosMap.get(toId);
+      if (!p1 || !p2) return;
 
-      // Pulsing cyan/blue halo ring on globe surface
-      const ringGeo = new THREE.RingGeometry(2.2, 4.4, 24);
+      const dist = p1.distanceTo(p2);
+      const altitude = Math.min(Math.max(dist * 0.17, 10), 24);
+      const arcPoints = getGreatCircleArc(p1, p2, GLOBE_RADIUS, altitude, 40);
+      const curve = new THREE.CatmullRomCurve3(arcPoints);
+
+      const tubeGeo = new THREE.TubeGeometry(curve, 36, 0.4, 8, false);
+      const tubeMat = new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        transparent: true,
+        opacity: 0.0, // Illuminates during entrance
+      });
+      const tubeMesh = new THREE.Mesh(tubeGeo, tubeMat);
+      arcGroup.add(tubeMesh);
+
+      const packetGeo = new THREE.SphereGeometry(1.1, 12, 12);
+      const packetMat = new THREE.MeshBasicMaterial({
+        color: 0x7dd3fc,
+        transparent: true,
+        opacity: 0.0, // Illuminates during entrance
+      });
+      const packetMesh = new THREE.Mesh(packetGeo, packetMat);
+      arcGroup.add(packetMesh);
+
+      arcDataList.push({
+        curve,
+        tubeMesh,
+        pulseMesh: packetMesh,
+        pulseProgress: (i * 0.16) % 1.0,
+        pulseSpeed: 0.0035 + (i % 3) * 0.0008,
+      });
+    });
+
+    // 6. Intelligent Location Markers (Pin, Halo, and Dynamic Pulse)
+    const markerGroup = new THREE.Group();
+    globeGroup.add(markerGroup);
+
+    interface MarkerObject {
+      location: IntelLocation;
+      pos: THREE.Vector3;
+      coreDot: THREE.Mesh;
+      pulseRing: THREE.Mesh;
+      pinStem: THREE.Line;
+    }
+
+    const markerObjects: MarkerObject[] = [];
+
+    INTEL_LOCATIONS.forEach((loc) => {
+      const pos = latLonToVector3(loc.lat, loc.lon, GLOBE_RADIUS + 0.6);
+
+      // Core luminous beacon dot
+      const coreGeo = new THREE.SphereGeometry(1.9, 16, 16);
+      const coreMat = new THREE.MeshBasicMaterial({
+        color: loc.indicatorColor,
+      });
+      const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+      coreMesh.position.copy(pos);
+      coreMesh.scale.setScalar(0.001); // Scales in on entrance
+      markerGroup.add(coreMesh);
+
+      // Concentric expanding ring on surface
+      const ringGeo = new THREE.RingGeometry(2.4, 4.8, 24);
       const ringMat = new THREE.MeshBasicMaterial({
         color: 0x38bdf8,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.85,
+        opacity: 0.0,
       });
       const ringMesh = new THREE.Mesh(ringGeo, ringMat);
       ringMesh.position.copy(pos);
       ringMesh.lookAt(0, 0, 0);
-      hotspotGroup.add(ringMesh);
+      markerGroup.add(ringMesh);
 
-      hotspotMarkers.push({
-        hotspot: spot,
-        dot: dotMesh,
-        ring: ringMesh,
+      // Mini vertical beacon stem pointing outward
+      const normal = pos.clone().normalize();
+      const tipPos = pos.clone().addScaledVector(normal, 4.5);
+      const stemGeo = new THREE.BufferGeometry().setFromPoints([pos, tipPos]);
+      const stemMat = new THREE.LineBasicMaterial({
+        color: 0x7dd3fc,
+        transparent: true,
+        opacity: 0.0,
+      });
+      const stemLine = new THREE.Line(stemGeo, stemMat);
+      markerGroup.add(stemLine);
+
+      markerObjects.push({
+        location: loc,
+        pos,
+        coreDot: coreMesh,
+        pulseRing: ringMesh,
+        pinStem: stemLine,
       });
     });
 
-    // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.15);
+    // 7. Lighting
+    const ambientLight = new THREE.AmbientLight(0xdbeafe, 0.95);
     scene.add(ambientLight);
 
-    const softDirLight = new THREE.DirectionalLight(0xffffff, 0.70);
-    softDirLight.position.set(160, 200, 300);
-    scene.add(softDirLight);
+    const sunLight = new THREE.DirectionalLight(0xffffff, 1.25);
+    sunLight.position.set(220, 240, 280);
+    scene.add(sunLight);
 
-    // Initial Europe/Africa centering
-    globeGroup.rotation.x = 0.22;
-    globeGroup.rotation.y = -1.82;
+    const rimLight = new THREE.DirectionalLight(0x0ea5e9, 0.4);
+    rimLight.position.set(-200, -100, -100);
+    scene.add(rimLight);
 
-    // Drag Interaction with Inertia Momentum
+    // Initial Starting Angle: Natural view across Atlantic / Americas / Europe
+    globeGroup.rotation.x = 0.20;
+    globeGroup.rotation.y = -1.75;
+
+    // Start with subtle smaller scale for initial entrance
+    globeGroup.scale.setScalar(0.82);
+    atmosMesh.scale.setScalar(0.82);
+
+    // Interactive Drag with Smooth Momentum
     let isDragging = false;
     let prevMousePos = { x: 0, y: 0 };
-    let velocity = { x: 0.0008, y: 0 };
+    let dragVelocity = { x: 0.0006, y: 0 };
 
     const canvasEl = renderer.domElement;
 
     const onMouseDown = (e: MouseEvent) => {
       isDragging = true;
       prevMousePos = { x: e.clientX, y: e.clientY };
-      velocity = { x: 0, y: 0 };
+      dragVelocity = { x: 0, y: 0 };
     };
 
     const onMouseMove = (e: MouseEvent) => {
@@ -478,11 +575,11 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
       const deltaX = e.clientX - prevMousePos.x;
       const deltaY = e.clientY - prevMousePos.y;
 
-      globeGroup.rotation.y += deltaX * 0.005;
-      globeGroup.rotation.x += deltaY * 0.005;
-      globeGroup.rotation.x = Math.max(-0.85, Math.min(0.85, globeGroup.rotation.x));
+      globeGroup.rotation.y += deltaX * 0.0045;
+      globeGroup.rotation.x += deltaY * 0.0045;
+      globeGroup.rotation.x = Math.max(-0.75, Math.min(0.75, globeGroup.rotation.x));
 
-      velocity = { x: deltaX * 0.0028, y: deltaY * 0.0028 };
+      dragVelocity = { x: deltaX * 0.0022, y: deltaY * 0.0022 };
       prevMousePos = { x: e.clientX, y: e.clientY };
     };
 
@@ -494,7 +591,7 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
       if (e.touches.length === 1) {
         isDragging = true;
         prevMousePos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        velocity = { x: 0, y: 0 };
+        dragVelocity = { x: 0, y: 0 };
       }
     };
 
@@ -503,11 +600,11 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
       const deltaX = e.touches[0].clientX - prevMousePos.x;
       const deltaY = e.touches[0].clientY - prevMousePos.y;
 
-      globeGroup.rotation.y += deltaX * 0.005;
-      globeGroup.rotation.x += deltaY * 0.005;
-      globeGroup.rotation.x = Math.max(-0.85, Math.min(0.85, globeGroup.rotation.x));
+      globeGroup.rotation.y += deltaX * 0.0045;
+      globeGroup.rotation.x += deltaY * 0.0045;
+      globeGroup.rotation.x = Math.max(-0.75, Math.min(0.75, globeGroup.rotation.x));
 
-      velocity = { x: deltaX * 0.0028, y: deltaY * 0.0028 };
+      dragVelocity = { x: deltaX * 0.0022, y: deltaY * 0.0022 };
       prevMousePos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     };
 
@@ -518,19 +615,31 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
     canvasEl.addEventListener('mousedown', onMouseDown);
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
-    canvasEl.addEventListener('touchstart', onTouchStart);
-    window.addEventListener('touchmove', onTouchMove);
+    canvasEl.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
     window.addEventListener('touchend', onTouchEnd);
 
-    // Animation Loop with Center-Radius Hotspot Detection
+    // 8. Animation Loop with Entrance System Online Choreography
     let animId: number;
     let clock = 0;
     const tempWorldPos = new THREE.Vector3();
-    const introStartTime = performance.now();
+
+    // Constant slow rotation speed (~20s per full rotation)
+    const BASE_ROTATION_SPEED = 0.0022;
+
+    const mountTime = performance.now();
+    const ENTRANCE_DURATION_MS = 1400; // 1.4s smooth cinematic power-up entrance
+
+    let currentActiveId: string = INTEL_LOCATIONS[0].id;
+    let activeSwitchTime = performance.now() + 1000; // Allow globe to boot up before first card pops out
+    const DISPLAY_DURATION_MS = 3600; // Duration each location card stays prominent
+    const shownHistory: string[] = [currentActiveId];
 
     function animate() {
       animId = requestAnimationFrame(animate);
-      clock += 0.03;
+      clock += 0.026;
+      const now = performance.now();
+      const elapsedSinceMount = now - mountTime;
 
       // Dynamic resize check
       const curContainer = containerRef.current;
@@ -544,156 +653,161 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
         renderer.setSize(width, height);
       }
 
-      const currentPhase = phaseRef.current;
-      const elapsed = (performance.now() - introStartTime) / 1000;
+      // Step 1 - Step 5: Initial Cinematic Entrance Interpolation
+      const entranceProg = Math.min(1.0, elapsedSinceMount / ENTRANCE_DURATION_MS);
+      // Smooth cubic ease-out curve
+      const ease = 1 - Math.pow(1 - entranceProg, 3);
 
-      // 1. Globe Pop-out Scale (fast spring pop from 0.2 to 1.0 in ~0.35s)
-      if (scaleProgRef.current < 1.0) {
-        scaleProgRef.current = Math.min(1, scaleProgRef.current + 0.045);
-        const t = scaleProgRef.current;
-        const ease = Math.sin(t * Math.PI * 0.5);
-        const popScale = t >= 1 ? 1 : 0.2 + 0.8 * ease * (1 + 0.15 * Math.sin(t * Math.PI));
-        globeGroup.scale.setScalar(popScale);
-        atmosMesh.scale.setScalar(popScale);
-      } else {
-        globeGroup.scale.setScalar(1);
-        atmosMesh.scale.setScalar(1);
-      }
+      if (entranceProg < 1.0) {
+        // Scale from 0.82 to 1.0
+        const currentScale = 0.82 + 0.18 * ease;
+        globeGroup.scale.setScalar(currentScale);
+        atmosMesh.scale.setScalar(currentScale);
 
-      // 2. Smooth Continuous Non-Zero Deceleration
-      // Starts after a very minute delay (~0.26s) after points begin plotting
-      if (elapsed >= 0.26) {
-        // Continuous exponential deceleration toward resting rate: speed drops smoothly every frame
-        // Acceleration is mathematically never 0 (no plateau or stuck sensation)
-        spinSpeedRef.current = 0.0028 + (spinSpeedRef.current - 0.0028) * 0.974;
-      }
+        // Fade in Earth sphere
+        sphereMat.opacity = 0.2 + 0.8 * ease;
 
-      if (!isDragging) {
-        globeGroup.rotation.y += spinSpeedRef.current;
-        globeGroup.rotation.y += velocity.x;
-        globeGroup.rotation.x += velocity.y;
-        velocity.x *= 0.94;
-        velocity.y *= 0.94;
-      }
+        // Illuminate atmospheric rim
+        atmosMat.uniforms.uOpacity.value = 0.72 * ease;
 
-      // 3. Points Plotting: starts after very minute ms delay (~0.16s) while spinning rapidly
-      const pointsStart = 0.16;
-      if (elapsed < pointsStart && currentPhase !== 'settled') {
-        hotspotMarkers.forEach(({ dot, ring }) => {
-          dot.scale.setScalar(0);
-          ring.scale.setScalar(0);
+        // Illuminate orbital arcs
+        arcDataList.forEach((arc) => {
+          (arc.tubeMesh.material as THREE.MeshBasicMaterial).opacity = 0.24 * ease;
+          (arc.pulseMesh.material as THREE.MeshBasicMaterial).opacity = 0.9 * ease;
         });
-      } else if (currentPhase !== 'settled') {
-        const plotTime = elapsed - pointsStart;
-        hotspotMarkers.forEach(({ dot, ring }, idx) => {
-          const delay = idx * 0.046; // ~46ms stagger: all 16 plotted by t = 0.88s
-          const pTime = Math.max(0, plotTime - delay);
-          if (pTime <= 0) {
-            dot.scale.setScalar(0);
-            ring.scale.setScalar(0);
-          } else {
-            const p = Math.min(1, pTime / 0.18);
-            const s = p >= 1 ? 1 : Math.sin(p * Math.PI * 0.5) * (1 + 0.45 * Math.sin(p * Math.PI));
-            dot.scale.setScalar(s);
-            ring.scale.setScalar(s * (1.0 + Math.sin(clock + idx * 0.4) * 0.22));
-          }
-        });
-      } else {
-        // Settled state: all dots visible with pulse
-        hotspotMarkers.forEach(({ dot, ring }, idx) => {
-          dot.scale.setScalar(1);
-          const s = 1.0 + Math.sin(clock + idx * 0.4) * 0.22;
-          ring.scale.set(s, s, s);
-        });
-      }
 
-      // 4. Multiple Non-Overlapping Trend Dialogues (starts as soon as enough points are plotted: t >= 0.48s)
-      const dialoguesStart = 0.48;
-      if (elapsed < dialoguesStart && currentPhase !== 'settled') {
-        if (activeSpot1IdRef.current !== null) {
-          activeSpot1IdRef.current = null;
-          setSlot1Visible(false);
-        }
-        if (activeSpot2IdRef.current !== null) {
-          activeSpot2IdRef.current = null;
-          setSlot2Visible(false);
+        // Illuminate markers gradually
+        markerObjects.forEach((m) => {
+          m.coreDot.scale.setScalar(ease);
+          (m.pinStem.material as THREE.LineBasicMaterial).opacity = 0.6 * ease;
+        });
+
+        // Progressive entrance rotation speed
+        if (!isDragging) {
+          globeGroup.rotation.y += BASE_ROTATION_SPEED * (0.5 + 0.5 * ease);
         }
       } else {
-        interface VisibleCandidate {
-          hotspot: Hotspot;
-          screenX: number;
-          screenY: number;
-          dist: number;
-        }
-        const visibleCandidates: VisibleCandidate[] = [];
+        // Entrance settled state
+        globeGroup.scale.setScalar(1.0);
+        atmosMesh.scale.setScalar(1.0);
+        sphereMat.opacity = 1.0;
+        atmosMat.uniforms.uOpacity.value = 0.72;
 
-        hotspotMarkers.forEach(({ hotspot, dot }) => {
-          dot.getWorldPosition(tempWorldPos);
-          // Must be on the forward visible hemisphere
-          if (tempWorldPos.z > 35) {
-            const proj = tempWorldPos.clone().project(camera);
-            const screenX = ((proj.x + 1) / 2) * width;
-            const screenY = ((-proj.y + 1) / 2) * height;
-            const dist = Math.hypot(proj.x, proj.y);
-            visibleCandidates.push({ hotspot, screenX, screenY, dist });
-          }
+        arcDataList.forEach((arc) => {
+          (arc.tubeMesh.material as THREE.MeshBasicMaterial).opacity = 0.24;
+          (arc.pulseMesh.material as THREE.MeshBasicMaterial).opacity = 0.9;
         });
 
-        // Sort candidates by proximity to center
-        visibleCandidates.sort((a, b) => a.dist - b.dist);
+        // Continuous Slow Vertical Rotation (60fps elegant cinematic motion)
+        if (!isDragging) {
+          globeGroup.rotation.y += BASE_ROTATION_SPEED;
+          globeGroup.rotation.y += dragVelocity.x;
+          globeGroup.rotation.x += dragVelocity.y;
+          dragVelocity.x *= 0.94;
+          dragVelocity.y *= 0.94;
+        }
+      }
 
-        // Pick up to 2 distinct candidates that are separated by at least 160px so they NEVER overlap
-        const chosen: VisibleCandidate[] = [];
-        for (const cand of visibleCandidates) {
-          const isFarEnough = chosen.every(
-            (c) => Math.hypot(c.screenX - cand.screenX, c.screenY - cand.screenY) >= 160
-          );
-          if (isFarEnough) {
-            chosen.push(cand);
-            if (chosen.length >= 2) break;
+      // Animate Signal Arc Pulses
+      arcDataList.forEach((arc) => {
+        arc.pulseProgress += arc.pulseSpeed;
+        if (arc.pulseProgress > 1.0) arc.pulseProgress = 0;
+        const pt = arc.curve.getPointAt(arc.pulseProgress);
+        arc.pulseMesh.position.copy(pt);
+      });
+
+      // Markers & Visibility Check (Disappear naturally when on back hemisphere)
+      interface Candidate {
+        marker: MarkerObject;
+        screenX: number;
+        screenY: number;
+        facingScore: number;
+      }
+
+      const visibleCandidates: Candidate[] = [];
+
+      markerObjects.forEach((m) => {
+        m.coreDot.getWorldPosition(tempWorldPos);
+
+        // Z > 18 is front hemisphere facing viewer
+        if (tempWorldPos.z > 18 && entranceProg >= 0.7) {
+          const proj = tempWorldPos.clone().project(camera);
+          const screenX = ((proj.x + 1) / 2) * width;
+          const screenY = ((-proj.y + 1) / 2) * height;
+          const facingScore = tempWorldPos.z / GLOBE_RADIUS;
+
+          visibleCandidates.push({
+            marker: m,
+            screenX,
+            screenY,
+            facingScore,
+          });
+
+          // Soft pulse animation on surface ring
+          const isCurrent = m.location.id === currentActiveId && isLabelVisible;
+          const pulseSpeed = isCurrent ? 2.8 : 1.6;
+          const pulseScale = isCurrent
+            ? 1.0 + Math.sin(clock * pulseSpeed) * 0.45
+            : 1.0 + Math.sin(clock * pulseSpeed) * 0.2;
+          m.pulseRing.scale.set(pulseScale, pulseScale, pulseScale);
+          (m.pulseRing.material as THREE.MeshBasicMaterial).opacity = isCurrent
+            ? 0.85 + Math.sin(clock * pulseSpeed) * 0.15
+            : 0.35;
+          m.coreDot.scale.setScalar(isCurrent ? 1.4 : 1.0);
+        } else {
+          m.pulseRing.scale.set(1, 1, 1);
+          (m.pulseRing.material as THREE.MeshBasicMaterial).opacity = 0.08;
+          m.coreDot.scale.setScalar(0.75);
+        }
+      });
+
+      // Dynamic Location Transition & Selection (Only after initial entrance settled)
+      if (entranceProg >= 1.0) {
+        visibleCandidates.sort((a, b) => b.facingScore - a.facingScore);
+
+        const activeCandidate = visibleCandidates.find((c) => c.marker.location.id === currentActiveId);
+        const isCurrentFacingWell = activeCandidate && activeCandidate.facingScore > 0.35;
+        const timeElapsed = now - activeSwitchTime;
+
+        // Switch to next location when duration expires OR current active rotates out of view
+        if ((timeElapsed >= DISPLAY_DURATION_MS || !isCurrentFacingWell) && visibleCandidates.length > 0) {
+          // Find best candidate not in recent history
+          let next = visibleCandidates.find((c) => !shownHistory.includes(c.marker.location.id) && c.facingScore > 0.45);
+          if (!next) {
+            shownHistory.length = 0;
+            next = visibleCandidates[0];
+          }
+
+          if (next && next.marker.location.id !== currentActiveId) {
+            currentActiveId = next.marker.location.id;
+            shownHistory.push(currentActiveId);
+            if (shownHistory.length > 5) shownHistory.shift();
+
+            activeSwitchTime = now;
+            setActiveCity(next.marker.location);
+            setIsLabelVisible(true);
           }
         }
 
-        // Update Slot 1
-        if (chosen.length >= 1) {
-          const c1 = chosen[0];
-          if (activeSpot1IdRef.current !== c1.hotspot.id) {
-            activeSpot1IdRef.current = c1.hotspot.id;
-            setSlot1Hotspot(c1.hotspot);
-            setSlot1Visible(true);
-          }
-          if (popup1Ref.current) {
-            popup1Ref.current.style.transform = `translate3d(${c1.screenX}px, ${c1.screenY}px, 0)`;
+        // Update projected 2D coordinates for the active floating label card
+        if (activeCandidate) {
+          setActiveScreenPos({ x: activeCandidate.screenX, y: activeCandidate.screenY });
+          if (!isLabelVisible && activeCandidate.facingScore > 0.35) {
+            setIsLabelVisible(true);
           }
         } else {
-          if (activeSpot1IdRef.current !== null) {
-            activeSpot1IdRef.current = null;
-            setSlot1Visible(false);
-          }
-        }
-
-        // Update Slot 2 (Second distinct, non-overlapping dialogue)
-        if (chosen.length >= 2 && currentPhase !== 'settled') {
-          const c2 = chosen[1];
-          if (activeSpot2IdRef.current !== c2.hotspot.id) {
-            activeSpot2IdRef.current = c2.hotspot.id;
-            setSlot2Hotspot(c2.hotspot);
-            setSlot2Visible(true);
-          }
-          if (popup2Ref.current) {
-            popup2Ref.current.style.transform = `translate3d(${c2.screenX}px, ${c2.screenY}px, 0)`;
-          }
-        } else {
-          if (activeSpot2IdRef.current !== null) {
-            activeSpot2IdRef.current = null;
-            setSlot2Visible(false);
+          if (isLabelVisible) {
+            setIsLabelVisible(false);
           }
         }
       }
 
+      // Atmosphere tracks globe position
       atmosMesh.position.copy(globeGroup.position);
+
       renderer.render(scene, camera);
     }
+
     animate();
 
     const onResize = () => {
@@ -707,6 +821,7 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
     window.addEventListener('resize', onResize);
 
     return () => {
+      clearTimeout(timer);
       cancelAnimationFrame(animId);
       canvasEl.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mousemove', onMouseMove);
@@ -719,6 +834,7 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
       sphereGeo.dispose();
       sphereMat.dispose();
       globeTexture.dispose();
+      specularMap.dispose();
       atmosGeo.dispose();
       atmosMat.dispose();
       renderer.dispose();
@@ -729,68 +845,81 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
   }, []);
 
   return (
-    <div className="relative w-full h-full aspect-square flex items-center justify-center">
-      {/* 3D WebGL Canvas Container */}
+    <div
+      className="relative w-full h-full aspect-square flex items-center justify-center select-none transition-all duration-1000 ease-out"
+      style={{
+        filter: isSystemOnline ? 'blur(0px)' : 'blur(6px)',
+        opacity: isSystemOnline ? 1 : 0.35,
+      }}
+    >
+      {/* Subtle Spherical Grounding Shadow */}
+      <div className="absolute inset-4 rounded-full pointer-events-none bg-[radial-gradient(circle_at_50%_50%,rgba(14,165,233,0.06)_0%,rgba(15,23,42,0.08)_50%,transparent_72%)] blur-2xl -z-10" />
+
+      {/* 3D WebGL Canvas Viewport */}
       <div
         ref={containerRef}
         className="w-full h-full cursor-grab active:cursor-grabbing select-none"
+        title="Click and drag to rotate the digital intelligence globe"
       />
 
-      {/* Dynamic Pop-up Trend Card 1 */}
+      {/* Floating Precision Intelligence Trend Card (Answers: 'What are people talking about here right now?') */}
       <div
-        ref={popup1Ref}
+        ref={labelCardRef}
         className="absolute top-0 left-0 pointer-events-none z-30"
         style={{
-          opacity: slot1Visible ? 1 : 0,
-          transition: 'opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
+          transform: `translate3d(${activeScreenPos.x}px, ${activeScreenPos.y}px, 0)`,
           willChange: 'transform, opacity',
         }}
       >
-        <div className="relative flex items-center justify-center">
-          <div className="absolute w-8 h-8 rounded-full border-2 border-sky-400/90 animate-ping" />
-          <div className="w-3.5 h-3.5 rounded-full bg-sky-400 shadow-[0_0_14px_#38bdf8] border-2 border-white z-10" />
-
+        <div
+          className={`relative -translate-x-1/2 -translate-y-full mb-3.5 pointer-events-auto transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+            isLabelVisible ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-2'
+          }`}
+        >
+          {/* Dark Navy Translucent Glass Card */}
           <div
-            className={`absolute bottom-4 left-1/2 -translate-x-1/2 mb-2 pointer-events-auto transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-              slot1Visible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-2'
-            }`}
+            className="relative border border-sky-400/35 shadow-[0_12px_28px_rgba(2,8,20,0.6),0_0_16px_rgba(56,189,248,0.15)] rounded-lg px-3.5 py-2 min-w-[145px] max-w-[175px] select-none"
+            style={{
+              backgroundColor: 'rgba(8, 18, 32, 0.94)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+            }}
           >
-            <div className="relative bg-white/95 backdrop-blur-xl border border-white/90 shadow-[0_10px_24px_rgba(15,23,42,0.12),0_2px_6px_rgba(15,23,42,0.06)] rounded-xl px-4 py-2 select-none whitespace-nowrap text-center">
-              <span className="font-brand text-[13.5px] font-bold text-[#111727] tracking-tight">
-                {slot1Hotspot?.trend}
+            {/* Top row: City Name + Muted Country Code */}
+            <div className="flex items-center justify-between gap-2.5 mb-1">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span
+                  className="w-1.5 h-1.5 rounded-full shrink-0 shadow-[0_0_6px_currentColor] animate-pulse"
+                  style={{
+                    backgroundColor: activeCity?.indicatorColor || '#38bdf8',
+                    color: activeCity?.indicatorColor || '#38bdf8',
+                  }}
+                />
+                <span className="font-semibold text-[13px] text-white tracking-tight truncate">
+                  {activeCity?.name}
+                </span>
+              </div>
+              <span className="text-[10px] font-mono font-medium text-sky-400/75 shrink-0 tracking-wider">
+                {activeCity?.countryCode}
               </span>
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-white/95 rotate-45 border-r border-b border-white/90 shadow-sm" />
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Dynamic Pop-up Trend Card 2 (Second distinct, non-overlapping dialogue) */}
-      <div
-        ref={popup2Ref}
-        className="absolute top-0 left-0 pointer-events-none z-30"
-        style={{
-          opacity: slot2Visible ? 1 : 0,
-          transition: 'opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
-          willChange: 'transform, opacity',
-        }}
-      >
-        <div className="relative flex items-center justify-center">
-          <div className="absolute w-8 h-8 rounded-full border-2 border-sky-400/90 animate-ping" />
-          <div className="w-3.5 h-3.5 rounded-full bg-sky-400 shadow-[0_0_14px_#38bdf8] border-2 border-white z-10" />
-
-          <div
-            className={`absolute bottom-4 left-1/2 -translate-x-1/2 mb-2 pointer-events-auto transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-              slot2Visible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-2'
-            }`}
-          >
-            <div className="relative bg-white/95 backdrop-blur-xl border border-white/90 shadow-[0_10px_24px_rgba(15,23,42,0.12),0_2px_6px_rgba(15,23,42,0.06)] rounded-xl px-4 py-2 select-none whitespace-nowrap text-center">
-              <span className="font-brand text-[13.5px] font-bold text-[#111727] tracking-tight">
-                {slot2Hotspot?.trend}
+            {/* Bottom row: Real Concise Topic / Trend Name (The Visual Hero) */}
+            <div className="flex items-center">
+              <span className="text-[12.5px] font-medium text-sky-100 tracking-tight leading-tight">
+                {activeCity?.trend}
               </span>
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-white/95 rotate-45 border-r border-b border-white/90 shadow-sm" />
             </div>
+
+            {/* Downward Anchor Stem to Point */}
+            <div
+              className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 border-r border-b border-sky-400/35 shadow-sm"
+              style={{ backgroundColor: 'rgba(8, 18, 32, 0.94)' }}
+            />
           </div>
+
+          {/* Very thin connection line extending down to the 3D pin */}
+          <div className="w-[1px] h-3 bg-gradient-to-b from-sky-400/80 to-transparent mx-auto mt-0.5" />
         </div>
       </div>
     </div>
