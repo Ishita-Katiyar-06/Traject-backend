@@ -168,6 +168,9 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
   // CSS Entrance state for initial blur & fade-in wrapper
   const [isSystemOnline, setIsSystemOnline] = useState<boolean>(false);
 
+  // User interaction & affordance state
+  const [hasInteracted, setHasInteracted] = useState<boolean>(false);
+
   const phaseRef = useRef<IntroPhase>(introPhase);
   useEffect(() => {
     phaseRef.current = introPhase;
@@ -425,6 +428,8 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
     globeGroup.add(arcGroup);
 
     interface SignalArcData {
+      fromId: string;
+      toId: string;
       curve: THREE.CatmullRomCurve3;
       tubeMesh: THREE.Mesh;
       pulseMesh: THREE.Mesh;
@@ -468,6 +473,8 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
       arcGroup.add(packetMesh);
 
       arcDataList.push({
+        fromId,
+        toId,
         curve,
         tubeMesh,
         pulseMesh: packetMesh,
@@ -476,7 +483,7 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
       });
     });
 
-    // 6. Intelligent Location Markers (Pin, Halo, and Dynamic Pulse)
+    // 6. Intelligent Location Markers (Pin, Halo, Generous Hit Area, and Dynamic Pulse)
     const markerGroup = new THREE.Group();
     globeGroup.add(markerGroup);
 
@@ -484,11 +491,13 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
       location: IntelLocation;
       pos: THREE.Vector3;
       coreDot: THREE.Mesh;
+      hitMesh: THREE.Mesh;
       pulseRing: THREE.Mesh;
       pinStem: THREE.Line;
     }
 
     const markerObjects: MarkerObject[] = [];
+    const hitMeshes: THREE.Mesh[] = [];
 
     INTEL_LOCATIONS.forEach((loc) => {
       const pos = latLonToVector3(loc.lat, loc.lon, GLOBE_RADIUS + 0.6);
@@ -502,6 +511,15 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
       coreMesh.position.copy(pos);
       coreMesh.scale.setScalar(0.001); // Scales in on entrance
       markerGroup.add(coreMesh);
+
+      // Generous invisible hit testing sphere (radius 8) for easy clicking and hover
+      const hitGeo = new THREE.SphereGeometry(8.0, 8, 8);
+      const hitMat = new THREE.MeshBasicMaterial({ visible: false });
+      const hitMesh = new THREE.Mesh(hitGeo, hitMat);
+      hitMesh.position.copy(pos);
+      hitMesh.userData = { locationId: loc.id };
+      markerGroup.add(hitMesh);
+      hitMeshes.push(hitMesh);
 
       // Concentric expanding ring on surface
       const ringGeo = new THREE.RingGeometry(2.4, 4.8, 24);
@@ -532,6 +550,7 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
         location: loc,
         pos,
         coreDot: coreMesh,
+        hitMesh,
         pulseRing: ringMesh,
         pinStem: stemLine,
       });
@@ -549,6 +568,11 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
     rimLight.position.set(-200, -100, -100);
     scene.add(rimLight);
 
+    // Warm Amber key light to harmoniously tie into Traject's golden brand aura
+    const warmAmberLight = new THREE.DirectionalLight(0xf59e0b, 0.42);
+    warmAmberLight.position.set(-220, 200, 180);
+    scene.add(warmAmberLight);
+
     // Initial Starting Angle: Natural view across Atlantic / Americas / Europe
     globeGroup.rotation.x = 0.20;
     globeGroup.rotation.y = -1.75;
@@ -557,23 +581,79 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
     globeGroup.scale.setScalar(0.82);
     atmosMesh.scale.setScalar(0.82);
 
-    // Interactive Drag with Smooth Momentum
+    // Interactive Drag & Raycasting with Smooth Momentum
     let isDragging = false;
     let prevMousePos = { x: 0, y: 0 };
     let dragVelocity = { x: 0.0006, y: 0 };
+    let dragDistance = 0;
+
+    // Smooth camera ease when city pin is selected
+    let isTargetingCity = false;
+    let targetRotY = 0;
+    let targetRotX = 0;
+
+    const raycaster = new THREE.Raycaster();
+    const mouseNDC = new THREE.Vector2();
 
     const canvasEl = renderer.domElement;
+    canvasEl.style.touchAction = 'pan-y';
+
+    const getNDCCoords = (clientX: number, clientY: number) => {
+      const rect = canvasEl.getBoundingClientRect();
+      return {
+        x: ((clientX - rect.left) / rect.width) * 2 - 1,
+        y: -((clientY - rect.top) / rect.height) * 2 + 1,
+      };
+    };
+
+    let currentActiveId: string = INTEL_LOCATIONS[0].id;
+    let activeSwitchTime = performance.now() + 3200; // Wait for fast spin to settle before first card
+    const DISPLAY_DURATION_MS = 3600; // Duration each location card stays prominent
+    const shownHistory: string[] = [currentActiveId];
+
+    const selectCityById = (locId: string) => {
+      const loc = INTEL_LOCATIONS.find((l) => l.id === locId);
+      if (!loc) return;
+      setHasInteracted(true);
+      currentActiveId = loc.id;
+      setActiveCity(loc);
+      setIsLabelVisible(true);
+      activeSwitchTime = performance.now() + 5500; // Hold for 5.5s on selected hub
+
+      // Target angles to face front
+      targetRotY = -Math.PI / 2 - (loc.lon * Math.PI) / 180;
+      targetRotX = Math.max(-0.4, Math.min(0.4, (loc.lat * Math.PI) / 180 * 0.35));
+      isTargetingCity = true;
+    };
 
     const onMouseDown = (e: MouseEvent) => {
       isDragging = true;
+      dragDistance = 0;
+      isTargetingCity = false;
+      setHasInteracted(true);
       prevMousePos = { x: e.clientX, y: e.clientY };
       dragVelocity = { x: 0, y: 0 };
     };
 
     const onMouseMove = (e: MouseEvent) => {
-      if (!isDragging) return;
+      if (!isDragging) {
+        // Raycast hover check to change cursor to pointer
+        const ndc = getNDCCoords(e.clientX, e.clientY);
+        mouseNDC.set(ndc.x, ndc.y);
+        raycaster.setFromCamera(mouseNDC, camera);
+        const hits = raycaster.intersectObjects(hitMeshes);
+        if (hits.length > 0) {
+          canvasEl.style.cursor = 'pointer';
+        } else {
+          canvasEl.style.cursor = 'grab';
+        }
+        return;
+      }
+
+      canvasEl.style.cursor = 'grabbing';
       const deltaX = e.clientX - prevMousePos.x;
       const deltaY = e.clientY - prevMousePos.y;
+      dragDistance += Math.hypot(deltaX, deltaY);
 
       globeGroup.rotation.y += deltaX * 0.0045;
       globeGroup.rotation.x += deltaY * 0.0045;
@@ -587,10 +667,28 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
       isDragging = false;
     };
 
+    const onClick = (e: MouseEvent) => {
+      if (dragDistance < 8) {
+        const ndc = getNDCCoords(e.clientX, e.clientY);
+        mouseNDC.set(ndc.x, ndc.y);
+        raycaster.setFromCamera(mouseNDC, camera);
+        const hits = raycaster.intersectObjects(hitMeshes);
+        if (hits.length > 0) {
+          const locId = hits[0].object.userData.locationId;
+          if (locId) selectCityById(locId);
+        }
+      }
+    };
+
+    let touchStartPos = { x: 0, y: 0 };
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 1) {
         isDragging = true;
+        dragDistance = 0;
+        isTargetingCity = false;
+        setHasInteracted(true);
         prevMousePos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        touchStartPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         dragVelocity = { x: 0, y: 0 };
       }
     };
@@ -599,6 +697,7 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
       if (!isDragging || e.touches.length !== 1) return;
       const deltaX = e.touches[0].clientX - prevMousePos.x;
       const deltaY = e.touches[0].clientY - prevMousePos.y;
+      dragDistance += Math.hypot(deltaX, deltaY);
 
       globeGroup.rotation.y += deltaX * 0.0045;
       globeGroup.rotation.x += deltaY * 0.0045;
@@ -610,11 +709,22 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
 
     const onTouchEnd = () => {
       isDragging = false;
+      if (dragDistance < 10) {
+        const ndc = getNDCCoords(touchStartPos.x, touchStartPos.y);
+        mouseNDC.set(ndc.x, ndc.y);
+        raycaster.setFromCamera(mouseNDC, camera);
+        const hits = raycaster.intersectObjects(hitMeshes);
+        if (hits.length > 0) {
+          const locId = hits[0].object.userData.locationId;
+          if (locId) selectCityById(locId);
+        }
+      }
     };
 
     canvasEl.addEventListener('mousedown', onMouseDown);
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
+    canvasEl.addEventListener('click', onClick);
     canvasEl.addEventListener('touchstart', onTouchStart, { passive: true });
     window.addEventListener('touchmove', onTouchMove, { passive: true });
     window.addEventListener('touchend', onTouchEnd);
@@ -631,11 +741,6 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
 
     const mountTime = performance.now();
     const ENTRANCE_DURATION_MS = 1400; // 1.4s smooth cinematic power-up entrance
-
-    let currentActiveId: string = INTEL_LOCATIONS[0].id;
-    let activeSwitchTime = performance.now() + 3200; // Wait for fast spin to settle before first card
-    const DISPLAY_DURATION_MS = 3600; // Duration each location card stays prominent
-    const shownHistory: string[] = [currentActiveId];
 
     function animate() {
       animId = requestAnimationFrame(animate);
@@ -698,13 +803,17 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
         sphereMat.opacity = 1.0;
         atmosMat.uniforms.uOpacity.value = 0.72;
 
-        arcDataList.forEach((arc) => {
-          (arc.tubeMesh.material as THREE.MeshBasicMaterial).opacity = 0.24;
-          (arc.pulseMesh.material as THREE.MeshBasicMaterial).opacity = 0.9;
-        });
-
-        // Continuous Rotation: fast spin then decelerate to cruise
-        if (!isDragging) {
+        // Continuous Rotation or Smooth Targeting of Clicked City
+        if (isTargetingCity) {
+          let dY = (targetRotY - globeGroup.rotation.y) % (Math.PI * 2);
+          if (dY > Math.PI) dY -= Math.PI * 2;
+          if (dY < -Math.PI) dY += Math.PI * 2;
+          globeGroup.rotation.y += dY * 0.08;
+          globeGroup.rotation.x += (targetRotX - globeGroup.rotation.x) * 0.08;
+          if (Math.abs(dY) < 0.003 && Math.abs(targetRotX - globeGroup.rotation.x) < 0.003) {
+            isTargetingCity = false;
+          }
+        } else if (!isDragging) {
           const spinProg = Math.min(1.0, elapsedSinceMount / FAST_SPIN_DURATION_MS);
           const spinEase = 1 - Math.pow(1 - spinProg, 2); // ease-out quad
           const currentSpeed = FAST_SPIN_SPEED - (FAST_SPIN_SPEED - BASE_ROTATION_SPEED) * spinEase;
@@ -716,12 +825,26 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
         }
       }
 
-      // Animate Signal Arc Pulses
+      // Animate Signal Arc Pulses with Connected Propagation Highlighting
       arcDataList.forEach((arc) => {
-        arc.pulseProgress += arc.pulseSpeed;
+        const isConnected = arc.fromId === currentActiveId || arc.toId === currentActiveId;
+        const speedMult = isConnected ? 2.2 : 1.0;
+        arc.pulseProgress += arc.pulseSpeed * speedMult;
         if (arc.pulseProgress > 1.0) arc.pulseProgress = 0;
         const pt = arc.curve.getPointAt(arc.pulseProgress);
         arc.pulseMesh.position.copy(pt);
+
+        if (entranceProg >= 1.0) {
+          const targetTubeOpacity = isConnected ? 0.72 : 0.14;
+          const targetPacketOpacity = isConnected ? 1.0 : 0.45;
+          const tubeMat = arc.tubeMesh.material as THREE.MeshBasicMaterial;
+          const packetMat = arc.pulseMesh.material as THREE.MeshBasicMaterial;
+
+          tubeMat.opacity += (targetTubeOpacity - tubeMat.opacity) * 0.08;
+          packetMat.opacity += (targetPacketOpacity - packetMat.opacity) * 0.08;
+          tubeMat.color.setHex(isConnected ? 0x38bdf8 : 0x0284c7);
+          packetMat.color.setHex(isConnected ? 0xfde047 : 0x7dd3fc);
+        }
       });
 
       // Markers & Visibility Check (Disappear naturally when on back hemisphere)
@@ -782,7 +905,7 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
         const timeElapsed = now - activeSwitchTime;
 
         // Switch to next location when duration expires OR current active rotates out of clear view
-        if ((timeElapsed >= DISPLAY_DURATION_MS || !isCurrentFacingWell) && visibleCandidates.length > 0) {
+        if (!isTargetingCity && (timeElapsed >= DISPLAY_DURATION_MS || !isCurrentFacingWell) && visibleCandidates.length > 0) {
           // Find best candidate not in recent history, clearly front-facing
           let next = visibleCandidates.find((c) => !shownHistory.includes(c.marker.location.id) && c.facingScore > 0.5);
           if (!next) {
@@ -805,8 +928,11 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
           }
         }
 
+        // Drag dampening: suppress card jitter during rapid mouse/touch drag
+        const isRapidDrag = isDragging && Math.hypot(dragVelocity.x, dragVelocity.y) > 0.0035;
+
         // Update projected 2D coordinates for the active floating label card
-        if (activeCandidate && activeCandidate.facingScore > 0.5) {
+        if (activeCandidate && activeCandidate.facingScore > 0.5 && !isRapidDrag) {
           setActiveScreenPos({ x: activeCandidate.screenX, y: activeCandidate.screenY });
           if (!isLabelVisible) {
             setIsLabelVisible(true);
@@ -842,6 +968,7 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
       canvasEl.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
+      canvasEl.removeEventListener('click', onClick);
       canvasEl.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('touchend', onTouchEnd);
@@ -875,8 +1002,22 @@ export const LandingGlobe: React.FC<LandingGlobeProps> = ({ introPhase = 'settle
       <div
         ref={containerRef}
         className="w-full h-full cursor-grab active:cursor-grabbing select-none"
-        title="Click and drag to rotate the digital intelligence globe"
+        title="Click and drag to rotate the digital intelligence globe. Click any hub to inspect."
       />
+
+      {/* Interactive Affordance Hint Pill */}
+      <div
+        className={`absolute -bottom-2.5 left-1/2 -translate-x-1/2 pointer-events-none transition-all duration-700 ease-out z-20 ${
+          hasInteracted || !isSystemOnline ? 'opacity-0 translate-y-2 pointer-events-none' : 'opacity-100 translate-y-0'
+        }`}
+      >
+        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#081220]/85 border border-sky-400/25 backdrop-blur-md shadow-[0_4px_16px_rgba(2,8,20,0.6)]">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
+          <span className="text-[11px] font-mono text-sky-200/90 tracking-wide font-medium whitespace-nowrap">
+            Drag to rotate • Click hub to explore
+          </span>
+        </div>
+      </div>
 
       {/* Floating Precision Intelligence Trend Card (Answers: 'What are people talking about here right now?') */}
       <div

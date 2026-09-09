@@ -18,7 +18,12 @@ const STARS = Array.from({ length: 75 }, (_, i) => {
 });
 
 export const LandingPage: React.FC = () => {
-  const [introPhase, setIntroPhase] = useState<IntroPhase>('space_spin');
+  const [introPhase, setIntroPhase] = useState<IntroPhase>(() => {
+    if (typeof window !== 'undefined' && sessionStorage.getItem('traject_intro_seen') === 'true') {
+      return 'settled';
+    }
+    return 'space_spin';
+  });
   const heroSlotRef = useRef<HTMLDivElement>(null);
   const [centerOffset, setCenterOffset] = useState<{ x: number; y: number }>(() => {
     if (typeof window !== 'undefined') {
@@ -56,8 +61,15 @@ export const LandingPage: React.FC = () => {
     };
   }, []);
 
-  // Cinematic Intro Sequence Timers
+  // Cinematic Intro Sequence Timers (Only on first session visit)
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (sessionStorage.getItem('traject_intro_seen') === 'true') {
+        return;
+      }
+      sessionStorage.setItem('traject_intro_seen', 'true');
+    }
+
     // As soon as all points are plotted (~1050ms), transition immediately begins
     // while the globe continues in its spinning and decelerating position
     const t1 = setTimeout(() => {
@@ -76,6 +88,9 @@ export const LandingPage: React.FC = () => {
   }, []);
 
   const handleSkip = () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('traject_intro_seen', 'true');
+    }
     setIntroPhase('settled');
   };
 
