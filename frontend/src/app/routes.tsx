@@ -42,11 +42,12 @@ const SettingsPage = lazy(() =>
 const NotFoundPage = lazy(() =>
   import('../pages/NotFound/NotFoundPage').then((m) => ({ default: m.NotFoundPage }))
 );
+import { LandingPage } from '../pages/Landing/LandingPage';
 
 const RouteLoadingFallback: React.FC = () => (
-  <div className="w-full min-h-[400px] flex flex-col items-center justify-center p-8 space-y-3">
-    <div className="w-6 h-6 border-2 border-[#2F65F6] border-t-transparent rounded-full animate-spin" />
-    <span className="font-mono text-[12px] text-[#8591A5]">Loading workspace...</span>
+  <div className="w-full min-h-screen bg-[#060913] flex flex-col items-center justify-center p-8 space-y-3 select-none">
+    <div className="w-7 h-7 border-2 border-[#D97706] border-t-transparent rounded-full animate-spin" />
+    <span className="font-mono text-[12px] text-[#94A3B8] tracking-wide">Initializing workspace...</span>
   </div>
 );
 
@@ -76,8 +77,13 @@ if (typeof window !== 'undefined') {
 export const AppRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path="/" element={<AppShell />}>
-        <Route index element={<Navigate to="/overview" replace />} />
+      {/* Default Root and Home Landing Page */}
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/home" element={<LandingPage />} />
+      <Route path="/landing" element={<LandingPage />} />
+
+      {/* Main Analytical Dashboard & Workspace Application */}
+      <Route element={<AppShell />}>
         <Route
           path="overview"
           element={
