@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 import math
 import re
-from typing import Literal
+from typing import Any, Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.api.deps import (
